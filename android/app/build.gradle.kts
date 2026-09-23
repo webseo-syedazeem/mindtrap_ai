@@ -8,7 +8,11 @@ plugins {
 android {
     namespace = "com.example.mindtrap_ai"
     compileSdk = 36
+<<<<<<< HEAD
     ndkVersion = "28.2.13676358"
+=======
+    ndkVersion = flutter.ndkVersion
+>>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

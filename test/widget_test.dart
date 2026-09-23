@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+<<<<<<< HEAD
 import 'package:mindtrap_ai/localization/app_language.dart';
 import 'package:mindtrap_ai/localization/language_controller.dart';
 import 'package:mindtrap_ai/localization/puzzle_localizer.dart';
@@ -115,3 +116,21 @@ void main() {
   });
 }
 
+=======
+
+import 'package:mindtrap_ai/main.dart';
+
+void main() {
+  testWidgets('MindTrap AI home screen shows menu options', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MindTrapApp());
+
+    expect(find.text('MindTrap AI'), findsOneWidget);
+    expect(find.text('Play Game'), findsOneWidget);
+    expect(find.text('Daily Puzzle'), findsOneWidget);
+    expect(find.text('Stats'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+  });
+}
+>>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
