@@ -48,4 +48,6 @@ app.*.map.json
 # Environment / secrets
 .env
 .env.*
-!.env.example
+!.env.exampleMindTrap_AI.apk
+MindTrap_AI.aab
+build/
