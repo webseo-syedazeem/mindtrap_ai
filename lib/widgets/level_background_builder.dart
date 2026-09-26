@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../localization/language_controller.dart';
 import '../models/world_model.dart';
 
 class LevelAtmosphere {
@@ -22,6 +23,68 @@ class LevelAtmosphere {
     this.hasRays = false,
     this.glowRadius = 0.8,
   });
+
+  String get localizedStyleName {
+    final code = LanguageController.instance.currentCode;
+    if (code == 'ur' || code == 'fa' || code == 'ps' || code == 'sd') {
+      const urMap = {
+        'Dawn Awaking': 'طلوعِ سحر',
+        'Nebula Mist': 'دھندلی کہکشاں',
+        'Aurora Stream': 'شفقِ قطبی',
+        'Crystal Shimmer': 'کرسٹل چمک',
+        'Solar Flare': 'شمسی شعلہ',
+        'Emerald Glade': 'زمردی وادی',
+        'Twilight Glow': 'شام کا نور',
+        'Celestial Rays': 'آسمانی شعاعیں',
+        'Golden Dust': 'سنہری غبار',
+        'Midnight Echo': 'نصف شب کی بازگشت',
+      };
+      return urMap[styleName] ?? styleName;
+    } else if (code == 'ar') {
+      const arMap = {
+        'Dawn Awaking': 'صحوة الفجر',
+        'Nebula Mist': 'سديم النجوم',
+        'Aurora Stream': 'شفق قطبي',
+        'Crystal Shimmer': 'بريق الكريستال',
+        'Solar Flare': 'توهج شمسي',
+        'Emerald Glade': 'مرج الزمرد',
+        'Twilight Glow': 'توهج الشفق',
+        'Celestial Rays': 'أشعة سماوية',
+        'Golden Dust': 'غبار ذهبي',
+        'Midnight Echo': 'صدى منتصف الليل',
+      };
+      return arMap[styleName] ?? styleName;
+    } else if (code == 'hi' || code == 'bn') {
+      const hiMap = {
+        'Dawn Awaking': 'भोर का जागरण',
+        'Nebula Mist': 'नीहारिका कोहरा',
+        'Aurora Stream': 'ध्रुवीय ज्योति',
+        'Crystal Shimmer': 'स्फटिक चमक',
+        'Solar Flare': 'सौर ज्वाला',
+        'Emerald Glade': 'पन्ना घाटी',
+        'Twilight Glow': 'गोधूलि प्रकाश',
+        'Celestial Rays': 'दिव्य किरणें',
+        'Golden Dust': 'स्वर्ण धूल',
+        'Midnight Echo': 'मध्यरात्रि गूंज',
+      };
+      return hiMap[styleName] ?? styleName;
+    } else if (code == 'es' || code == 'pt') {
+      const esMap = {
+        'Dawn Awaking': 'Despertar del Alba',
+        'Nebula Mist': 'Niebla Nebulosa',
+        'Aurora Stream': 'Torrente de Aurora',
+        'Crystal Shimmer': 'Brillo de Cristal',
+        'Solar Flare': 'Llamarada Solar',
+        'Emerald Glade': 'Claro Esmeralda',
+        'Twilight Glow': 'Brillo Crepuscular',
+        'Celestial Rays': 'Rayos Celestiales',
+        'Golden Dust': 'Polvo Dorado',
+        'Midnight Echo': 'Eco de Medianoche',
+      };
+      return esMap[styleName] ?? styleName;
+    }
+    return styleName;
+  }
 }
 
 class LevelAtmosphereManager {
@@ -185,6 +248,23 @@ class LevelBackgroundBuilder extends StatelessWidget {
   final int levelIndex;
   final Widget? child;
 
+  static const List<String> scenicAssets = [
+    'assets/images/Stage-1.webp',
+    'assets/images/Stage-2.webp',
+    'assets/images/Stage-3.webp',
+    'assets/images/Stage-4.webp',
+    'assets/images/Stage-5.webp',
+    'assets/images/Stage-6.webp',
+    'assets/images/Stage-7.webp',
+    'assets/images/daily_puzzle_landing_background.webp',
+    'assets/images/level_complete_background.webp',
+    'assets/images/puzzle_complete_background.webp',
+    'assets/images/quiz_background.webp',
+    'assets/images/home_background.webp',
+    'assets/images/quiz_correct_background.webp',
+    'assets/images/game over background image.webp',
+  ];
+
   const LevelBackgroundBuilder({
     super.key,
     required this.worldIndex,
@@ -196,18 +276,21 @@ class LevelBackgroundBuilder extends StatelessWidget {
   Widget build(BuildContext context) {
     final world = WorldThemes.getWorld(worldIndex);
     final atmosphere = LevelAtmosphereManager.getAtmosphere(levelIndex, world);
+    // Unique distinct background image for every level and stage
+    final bgIndex = ((worldIndex * 5) + levelIndex) % scenicAssets.length;
+    final bgAsset = scenicAssets[bgIndex];
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        // 1. World distinct base background image (CLEAR & VIBRANT)
+        // 1. Level distinct scenic background image
         Image(
-          image: AssetImage(world.backgroundAsset),
+          image: AssetImage(bgAsset),
           fit: BoxFit.cover,
           alignment: Alignment.topCenter,
           gaplessPlayback: true,
           errorBuilder: (context, error, stackTrace) {
-            return Container(color: const Color(0xFF0F0826));
+            return Container(color: world.cardGradientEnd);
           },
         ),
 

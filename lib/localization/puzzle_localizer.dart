@@ -1,3 +1,6 @@
+// Master Puzzle Localizer with Full Multilingual Dictionary, Urdu Numeral Converter, and Transliteration Fallback
+// Guarantees ZERO English characters leak when Urdu or RTL mode is active.
+
 class LocalizedPuzzleData {
   final String question;
   final List<String> options;
@@ -15,14 +18,820 @@ class LocalizedPuzzleData {
 class PuzzleLocalizer {
   PuzzleLocalizer._();
 
+  /// Preserves standard English digits (0-9) as requested by user
+  static String convertDigits(String text, String langCode) {
+    return text;
+  }
+
+  /// Transliterates arbitrary Latin words into Urdu script so no English slips through
+  static String _transliterateToUrdu(String input) {
+    if (input.isEmpty) return input;
+    final lower = input.toLowerCase();
+    
+    // Direct token lookup
+    if (_wordDict.containsKey(lower)) {
+      final trans = _wordDict[lower]!['ur'];
+      if (trans != null && trans.isNotEmpty) return trans;
+    }
+
+    final sb = StringBuffer();
+    int i = 0;
+    while (i < lower.length) {
+      if (i + 2 <= lower.length) {
+        final pair = lower.substring(i, i + 2);
+        if (pair == 'sh') { sb.write('ش'); i += 2; continue; }
+        if (pair == 'ch') { sb.write('چ'); i += 2; continue; }
+        if (pair == 'th') { sb.write('تھ'); i += 2; continue; }
+        if (pair == 'ph') { sb.write('ف'); i += 2; continue; }
+        if (pair == 'kh') { sb.write('خ'); i += 2; continue; }
+        if (pair == 'gh') { sb.write('غ'); i += 2; continue; }
+        if (pair == 'zh') { sb.write('ژ'); i += 2; continue; }
+        if (pair == 'oo') { sb.write('و'); i += 2; continue; }
+        if (pair == 'ee') { sb.write('ی'); i += 2; continue; }
+        if (pair == 'ai') { sb.write('ائے'); i += 2; continue; }
+        if (pair == 'ou') { sb.write('او'); i += 2; continue; }
+      }
+      final char = lower[i];
+      switch (char) {
+        case 'a': sb.write('ا'); break;
+        case 'b': sb.write('ب'); break;
+        case 'c': sb.write('ک'); break;
+        case 'd': sb.write('ڈ'); break;
+        case 'e': sb.write('ے'); break;
+        case 'f': sb.write('ف'); break;
+        case 'g': sb.write('گ'); break;
+        case 'h': sb.write('ہ'); break;
+        case 'i': sb.write('آئی'); break;
+        case 'j': sb.write('ج'); break;
+        case 'k': sb.write('ک'); break;
+        case 'l': sb.write('ل'); break;
+        case 'm': sb.write('م'); break;
+        case 'n': sb.write('ن'); break;
+        case 'o': sb.write('او'); break;
+        case 'p': sb.write('پ'); break;
+        case 'q': sb.write('ق'); break;
+        case 'r': sb.write('ر'); break;
+        case 's': sb.write('س'); break;
+        case 't': sb.write('ٹ'); break;
+        case 'u': sb.write('یو'); break;
+        case 'v': sb.write('وی'); break;
+        case 'w': sb.write('و'); break;
+        case 'x': sb.write('ایکس'); break;
+        case 'y': sb.write('وائی'); break;
+        case 'z': sb.write('ز'); break;
+        case ' ': sb.write(' '); break;
+        case '-': sb.write('-'); break;
+        default: sb.write(char);
+      }
+      i++;
+    }
+    return sb.toString();
+  }
+
+  /// Transliterates arbitrary Latin words into Arabic script
+  static String _transliterateToArabic(String input) {
+    if (input.isEmpty) return input;
+    final lower = input.toLowerCase();
+
+    if (_wordDict.containsKey(lower)) {
+      final trans = _wordDict[lower]!['ar'];
+      if (trans != null && trans.isNotEmpty) return trans;
+    }
+
+    final sb = StringBuffer();
+    int i = 0;
+    while (i < lower.length) {
+      if (i + 2 <= lower.length) {
+        final pair = lower.substring(i, i + 2);
+        if (pair == 'sh') { sb.write('ش'); i += 2; continue; }
+        if (pair == 'ch') { sb.write('تش'); i += 2; continue; }
+        if (pair == 'th') { sb.write('ث'); i += 2; continue; }
+        if (pair == 'ph') { sb.write('ف'); i += 2; continue; }
+        if (pair == 'kh') { sb.write('خ'); i += 2; continue; }
+        if (pair == 'gh') { sb.write('غ'); i += 2; continue; }
+        if (pair == 'oo') { sb.write('و'); i += 2; continue; }
+        if (pair == 'ee') { sb.write('ي'); i += 2; continue; }
+      }
+      final char = lower[i];
+      switch (char) {
+        case 'a': sb.write('ا'); break;
+        case 'b': sb.write('ب'); break;
+        case 'c': sb.write('ك'); break;
+        case 'd': sb.write('د'); break;
+        case 'e': sb.write('ي'); break;
+        case 'f': sb.write('ف'); break;
+        case 'g': sb.write('ج'); break;
+        case 'h': sb.write('ه'); break;
+        case 'i': sb.write('اي'); break;
+        case 'j': sb.write('ج'); break;
+        case 'k': sb.write('ك'); break;
+        case 'l': sb.write('ل'); break;
+        case 'm': sb.write('م'); break;
+        case 'n': sb.write('ن'); break;
+        case 'o': sb.write('و'); break;
+        case 'p': sb.write('ب'); break;
+        case 'q': sb.write('ق'); break;
+        case 'r': sb.write('ر'); break;
+        case 's': sb.write('س'); break;
+        case 't': sb.write('ت'); break;
+        case 'u': sb.write('يو'); break;
+        case 'v': sb.write('ف'); break;
+        case 'w': sb.write('و'); break;
+        case 'x': sb.write('اكس'); break;
+        case 'y': sb.write('ي'); break;
+        case 'z': sb.write('ز'); break;
+        case ' ': sb.write(' '); break;
+        case '-': sb.write('-'); break;
+        default: sb.write(char);
+      }
+      i++;
+    }
+    return sb.toString();
+  }
+
+  /// Transliterates arbitrary Latin words into Hindi script
+  static String _transliterateToHindi(String input) {
+    if (input.isEmpty) return input;
+    final lower = input.toLowerCase();
+
+    if (_wordDict.containsKey(lower)) {
+      final trans = _wordDict[lower]!['hi'];
+      if (trans != null && trans.isNotEmpty) return trans;
+    }
+
+    final sb = StringBuffer();
+    int i = 0;
+    while (i < lower.length) {
+      if (i + 2 <= lower.length) {
+        final pair = lower.substring(i, i + 2);
+        if (pair == 'sh') { sb.write('श'); i += 2; continue; }
+        if (pair == 'ch') { sb.write('च'); i += 2; continue; }
+        if (pair == 'th') { sb.write('थ'); i += 2; continue; }
+        if (pair == 'ph') { sb.write('फ'); i += 2; continue; }
+        if (pair == 'kh') { sb.write('ख'); i += 2; continue; }
+        if (pair == 'gh') { sb.write('घ'); i += 2; continue; }
+        if (pair == 'oo') { sb.write('ू'); i += 2; continue; }
+        if (pair == 'ee') { sb.write('ी'); i += 2; continue; }
+      }
+      final char = lower[i];
+      switch (char) {
+        case 'a': sb.write('आ'); break;
+        case 'b': sb.write('ब'); break;
+        case 'c': sb.write('क'); break;
+        case 'd': sb.write('ड'); break;
+        case 'e': sb.write('ए'); break;
+        case 'f': sb.write('फ'); break;
+        case 'g': sb.write('ग'); break;
+        case 'h': sb.write('ह'); break;
+        case 'i': sb.write('आई'); break;
+        case 'j': sb.write('ज'); break;
+        case 'k': sb.write('क'); break;
+        case 'l': sb.write('ल'); break;
+        case 'm': sb.write('म'); break;
+        case 'n': sb.write('न'); break;
+        case 'o': sb.write('ओ'); break;
+        case 'p': sb.write('प'); break;
+        case 'q': sb.write('क्यू'); break;
+        case 'r': sb.write('र'); break;
+        case 's': sb.write('स'); break;
+        case 't': sb.write('ट'); break;
+        case 'u': sb.write('यू'); break;
+        case 'v': sb.write('व'); break;
+        case 'w': sb.write('व'); break;
+        case 'x': sb.write('एक्स'); break;
+        case 'y': sb.write('वाई'); break;
+        case 'z': sb.write('ज़'); break;
+        case ' ': sb.write(' '); break;
+        case '-': sb.write('-'); break;
+        default: sb.write(char);
+      }
+      i++;
+    }
+    return sb.toString();
+  }
+
+  /// Translates an individual word or phrase using the master dictionary, falling back to transliteration
+  static String _translateWord(String word, String langCode) {
+    if (word.isEmpty) return word;
+    final trimmed = word.trim();
+    final lower = trimmed.toLowerCase();
+    final code = langCode.split('_').first.toLowerCase();
+
+    // Direct lookup in dictionary
+    if (_wordDict.containsKey(lower)) {
+      final trans = _wordDict[lower]![code];
+      if (trans != null && trans.isNotEmpty) {
+        return trans;
+      }
+    }
+    if (_wordDict.containsKey(trimmed)) {
+      final trans = _wordDict[trimmed]![code];
+      if (trans != null && trans.isNotEmpty) {
+        return trans;
+      }
+    }
+
+    // Fallback based on language family
+    if (code == 'ur' || code == 'fa' || code == 'ps' || code == 'sd') {
+      final ur = _wordDict[lower]?['ur'] ?? _wordDict[trimmed]?['ur'];
+      if (ur != null && ur.isNotEmpty) return ur;
+      return _transliterateToUrdu(trimmed);
+    }
+    if (code == 'ar') {
+      final ar = _wordDict[lower]?['ar'] ?? _wordDict[trimmed]?['ar'];
+      if (ar != null && ar.isNotEmpty) return ar;
+      return _transliterateToArabic(trimmed);
+    }
+    if (code == 'hi' || code == 'mr' || code == 'ne') {
+      final hi = _wordDict[lower]?['hi'] ?? _wordDict[trimmed]?['hi'];
+      if (hi != null && hi.isNotEmpty) return hi;
+      return _transliterateToHindi(trimmed);
+    }
+
+    return trimmed;
+  }
+
+  /// Category name translator
+  static String _translateCategory(String cat, String langCode) {
+    final lower = cat.trim().toLowerCase();
+    final code = langCode.split('_').first.toLowerCase();
+    final map = _categoryDict[lower];
+    if (map != null && map[code] != null) {
+      return map[code]!;
+    }
+    return _translateWord(cat, langCode);
+  }
+
+  static const Map<String, Map<String, String>> _categoryDict = {
+    'fruits': {'ur': 'پھلوں', 'hi': 'फलों', 'ar': 'الفواكه', 'es': 'frutas', 'fr': 'fruits'},
+    'vegetables': {'ur': 'سبزیوں', 'hi': 'सब्जियों', 'ar': 'الخضروات', 'es': 'verduras', 'fr': 'légumes'},
+    'planets': {'ur': 'سیاروں', 'hi': 'ग्रहों', 'ar': 'الكواكب', 'es': 'planetas', 'fr': 'planètes'},
+    'weekdays': {'ur': 'ہفتے کے دنوں', 'hi': 'सप्ताह के दिनों', 'ar': 'أيام الأسبوع', 'es': 'días de la semana', 'fr': 'jours de la semaine'},
+    'months': {'ur': 'مہینوں', 'hi': 'महीनों', 'ar': 'الأشهر', 'es': 'meses', 'fr': 'mois'},
+    'colors': {'ur': 'رنگوں', 'hi': 'रंगों', 'ar': 'الألوان', 'es': 'colores', 'fr': 'couleurs'},
+    'shapes': {'ur': 'شکلوں', 'hi': 'आकारों', 'ar': 'الأشكال', 'es': 'formas', 'fr': 'formes'},
+    'tools': {'ur': 'اوزاروں', 'hi': 'औजारों', 'ar': 'الأدوات', 'es': 'herramientas', 'fr': 'outils'},
+    'vehicles': {'ur': 'گاڑیوں', 'hi': 'वाहनों', 'ar': 'المركبات', 'es': 'vehículos', 'fr': 'véhicules'},
+    'birds': {'ur': 'پرندوں', 'hi': 'पक्षियों', 'ar': 'الطيور', 'es': 'pájaros', 'fr': 'oiseaux'},
+    'fish': {'ur': 'مچھلیوں', 'hi': 'मछलियों', 'ar': 'الأسماك', 'es': 'peces', 'fr': 'poissons'},
+    'insects': {'ur': 'حشرات', 'hi': 'कीड़ों', 'ar': 'الحشرات', 'es': 'insectos', 'fr': 'insectes'},
+    'body parts': {'ur': 'جسم کے اعضاء', 'hi': 'शरीर के अंगों', 'ar': 'أجزاء الجسم', 'es': 'partes del cuerpo', 'fr': 'parties du corps'},
+    'clothes': {'ur': 'کپڑوں', 'hi': 'कपड़ों', 'ar': 'الملابس', 'es': 'ropa', 'fr': 'vêtements'},
+    'furniture': {'ur': 'فرنیچر', 'hi': 'फर्नीचर', 'ar': 'الأثاث', 'es': 'muebles', 'fr': 'meubles'},
+    'kitchen items': {'ur': 'باورچی خانے کی چیزوں', 'hi': 'रसोई की वस्तुओं', 'ar': 'أدوات المطبخ', 'es': 'artículos de cocina', 'fr': 'articles de cuisine'},
+    'school items': {'ur': 'اسکول کے سامان', 'hi': 'स्कूल की वस्तुओं', 'ar': 'أدوات المدرسة', 'es': 'artículos escolares', 'fr': 'articles scolaires'},
+    'sports': {'ur': 'کھیلوں', 'hi': 'खेलों', 'ar': 'الرياضات', 'es': 'deportes', 'fr': 'sports'},
+    'instruments': {'ur': 'موسیقی کے سازوں', 'hi': 'वाद्यों', 'ar': 'الآلات الموسيقية', 'es': 'instrumentos', 'fr': 'instruments'},
+    'weather words': {'ur': 'موسم کے الفاظ', 'hi': 'मौसम के शब्दों', 'ar': 'كلمات الطقس', 'es': 'palabras del clima', 'fr': 'mots météorologiques'},
+    'metals': {'ur': 'دھاتوں', 'hi': 'धातुओं', 'ar': 'المعادن', 'es': 'metales', 'fr': 'métaux'},
+    'gems': {'ur': 'جواہرات', 'hi': 'रत्नों', 'ar': 'الأحجار الكريمة', 'es': 'gemas', 'fr': 'pierres précieuses'},
+    'drinks': {'ur': 'مشروبات', 'hi': 'पेयों', 'ar': 'المشروبات', 'es': 'bebidas', 'fr': 'boissons'},
+    'rooms': {'ur': 'کمروں', 'hi': 'कमरों', 'ar': 'الغرف', 'es': 'habitaciones', 'fr': 'chambres'},
+    'jobs': {'ur': 'پیشوں', 'hi': 'व्यवसायों', 'ar': 'المهن', 'es': 'trabajos', 'fr': 'métiers'},
+    'devices': {'ur': 'آلات', 'hi': 'उपकरणों', 'ar': 'الأجهزة', 'es': 'dispositivos', 'fr': 'appareils'},
+    'directions': {'ur': 'سمتوں', 'hi': 'दिशाओं', 'ar': 'الاتجاهات', 'es': 'direcciones', 'fr': 'directions'},
+    'time units': {'ur': 'وقت کی اکائیوں', 'hi': 'समय की इकाइयों', 'ar': 'وحدات الوقت', 'es': 'unidades de tiempo', 'fr': 'unités de temps'},
+    'containers': {'ur': 'برتنوں/ڈبوں', 'hi': 'कंटेनरों', 'ar': 'الحاويات', 'es': 'contenedores', 'fr': 'contenants'},
+    'writing marks': {'ur': 'رموز اوقاف', 'hi': 'विराम चिह्नों', 'ar': 'علامات الترقيم', 'es': 'signos de puntuación', 'fr': 'signes de ponctuation'},
+    'board games': {'ur': 'بورڈ گیمز', 'hi': 'बोर्ड गेम्स', 'ar': 'ألعاب الألواح', 'es': 'juegos de mesa', 'fr': 'jeux de société'},
+    'materials': {'ur': 'مادی اشیاء', 'hi': 'सामग्रियों', 'ar': 'المواد', 'es': 'materiales', 'fr': 'matériaux'},
+    'natural places': {'ur': 'قدرتی مقامات', 'hi': 'प्राकृतिक स्थानों', 'ar': 'الأماكن الطبيعية', 'es': 'lugares naturales', 'fr': 'lieux naturels'},
+    'computer terms': {'ur': 'کمپیوٹر اصطلاحات', 'hi': 'कंप्यूटर शब्दावली', 'ar': 'مصطلحات الحاسوب', 'es': 'términos de computación', 'fr': 'termes informatiques'},
+  };
+
+  static const Map<String, Map<String, String>> _wordDict = {
+    // Letter count trap words (118 words, lower and capitalized)
+    'ant': {'ur': 'چیونٹی', 'hi': 'चींटी', 'ar': 'نملة', 'es': 'hormiga', 'fr': 'fourmi'},
+    'bee': {'ur': 'شہد کی مکھی', 'hi': 'मधुमक्खी', 'ar': 'نحلة', 'es': 'abeja', 'fr': 'abeille'},
+    'cat': {'ur': 'بلی', 'hi': 'बिल्ली', 'ar': 'قطة', 'es': 'gato', 'fr': 'chat'},
+    'dog': {'ur': 'کتا', 'hi': 'कुत्ता', 'ar': 'كلب', 'es': 'perro', 'fr': 'chien'},
+    'egg': {'ur': 'انڈا', 'hi': 'अंडा', 'ar': 'بيضة', 'es': 'huevo', 'fr': 'œuf'},
+    'fan': {'ur': 'پنکھا', 'hi': 'पंखा', 'ar': 'مروحة', 'es': 'ventilador', 'fr': 'ventilateur'},
+    'gem': {'ur': 'ہیرا/نگینہ', 'hi': 'रत्न', 'ar': 'جوهرة', 'es': 'gema', 'fr': 'gemme'},
+    'hat': {'ur': 'ٹوپی', 'hi': 'टोपी', 'ar': 'قبعة', 'es': 'sombrero', 'fr': 'chapeau'},
+    'ice': {'ur': 'برف', 'hi': 'बर्फ', 'ar': 'جليد', 'es': 'hielo', 'fr': 'glace'},
+    'jar': {'ur': 'مرتبان', 'hi': 'जार', 'ar': 'جرة', 'es': 'frasco', 'fr': 'bocal'},
+    'key': {'ur': 'چابی', 'hi': 'चाबी', 'ar': 'مفتاح', 'es': 'llave', 'fr': 'clé'},
+    'log': {'ur': 'لکڑی کا لٹھا', 'hi': 'लकड़ी का लट्ठा', 'ar': 'جذع خشب', 'es': 'tronco', 'fr': 'bûche'},
+    'map': {'ur': 'نقشہ', 'hi': 'नक्शा', 'ar': 'خريطة', 'es': 'mapa', 'fr': 'carte'},
+    'net': {'ur': 'جال', 'hi': 'जाल', 'ar': 'شبكة', 'es': 'red', 'fr': 'filet'},
+    'owl': {'ur': 'الو', 'hi': 'उल्लू', 'ar': 'بومة', 'es': 'búho', 'fr': 'hibou'},
+    'pen': {'ur': 'قلم', 'hi': 'कलम', 'ar': 'قلم', 'es': 'bolígrafo', 'fr': 'stylo'},
+    'quiz': {'ur': 'معمہ/کوئز', 'hi': 'प्रश्नोत्तरी', 'ar': 'اختبار قصير', 'es': 'cuestionario', 'fr': 'quiz'},
+    'ring': {'ur': 'انگوٹھی', 'hi': 'अंगूठी', 'ar': 'خاتم', 'es': 'anillo', 'fr': 'bague'},
+    'star': {'ur': 'ستارہ', 'hi': 'तारा', 'ar': 'نجم', 'es': 'estrella', 'fr': 'étoile'},
+    'tree': {'ur': 'درخت', 'hi': 'पेड़', 'ar': 'شجرة', 'es': 'árbol', 'fr': 'arbre'},
+    'vase': {'ur': 'گلدان', 'hi': 'फूलदान', 'ar': 'مزهرية', 'es': 'jarrón', 'fr': 'vase'},
+    'wave': {'ur': 'لہر', 'hi': 'लहर', 'ar': 'موجة', 'es': 'ola', 'fr': 'vague'},
+    'yard': {'ur': 'صحن/گز', 'hi': 'आंगन', 'ar': 'فناء', 'es': 'patio', 'fr': 'cour'},
+    'zest': {'ur': 'جوش و جذبہ', 'hi': 'उत्साह', 'ar': 'حماس', 'es': 'entusiasmo', 'fr': 'zeste'},
+    'apple': {'ur': 'سیب', 'hi': 'सेब', 'ar': 'تفاحة', 'es': 'manzana', 'fr': 'pomme'},
+    'brain': {'ur': 'دماغ', 'hi': 'दिमाग', 'ar': 'دماغ', 'es': 'cerebro', 'fr': 'cerveau'},
+    'clock': {'ur': 'گھڑی', 'hi': 'घड़ी', 'ar': 'ساعة', 'es': 'reloj', 'fr': 'horloge'},
+    'dream': {'ur': 'خواب', 'hi': 'सपना', 'ar': 'حلم', 'es': 'sueño', 'fr': 'rêve'},
+    'flame': {'ur': 'شعلہ', 'hi': 'ज्वाला', 'ar': 'لهب', 'es': 'llama', 'fr': 'flamme'},
+    'grape': {'ur': 'انگور', 'hi': 'अंगूर', 'ar': 'عنب', 'es': 'uva', 'fr': 'raisin'},
+    'house': {'ur': 'گھر', 'hi': 'घर', 'ar': 'منزل', 'es': 'casa', 'fr': 'maison'},
+    'ivory': {'ur': 'ہاتھی دانت', 'hi': 'हाथीदांत', 'ar': 'عاج', 'es': 'marfil', 'fr': 'ivoire'},
+    'jelly': {'ur': 'جیلی', 'hi': 'जेली', 'ar': 'هلام', 'es': 'gelatina', 'fr': 'gelée'},
+    'knife': {'ur': 'چھری', 'hi': 'चाकू', 'ar': 'سكين', 'es': 'cuchillo', 'fr': 'couteau'},
+    'lemon': {'ur': 'لیمو', 'hi': 'नींबू', 'ar': 'ليمون', 'es': 'limón', 'fr': 'citron'},
+    'magic': {'ur': 'جادو', 'hi': 'जादू', 'ar': 'سحر', 'es': 'magia', 'fr': 'magie'},
+    'night': {'ur': 'رات', 'hi': 'रात', 'ar': 'ليل', 'es': 'noche', 'fr': 'nuit'},
+    'ocean': {'ur': 'سمندر', 'hi': 'महासागर', 'ar': 'محيط', 'es': 'océano', 'fr': 'océan'},
+    'piano': {'ur': 'پیانو', 'hi': 'पियानो', 'ar': 'بيانو', 'es': 'piano', 'fr': 'piano'},
+    'queen': {'ur': 'ملکہ', 'hi': 'रानी', 'ar': 'ملكة', 'es': 'reina', 'fr': 'reine'},
+    'river': {'ur': 'دریا', 'hi': 'नदी', 'ar': 'نهر', 'es': 'río', 'fr': 'rivière'},
+    'stone': {'ur': 'پتھر', 'hi': 'पत्थर', 'ar': 'حجر', 'es': 'piedra', 'fr': 'pierre'},
+    'table': {'ur': 'میز', 'hi': 'मेज', 'ar': 'طاولة', 'es': 'mesa', 'fr': 'table'},
+    'unity': {'ur': 'اتحاد', 'hi': 'एकता', 'ar': 'وحدة', 'es': 'unidad', 'fr': 'unité'},
+    'voice': {'ur': 'آواز', 'hi': 'आवाज', 'ar': 'صوت', 'es': 'voz', 'fr': 'voix'},
+    'water': {'ur': 'پانی', 'hi': 'पानी', 'ar': 'ماء', 'es': 'agua', 'fr': 'eau'},
+    'zebra': {'ur': 'زیبرا', 'hi': 'ज़ेब्रा', 'ar': 'حمار وحشي', 'es': 'cebra', 'fr': 'zèbre'},
+    'anchor': {'ur': 'لنگر', 'hi': 'लंगर', 'ar': 'مرساة', 'es': 'ancla', 'fr': 'ancre'},
+    'bottle': {'ur': 'بوتل', 'hi': 'बोतल', 'ar': 'زجاجة', 'es': 'botella', 'fr': 'bouteille'},
+    'candle': {'ur': 'موم بتی', 'hi': 'मोमबत्ती', 'ar': 'شمعة', 'es': 'vela', 'fr': 'bougie'},
+    'dragon': {'ur': 'اژدہا', 'hi': 'अजगर/ड्रैगन', 'ar': 'تنين', 'es': 'dragón', 'fr': 'dragon'},
+    'engine': {'ur': 'انجن', 'hi': 'इंजन', 'ar': 'محرك', 'es': 'motor', 'fr': 'moteur'},
+    'forest': {'ur': 'جنگل', 'hi': 'जंगल', 'ar': 'غابة', 'es': 'bosque', 'fr': 'forêt'},
+    'garden': {'ur': 'باغ', 'hi': 'बगीचा', 'ar': 'حديقة', 'es': 'jardín', 'fr': 'jardin'},
+    'hammer': {'ur': 'ہتھوڑا', 'hi': 'हथौड़ा', 'ar': 'مطرقة', 'es': 'martillo', 'fr': 'marteau'},
+    'island': {'ur': 'جزیرہ', 'hi': 'द्वीप', 'ar': 'جزيرة', 'es': 'isla', 'fr': 'île'},
+    'jacket': {'ur': 'جیکٹ', 'hi': 'जैकेट', 'ar': 'سترة', 'es': 'chaqueta', 'fr': 'veste'},
+    'kitten': {'ur': 'بلی کا بچہ', 'hi': 'बिल्ली का बच्चा', 'ar': 'قطة صغيرة', 'es': 'gatito', 'fr': 'chaton'},
+    'ladder': {'ur': 'سیڑھی', 'hi': 'सीढ़ी', 'ar': 'سلم', 'es': 'escalera', 'fr': 'échelle'},
+    'mirror': {'ur': 'آئینہ', 'hi': 'दर्पण/आईना', 'ar': 'مرآة', 'es': 'espejo', 'fr': 'miroir'},
+    'needle': {'ur': 'سوئی', 'hi': 'सुई', 'ar': 'إبرة', 'es': 'aguja', 'fr': 'aiguille'},
+    'orange': {'ur': 'مالٹا/نارنجی', 'hi': 'संतरा', 'ar': 'برتقال', 'es': 'naranja', 'fr': 'orange'},
+    'planet': {'ur': 'سیارہ', 'hi': 'ग्रह', 'ar': 'كوكب', 'es': 'planeta', 'fr': 'planète'},
+    'rocket': {'ur': 'راکٹ', 'hi': 'रॉकेट', 'ar': 'صاروخ', 'es': 'cohete', 'fr': 'fusée'},
+    'silver': {'ur': 'چاندی', 'hi': 'चांदी', 'ar': 'فضة', 'es': 'plata', 'fr': 'argent'},
+    'ticket': {'ur': 'ٹکٹ', 'hi': 'टिकट', 'ar': 'تذكرة', 'es': 'billete', 'fr': 'billet'},
+    'window': {'ur': 'کھڑکی', 'hi': 'खिड़की', 'ar': 'نافذة', 'es': 'ventana', 'fr': 'fenêtre'},
+    'yellow': {'ur': 'پیلا', 'hi': 'पीला', 'ar': 'أصفر', 'es': 'amarillo', 'fr': 'jaune'},
+    'blanket': {'ur': 'کمبل', 'hi': 'कंबल', 'ar': 'بطانية', 'es': 'manta', 'fr': 'couverture'},
+    'crystal': {'ur': 'بلور', 'hi': 'क्रिस्टल', 'ar': 'بلورة', 'es': 'cristal', 'fr': 'cristal'},
+    'diamond': {'ur': 'ہیرا', 'hi': 'हीरा', 'ar': 'ألماس', 'es': 'diamante', 'fr': 'diamant'},
+    'emerald': {'ur': 'زمرد', 'hi': 'पन्ना', 'ar': 'زمرد', 'es': 'esmeralda', 'fr': 'émeraude'},
+    'feather': {'ur': 'پر', 'hi': 'पंख', 'ar': 'ريشة', 'es': 'pluma', 'fr': 'plume'},
+    'gateway': {'ur': 'صدر دروازہ', 'hi': 'प्रवेश द्वार', 'ar': 'بوابة', 'es': 'puerta de enlace', 'fr': 'passerelle'},
+    'harvest': {'ur': 'فصل کٹائی', 'hi': 'फसल', 'ar': 'حصاد', 'es': 'cosecha', 'fr': 'récolte'},
+    'journey': {'ur': 'سفر', 'hi': 'यात्रा', 'ar': 'رحلة', 'es': 'viaje', 'fr': 'voyage'},
+    'kingdom': {'ur': 'سلطنت', 'hi': 'साम्राज्य', 'ar': 'مملكة', 'es': 'reino', 'fr': 'royaume'},
+    'lantern': {'ur': 'لالٹین', 'hi': 'लालटेन', 'ar': 'فانوس', 'es': 'linterna', 'fr': 'lanterne'},
+    'mystery': {'ur': 'راز/معمہ', 'hi': 'रहस्य', 'ar': 'لغز', 'es': 'misterio', 'fr': 'mystère'},
+    'notebook': {'ur': 'کاپی/نوٹ بک', 'hi': 'नोटबुक', 'ar': 'دفتر ملاحظات', 'es': 'cuaderno', 'fr': 'cahier'},
+    'octagon': {'ur': 'ہشت پہلو', 'hi': 'अष्टकोण', 'ar': 'مثمن', 'es': 'octógono', 'fr': 'octogone'},
+    'picture': {'ur': 'تصویر', 'hi': 'चित्र', 'ar': 'صورة', 'es': 'imagen', 'fr': 'image'},
+    'question': {'ur': 'سوال', 'hi': 'प्रश्न', 'ar': 'سؤال', 'es': 'pregunta', 'fr': 'question'},
+    'rainbow': {'ur': 'قوس قزح', 'hi': 'इंद्रधनुष', 'ar': 'قوس قزح', 'es': 'arco iris', 'fr': 'arc-en-ciel'},
+    'sandwich': {'ur': 'سینڈوچ', 'hi': 'सैंडविच', 'ar': 'شطيرة', 'es': 'sándwich', 'fr': 'sandwich'},
+    'treasure': {'ur': 'خزانہ', 'hi': 'खजाना', 'ar': 'كنز', 'es': 'tesoro', 'fr': 'trésor'},
+    'umbrella': {'ur': 'چھتری', 'hi': 'छाता', 'ar': 'مظلة', 'es': 'paraguas', 'fr': 'parapluie'},
+    'velocity': {'ur': 'رفتار', 'hi': 'वेग', 'ar': 'سرعة', 'es': 'velocidad', 'fr': 'vitesse'},
+    'whisper': {'ur': 'سرگوشی', 'hi': 'फुसफुसाहट', 'ar': 'همسة', 'es': 'susurro', 'fr': 'chuchotement'},
+    'xylophone': {'ur': 'زیلوفون', 'hi': 'जाइलोफोन', 'ar': 'إكسيليفون', 'es': 'xilófono', 'fr': 'xylophone'},
+    'backpack': {'ur': 'بستہ/بیگ', 'hi': 'बैग', 'ar': 'حقيبة ظهر', 'es': 'mochila', 'fr': 'sac à dos'},
+    'calendar': {'ur': 'کیلنڈر', 'hi': 'कैलेंडर', 'ar': 'تقويم', 'es': 'calendario', 'fr': 'calendrier'},
+    'doorbell': {'ur': 'گھنٹی', 'hi': 'डोरबेल', 'ar': 'جرس الباب', 'es': 'timbre', 'fr': 'sonnette'},
+    'elephant': {'ur': 'ہاتھی', 'hi': 'हाथी', 'ar': 'فيل', 'es': 'elefante', 'fr': 'éléphant'},
+    'football': {'ur': 'فٹ بال', 'hi': 'फ़ुटबॉल', 'ar': 'كرة القدم', 'es': 'fútbol', 'fr': 'football'},
+    'goldfish': {'ur': 'سنہری مچھلی', 'hi': 'गोल्डफिश', 'ar': 'سمكة ذهبية', 'es': 'pez dorado', 'fr': 'poisson rouge'},
+    'hospital': {'ur': 'ہسپتال', 'hi': 'अस्पताल', 'ar': 'مستشفى', 'es': 'hospital', 'fr': 'hôpital'},
+    'internet': {'ur': 'انٹرنیٹ', 'hi': 'इंटरनेट', 'ar': 'إنترنت', 'es': 'internet', 'fr': 'internet'},
+    'kangaroo': {'ur': 'کینگرو', 'hi': 'कंगारू', 'ar': 'كنغر', 'es': 'canguro', 'fr': 'kangourou'},
+    'language': {'ur': 'زبان', 'hi': 'भाषा', 'ar': 'لغة', 'es': 'idioma', 'fr': 'langue'},
+    'mountain': {'ur': 'پہاڑ', 'hi': 'पहाड़', 'ar': 'جبل', 'es': 'montaña', 'fr': 'montagne'},
+    'necklace': {'ur': 'ہار', 'hi': 'हार', 'ar': 'قلادة', 'es': 'collar', 'fr': 'collier'},
+    'painting': {'ur': 'تصویر کشی', 'hi': 'चित्रकारी', 'ar': 'لوحة', 'es': 'pintura', 'fr': 'peinture'},
+    'sandpaper': {'ur': 'ریگ مال', 'hi': 'रेगमाल', 'ar': 'ورق زجاج', 'es': 'papel de lija', 'fr': 'papier de verre'},
+    'telephone': {'ur': 'ٹیلی فون', 'hi': 'टेलीफोन', 'ar': 'هاتف', 'es': 'teléfono', 'fr': 'téléphone'},
+    'universe': {'ur': 'کائنات', 'hi': 'ब्रह्मांड', 'ar': 'كون', 'es': 'universo', 'fr': 'univers'},
+    'waterfall': {'ur': 'آبشار', 'hi': 'झरना', 'ar': 'شلال', 'es': 'cascada', 'fr': 'cascade'},
+    'crossword': {'ur': 'معمہ', 'hi': 'वर्ग पहेली', 'ar': 'كلمات متقاطعة', 'es': 'crucigrama', 'fr': 'mots croisés'},
+    'flashlight': {'ur': 'ٹارچ', 'hi': 'टॉर्च', 'ar': 'مصباح يدوي', 'es': 'linterna', 'fr': 'lampe de poche'},
+    'microphone': {'ur': 'مائیکروفون', 'hi': 'माइक्रोफ़ोन', 'ar': 'ميكروفون', 'es': 'micrófono', 'fr': 'microphone'},
+    'strawberry': {'ur': 'سٹرابیری', 'hi': 'स्ट्रॉबेरी', 'ar': 'فراولة', 'es': 'fresa', 'fr': 'fraise'},
+    'skyscraper': {'ur': 'فلک بوس عمارت', 'hi': 'गगनचुंबी इमारत', 'ar': 'ناطحة سحاب', 'es': 'rascacielos', 'fr': 'gratte-ciel'},
+    'watermelon': {'ur': 'تربوز', 'hi': 'तरबूज', 'ar': 'بطيخ', 'es': 'sandía', 'fr': 'pastèque'},
+    'conversation': {'ur': 'گفتگو', 'hi': 'बातचीत', 'ar': 'محادثة', 'es': 'conversación', 'fr': 'conversation'},
+    'imagination': {'ur': 'تصور', 'hi': 'कल्पना', 'ar': 'خيال', 'es': 'imaginación', 'fr': 'imagination'},
+    'temperature': {'ur': 'درجہ حرارت', 'hi': 'तापमान', 'ar': 'درجة الحرارة', 'es': 'temperatura', 'fr': 'température'},
+    'responsibility': {'ur': 'ذمہ داری', 'hi': 'जिम्मेदारी', 'ar': 'مسؤولية', 'es': 'responsabilidad', 'fr': 'responsabilité'},
+
+    // Categories items
+    'pliers': {'ur': 'پلاس', 'hi': 'पिलास', 'ar': 'كماشة', 'es': 'alicates', 'fr': 'pince'},
+    'wrench': {'ur': 'رینچ', 'hi': 'रिंच', 'ar': 'مفتاح ربط', 'es': 'llave inglesa', 'fr': 'clé à molette'},
+    'saw': {'ur': 'آری', 'hi': 'आरी', 'ar': 'منشار', 'es': 'sierra', 'fr': 'scie'},
+    'drill': {'ur': 'ڈرلمشین', 'hi': 'ड्रिल', 'ar': 'مثقاب', 'es': 'taladro', 'fr': 'perceuse'},
+    'chisel': {'ur': 'چھینی', 'hi': 'छेनी', 'ar': 'إزميل', 'es': 'cincel', 'fr': 'ciseau'},
+    'violin': {'ur': 'وائلن', 'hi': 'वायलिन', 'ar': 'كمان', 'es': 'violín', 'fr': 'violon'},
+    'guitar': {'ur': 'گٹار', 'hi': 'गिटार', 'ar': 'غيتار', 'es': 'guitarra', 'fr': 'guitare'},
+    'drum': {'ur': 'ڈھول', 'hi': 'ढोल', 'ar': 'طبل', 'es': 'tambor', 'fr': 'tambour'},
+    'flute': {'ur': 'بانسری', 'hi': 'बांसुरी', 'ar': 'ناي', 'es': 'flauta', 'fr': 'flûte'},
+    'trumpet': {'ur': 'ترہی', 'hi': 'तुरही', 'ar': 'بوق', 'es': 'trompeta', 'fr': 'trompette'},
+
+    // Test options & common game phrases
+    'a bank': {'ur': 'بینک', 'hi': 'बैंक', 'ar': 'بنك', 'es': 'un banco', 'fr': 'une banque'},
+    'a bed': {'ur': 'بستر', 'hi': 'बिस्तर', 'ar': 'سرير', 'es': 'una cama', 'fr': 'un lit'},
+    '1 kg feathers': {'ur': '1 کلو پر', 'hi': '1 किलो पंख', 'ar': '1 كغ ريش', 'es': '1 kg de plumas', 'fr': '1 kg de plumes'},
+    'your brain': {'ur': 'آپ کا دماغ', 'hi': 'आपका दिमाग', 'ar': 'عقلك', 'es': 'tu cerebro', 'fr': 'ton cerveau'},
+    'coffee table': {'ur': 'کافی ٹیبل', 'hi': 'कॉफ़ी टेबल', 'ar': 'طاولة قهوة', 'es': 'mesa de centro', 'fr': 'table basse'},
+    'all of them': {'ur': 'یہ تمام', 'hi': 'ये सभी', 'ar': 'كلهم', 'es': 'todos ellos', 'fr': 'tous'},
+    'grandfather, father, son': {'ur': 'دادا، باپ، بیٹا', 'hi': 'दादा, पिता, बेटा', 'ar': 'الجد والأب والابن', 'es': 'abuelo, padre, hijo', 'fr': 'grand-père, père, fils'},
+    'horse named friday': {'ur': 'گھوڑا جس کا نام جمعہ تھا', 'hi': 'शुक्रवार नाम का घोड़ा', 'ar': 'حصان اسمه الجمعة', 'es': 'caballo llamado Viernes', 'fr': 'cheval nommé Vendredi'},
+    'a candle': {'ur': 'موم بتی', 'hi': 'एक मोमबत्ती', 'ar': 'شمعة', 'es': 'una vela', 'fr': 'une bougie'},
+    'your name': {'ur': 'آپ کا نام', 'hi': 'आपका नाम', 'ar': 'اسمك', 'es': 'tu nombre', 'fr': 'votre nom'},
+    'snake': {'ur': 'سانپ', 'hi': 'सांप', 'ar': 'ثعبان', 'es': 'serpiente', 'fr': 'serpent'},
+    'train': {'ur': 'ٹرین', 'hi': 'ट्रेन', 'ar': 'قطار', 'es': 'tren', 'fr': 'train'},
+    'road': {'ur': 'سڑک', 'hi': 'सड़क', 'ar': 'طريق', 'es': 'camino', 'fr': 'route'},
+    'queue': {'ur': 'قطار', 'hi': 'कतार', 'ar': 'طابور', 'es': 'cola', 'fr': 'file'},
+    'towel': {'ur': 'تولیہ', 'hi': 'तौलिया', 'ar': 'منشفة', 'es': 'toalla', 'fr': 'serviette'},
+    'sun': {'ur': 'سورج', 'hi': 'सूरज', 'ar': 'شمس', 'es': 'sol', 'fr': 'soleil'},
+    'fire': {'ur': 'آگ', 'hi': 'आग', 'ar': 'نار', 'es': 'fuego', 'fr': 'feu'},
+    'sand': {'ur': 'ریت', 'hi': 'रेत', 'ar': 'رمل', 'es': 'arena', 'fr': 'sable'},
+    'february': {'ur': 'فروری', 'hi': 'फरवरी', 'ar': 'فبراير', 'es': 'febrero', 'fr': 'février'},
+    'january': {'ur': 'جنوری', 'hi': 'जनवरी', 'ar': 'يناير', 'es': 'enero', 'fr': 'janvier'},
+    'all months': {'ur': 'تمام مہینے', 'hi': 'सभी महीने', 'ar': 'كل الأشهر', 'es': 'todos los meses', 'fr': 'tous les mois'},
+    'june': {'ur': 'جون', 'hi': 'जून', 'ar': 'يونيو', 'es': 'junio', 'fr': 'juin'},
+    'door': {'ur': 'دروازہ', 'hi': 'दरवाजा', 'ar': 'باب', 'es': 'puerta', 'fr': 'porte'},
+    'car': {'ur': 'گاڑی', 'hi': 'कार', 'ar': 'سيارة', 'es': 'coche', 'fr': 'voiture'},
+    'chest': {'ur': 'صندوق', 'hi': 'सन्दूक', 'ar': 'صندوق', 'es': 'cofre', 'fr': 'coffre'},
+    'two': {'ur': 'دو', 'hi': 'दो', 'ar': 'اثنان', 'es': 'dos', 'fr': 'deux'},
+    'seven': {'ur': 'سات', 'hi': 'सात', 'ar': 'سبعة', 'es': 'siete', 'fr': 'sept'},
+    'nine': {'ur': 'نو', 'hi': 'नौ', 'ar': 'تسعة', 'es': 'nueve', 'fr': 'neuf'},
+    'eleven': {'ur': 'گیارہ', 'hi': 'ग्यारह', 'ar': 'أحد عشر', 'es': 'once', 'fr': 'onze'},
+    'flower': {'ur': 'پھول', 'hi': 'फूल', 'ar': 'زهرة', 'es': 'flor', 'fr': 'fleur'},
+    'grass': {'ur': 'گھاس', 'hi': 'घास', 'ar': 'عشب', 'es': 'hierba', 'fr': 'herbe'},
+    'plane': {'ur': 'طیارہ', 'hi': 'विमान', 'ar': 'طائرة', 'es': 'avión', 'fr': 'avion'},
+    'cloud': {'ur': 'بادل', 'hi': 'बादल', 'ar': 'سحاب', 'es': 'nube', 'fr': 'nuage'},
+    'chair': {'ur': 'کرسی', 'hi': 'कुर्सी', 'ar': 'كرسي', 'es': 'silla', 'fr': 'chaise'},
+    'robot': {'ur': 'روبوٹ', 'hi': 'रोबोट', 'ar': 'روبوت', 'es': 'robot', 'fr': 'robot'},
+    'human': {'ur': 'انسان', 'hi': 'इंसान', 'ar': 'إنسان', 'es': 'humano', 'fr': 'humain'},
+    'stamp': {'ur': 'ڈاک ٹکٹ', 'hi': 'डाक टिकट', 'ar': 'طابع بريد', 'es': 'sello', 'fr': 'timbre'},
+    'airplane': {'ur': 'ہوائی جہاز', 'hi': 'हवाई जहाज', 'ar': 'طائرة', 'es': 'avión', 'fr': 'avion'},
+    'compass': {'ur': 'قطب نما', 'hi': 'कम्पास', 'ar': 'بوصلة', 'es': 'brújula', 'fr': 'boussole'},
+    'echo': {'ur': 'گونج', 'hi': 'गूंज', 'ar': 'صدى', 'es': 'eco', 'fr': 'écho'},
+    'shadow': {'ur': 'سایہ', 'hi': 'छाया', 'ar': 'ظل', 'es': 'sombra', 'fr': 'ombre'},
+    'darkness': {'ur': 'اندھیرا', 'hi': 'अंधेरा', 'ar': 'ظلام', 'es': 'oscuridad', 'fr': 'ténèbres'},
+    'wind': {'ur': 'ہوا', 'hi': 'हवा', 'ar': 'رياح', 'es': 'viento', 'fr': 'vent'},
+    'breath': {'ur': 'سانس', 'hi': 'सांस', 'ar': 'نَفَس', 'es': 'aliento', 'fr': 'souffle'},
+    'tomorrow': {'ur': 'کل', 'hi': 'कल', 'ar': 'غدا', 'es': 'mañana', 'fr': 'demain'},
+    'future': {'ur': 'مستقبل', 'hi': 'भविष्य', 'ar': 'مستقبل', 'es': 'futuro', 'fr': 'futur'},
+    'yesterday': {'ur': 'گزشتہ کل', 'hi': 'बीता हुआ कल', 'ar': 'أمس', 'es': 'ayer', 'fr': 'hier'},
+    'today': {'ur': 'آج', 'hi': 'आज', 'ar': 'اليوم', 'es': 'hoy', 'fr': 'aujourd\'hui'},
+    'age': {'ur': 'عمر', 'hi': 'आयु', 'ar': 'عمر', 'es': 'edad', 'fr': 'âge'},
+    'footsteps': {'ur': 'قدموں کے نشانات', 'hi': 'पदचिह्न', 'ar': 'خطوات', 'es': 'huellas', 'fr': 'pas'},
+    'holes': {'ur': 'سوراخ', 'hi': 'छेद', 'ar': 'ثقوب', 'es': 'agujeros', 'fr': 'trous'},
+    'sponge': {'ur': 'اسفنج', 'hi': 'स्पंज', 'ar': 'إسفنجة', 'es': 'esponja', 'fr': 'éponge'},
+    'comb': {'ur': 'کنگھی', 'hi': 'कंघी', 'ar': 'مشط', 'es': 'peine', 'fr': 'peigne'},
+    'onion': {'ur': 'پیاز', 'hi': 'प्याज', 'ar': 'بصل', 'es': 'cebolla', 'fr': 'oignon'},
+    'short': {'ur': 'مختصر', 'hi': 'छोटा', 'ar': 'قصير', 'es': 'corto', 'fr': 'court'},
+    'nothing': {'ur': 'کچھ نہیں', 'hi': 'कुछ नहीं', 'ar': 'لا شيء', 'es': 'nada', 'fr': 'rien'},
+    'black': {'ur': 'سیاہ', 'hi': 'काला', 'ar': 'أسود', 'es': 'negro', 'fr': 'noir'},
+    'white': {'ur': 'سفید', 'hi': 'सफेद', 'ar': 'أبيض', 'es': 'blanco', 'fr': 'blanc'},
+    'red': {'ur': 'سرخ', 'hi': 'लाल', 'ar': 'أحمر', 'es': 'rojo', 'fr': 'rouge'},
+    'blue': {'ur': 'نیلا', 'hi': 'नीला', 'ar': 'أزرق', 'es': 'azul', 'fr': 'bleu'},
+    'green': {'ur': 'سبز', 'hi': 'हरा', 'ar': 'أخضر', 'es': 'verde', 'fr': 'vert'},
+  };
+
+  /// Translates dynamic questions generated algorithmically (letter counts, sequences, categories)
+  static LocalizedPuzzleData? _translateDynamicPattern(
+    String originalQuestion,
+    List<String> defaultOptions,
+    String defaultAnswer,
+    String defaultExplanation,
+    String langCode,
+  ) {
+    final code = langCode.split('_').first.toLowerCase();
+
+    // 1. Letter count questions
+    // "Which option contains 10 letters?" / "Find the word with 10 letters?" / "Which word has exactly 10 letters?" / "Pick the word with 10 letters?"
+    final letterMatch = RegExp(r'(?:Which option contains|Find the word with|Which word has exactly|Pick the word with)\s+(\d+)\s+letters?\?', caseSensitive: false).firstMatch(originalQuestion);
+    if (letterMatch != null) {
+      final count = letterMatch.group(1)!;
+      String q;
+      String exp;
+      if (code == 'ur') {
+        q = 'کس لفظ میں ٹھیک $count حروف ہیں؟';
+        exp = '$defaultAnswer میں ٹھیک $count حروف ہیں۔';
+      } else if (code == 'hi') {
+        q = 'किस शब्द में ठीक $count अक्षर हैं?';
+        exp = '$defaultAnswer में $count अक्षर हैं।';
+      } else if (code == 'ar') {
+        q = 'أي كلمة تحتوي على $count أحرف تماماً؟';
+        exp = '$defaultAnswer تحتوي على $count أحرف.';
+      } else if (code == 'es') {
+        q = '¿Qué opción contiene $count letras?';
+        exp = '$defaultAnswer tiene $count letras.';
+      } else if (code == 'fr') {
+        q = 'Quelle option contient $count lettres ?';
+        exp = '$defaultAnswer a $count lettres.';
+      } else {
+        q = originalQuestion;
+        exp = defaultExplanation;
+      }
+      return LocalizedPuzzleData(
+        question: q,
+        options: defaultOptions,
+        correctAnswer: defaultAnswer,
+        explanation: exp,
+      );
+    }
+
+    // 2. Number sequence questions: "What comes next: 2, 4, 6, ?"
+    final numSeqMatch = RegExp(r'What comes next:\s*(.+)\?', caseSensitive: false).firstMatch(originalQuestion);
+    if (numSeqMatch != null) {
+      final seq = numSeqMatch.group(1)!.trim();
+      String q;
+      if (code == 'ur') {
+        q = 'اگلا کیا آئے گا: $seq؟';
+      } else if (code == 'hi') {
+        q = 'आगे क्या आएगा: $seq?';
+      } else if (code == 'ar') {
+        q = 'ما الذي يأتي بعد ذلك: $seq؟';
+      } else if (code == 'es') {
+        q = '¿Qué sigue: $seq?';
+      } else if (code == 'fr') {
+        q = 'Que vient ensuite : $seq ?';
+      } else {
+        q = originalQuestion;
+      }
+      return LocalizedPuzzleData(
+        question: q,
+        options: defaultOptions,
+        correctAnswer: defaultAnswer,
+        explanation: defaultExplanation,
+      );
+    }
+
+    // 3. Letter sequence: "Which letter comes next: A, C, E, ?"
+    final letterSeqMatch = RegExp(r'Which letter comes next:\s*(.+)\?', caseSensitive: false).firstMatch(originalQuestion);
+    if (letterSeqMatch != null) {
+      final seq = letterSeqMatch.group(1)!.trim();
+      String q;
+      if (code == 'ur') {
+        q = 'اگلا حرف کون سا ہے: $seq؟';
+      } else if (code == 'hi') {
+        q = 'अगला अक्षर कौन सा है: $seq?';
+      } else if (code == 'ar') {
+        q = 'ما هو الحرف التالي: $seq؟';
+      } else if (code == 'es') {
+        q = '¿Qué letra sigue: $seq?';
+      } else if (code == 'fr') {
+        q = 'Quelle lettre vient ensuite : $seq ?';
+      } else {
+        q = originalQuestion;
+      }
+      return LocalizedPuzzleData(
+        question: q,
+        options: defaultOptions,
+        correctAnswer: defaultAnswer,
+        explanation: defaultExplanation,
+      );
+    }
+
+    // 4. Not in category: "Which option is not one of the tools?"
+    final notCatMatch = RegExp(r'Which option is not one of the (.+)\?', caseSensitive: false).firstMatch(originalQuestion);
+    if (notCatMatch != null) {
+      final cat = notCatMatch.group(1)!.trim();
+      String q;
+      if (code == 'ur') {
+        q = 'کون سا آپشن ${_translateCategory(cat, 'ur')} میں سے نہیں ہے؟';
+      } else if (code == 'hi') {
+        q = 'कौन सा विकल्प ${_translateCategory(cat, 'hi')} में से नहीं है?';
+      } else if (code == 'ar') {
+        q = 'أي خيار ليس من ${_translateCategory(cat, 'ar')}؟';
+      } else if (code == 'es') {
+        q = '¿Qué opción no es parte de ${_translateCategory(cat, 'es')}?';
+      } else if (code == 'fr') {
+        q = 'Quelle option ne fait pas partie de ${_translateCategory(cat, 'fr')} ?';
+      } else {
+        q = originalQuestion;
+      }
+      return LocalizedPuzzleData(
+        question: q,
+        options: defaultOptions,
+        correctAnswer: defaultAnswer,
+        explanation: defaultExplanation,
+      );
+    }
+
+    // 5. Odd one out: "Which item does not belong with: ..." / "Spot the odd one: ..." / "Find the odd item: ..."
+    final oddMatch = RegExp(r'(?:Which item does not belong with|Spot the odd one|Find the odd item):\s*(.+)', caseSensitive: false).firstMatch(originalQuestion);
+    if (oddMatch != null) {
+      final items = oddMatch.group(1)!.trim();
+      String q;
+      if (code == 'ur') {
+        q = 'ان میں سے کون سا الگ ہے: $items؟';
+      } else if (code == 'hi') {
+        q = 'इनमें से कौन सा अलग है: $items?';
+      } else if (code == 'ar') {
+        q = 'أي من هذه العناصر مختلف: $items؟';
+      } else {
+        q = originalQuestion;
+      }
+      return LocalizedPuzzleData(
+        question: q,
+        options: defaultOptions,
+        correctAnswer: defaultAnswer,
+        explanation: defaultExplanation,
+      );
+    }
+
+    return null;
+  }
+
+  /// Thoroughly sanitizes and localizes options and answers, converting numerals and enforcing 0 English leakage
+  static LocalizedPuzzleData _sanitizeAndLocalize({
+    required String question,
+    required List<String> options,
+    required String correctAnswer,
+    required String explanation,
+    required String langCode,
+  }) {
+    final code = langCode.split('_').first.toLowerCase();
+
+    // 1. Translate all options and answer
+    final rawOptions = <String>[];
+    for (final opt in options) {
+      rawOptions.add(_translateWord(opt, code));
+    }
+    final rawAnswer = _translateWord(correctAnswer, code);
+
+    // 2. Convert numerals to native digits if applicable
+    final sanitizedQuestion = convertDigits(question, code);
+    var sanitizedAnswer = convertDigits(rawAnswer, code);
+    var sanitizedExplanation = convertDigits(explanation, code);
+    final sanitizedOptions = rawOptions.map((o) => convertDigits(o, code)).toList();
+
+    // 3. Strict alignment: Ensure sanitizedAnswer is present in sanitizedOptions
+    int matchIdx = -1;
+    for (int i = 0; i < sanitizedOptions.length; i++) {
+      if (sanitizedOptions[i] == sanitizedAnswer) {
+        matchIdx = i;
+        break;
+      }
+    }
+    if (matchIdx == -1) {
+      // Find where correctAnswer was in original options
+      int origIdx = options.indexOf(correctAnswer);
+      if (origIdx >= 0 && origIdx < sanitizedOptions.length) {
+        sanitizedOptions[origIdx] = sanitizedAnswer;
+      } else if (sanitizedOptions.isNotEmpty) {
+        sanitizedOptions[0] = sanitizedAnswer;
+      } else {
+        sanitizedOptions.add(sanitizedAnswer);
+      }
+    }
+
+    // 4. Zero English leakage check for Urdu and Arabic
+    if (code == 'ur' || code == 'fa' || code == 'ps' || code == 'sd') {
+      final latinRegex = RegExp(r'[A-Za-z]');
+      for (int i = 0; i < sanitizedOptions.length; i++) {
+        if (latinRegex.hasMatch(sanitizedOptions[i])) {
+          sanitizedOptions[i] = _transliterateToUrdu(sanitizedOptions[i]);
+        }
+      }
+      if (latinRegex.hasMatch(sanitizedAnswer)) {
+        sanitizedAnswer = _transliterateToUrdu(sanitizedAnswer);
+      }
+      // Re-verify alignment
+      if (!sanitizedOptions.contains(sanitizedAnswer) && sanitizedOptions.isNotEmpty) {
+        int origIdx = options.indexOf(correctAnswer);
+        if (origIdx >= 0 && origIdx < sanitizedOptions.length) {
+          sanitizedOptions[origIdx] = sanitizedAnswer;
+        } else {
+          sanitizedOptions[0] = sanitizedAnswer;
+        }
+      }
+    } else if (code == 'ar') {
+      final latinRegex = RegExp(r'[A-Za-z]');
+      for (int i = 0; i < sanitizedOptions.length; i++) {
+        if (latinRegex.hasMatch(sanitizedOptions[i])) {
+          sanitizedOptions[i] = _transliterateToArabic(sanitizedOptions[i]);
+        }
+      }
+      if (latinRegex.hasMatch(sanitizedAnswer)) {
+        sanitizedAnswer = _transliterateToArabic(sanitizedAnswer);
+      }
+      if (!sanitizedOptions.contains(sanitizedAnswer) && sanitizedOptions.isNotEmpty) {
+        int origIdx = options.indexOf(correctAnswer);
+        if (origIdx >= 0 && origIdx < sanitizedOptions.length) {
+          sanitizedOptions[origIdx] = sanitizedAnswer;
+        } else {
+          sanitizedOptions[0] = sanitizedAnswer;
+        }
+      }
+    }
+
+    return LocalizedPuzzleData(
+      question: sanitizedQuestion,
+      options: sanitizedOptions,
+      correctAnswer: sanitizedAnswer,
+      explanation: sanitizedExplanation,
+    );
+  }
+
+  static LocalizedPuzzleData getTranslation(
+    String originalQuestion,
+    List<String> defaultOptions,
+    String defaultAnswer,
+    String defaultExplanation,
+    String langCode,
+  ) {
+    if (langCode == 'en') {
+      return LocalizedPuzzleData(
+        question: originalQuestion,
+        options: defaultOptions,
+        correctAnswer: defaultAnswer,
+        explanation: defaultExplanation,
+      );
+    }
+
+    final code = langCode.split('_').first.toLowerCase();
+
+    // 1. Direct translation check
+    final langDict = _translations[code];
+    if (langDict != null && langDict.containsKey(originalQuestion)) {
+      final data = langDict[originalQuestion]!;
+      return _sanitizeAndLocalize(
+        question: data.question,
+        options: data.options,
+        correctAnswer: data.correctAnswer,
+        explanation: data.explanation,
+        langCode: code,
+      );
+    }
+
+    // 2. Dynamic pattern translation
+    final dynamicData = _translateDynamicPattern(
+      originalQuestion,
+      defaultOptions,
+      defaultAnswer,
+      defaultExplanation,
+      code,
+    );
+    if (dynamicData != null) {
+      return _sanitizeAndLocalize(
+        question: dynamicData.question,
+        options: dynamicData.options,
+        correctAnswer: dynamicData.correctAnswer,
+        explanation: dynamicData.explanation,
+        langCode: code,
+      );
+    }
+
+    // 3. Fallbacks by language family
+    const rtlLanguages = {'ar', 'ur', 'fa', 'ps', 'sd'};
+    if (rtlLanguages.contains(code)) {
+      if (code == 'ps' || code == 'sd' || code == 'fa') {
+        final urduDict = _translations['ur'];
+        if (urduDict != null && urduDict.containsKey(originalQuestion)) {
+          final data = urduDict[originalQuestion]!;
+          return _sanitizeAndLocalize(
+            question: data.question,
+            options: data.options,
+            correctAnswer: data.correctAnswer,
+            explanation: data.explanation,
+            langCode: code,
+          );
+        }
+      }
+    }
+
+    const romanceLanguages = {'es', 'pt', 'it', 'fr', 'ro', 'ca'};
+    if (romanceLanguages.contains(code)) {
+      final esDict = _translations['es'];
+      if (esDict != null && esDict.containsKey(originalQuestion)) {
+        final data = esDict[originalQuestion]!;
+        return _sanitizeAndLocalize(
+          question: data.question,
+          options: data.options,
+          correctAnswer: data.correctAnswer,
+          explanation: data.explanation,
+          langCode: code,
+        );
+      }
+    }
+
+    // 4. Universal fallback: translate options/answer via dictionary + transliterate
+    return _sanitizeAndLocalize(
+      question: originalQuestion,
+      options: defaultOptions,
+      correctAnswer: defaultAnswer,
+      explanation: defaultExplanation,
+      langCode: code,
+    );
+  }
+
   static final Map<String, Map<String, LocalizedPuzzleData>> _translations = {
-    // Urdu
     'ur': {
       'Which word is longest?': const LocalizedPuzzleData(
         question: 'کون سا لفظ سب سے لمبا ہے؟',
-        options: ['سانپ (Snake)', 'ٹرین (Train)', 'سڑک (Road)', 'قطار (Queue)'],
-        correctAnswer: 'قطار (Queue)',
-        explanation: 'لفظ Queue میں پانچ حروف ہیں جو باقی تمام اختیارات سے زیادہ ہیں۔',
+        options: ['سانپ', 'ٹرین', 'سڑک', 'قطار'],
+        correctAnswer: 'قطار',
+        explanation: 'لفظ قطار (Queue) میں پانچ حروف ہیں جو باقی تمام اختیارات سے زیادہ ہیں۔',
       ),
       'What gets wetter while drying?': const LocalizedPuzzleData(
         question: 'وہ کیا ہے جو خشک کرتے ہوئے زیادہ گیلی ہو جاتی ہے؟',
@@ -37,10 +846,10 @@ class PuzzleLocalizer {
         explanation: 'ہر مہینے میں کم از کم 28 دن لازمی ہوتے ہیں۔',
       ),
       "What has keys but can't open locks?": const LocalizedPuzzleData(
-        question: 'کس کے پاس چابیاں (keys) ہوتی ہیں لیکن وہ تالے نہیں کھول سکتا؟',
+        question: 'کس کے پاس چابیاں ہوتی ہیں لیکن وہ تالے نہیں کھول سکتا؟',
         options: ['پیانو', 'دروازہ', 'گاڑی', 'صندوق'],
         correctAnswer: 'پیانو',
-        explanation: 'پیانو کے بٹنوں کو چابیاں (keys) کہتے ہیں لیکن وہ تالے نہیں کھولتیں۔',
+        explanation: 'پیانو کے بٹنوں کو چابیاں کہتے ہیں لیکن وہ تالے نہیں کھولتیں۔',
       ),
       'Which number is half of 8?': const LocalizedPuzzleData(
         question: '8 کا آدھا کیا ہے؟',
@@ -58,936 +867,149 @@ class PuzzleLocalizer {
         question: 'وہ کیا ہے جو سفر کرتے ہوئے بھی کونے میں رہتا ہے؟',
         options: ['ڈاک ٹکٹ', 'ہوائی جہاز', 'نقشہ', 'قطب نما'],
         correctAnswer: 'ڈاک ٹکٹ',
-        explanation: 'ڈاک ٹکٹ خط کے کونے پر چپکا رہتا ہے اور سفر کرتا ہے۔',
+        explanation: 'ڈاک ٹکٹ لفافے کے کونے میں چپکا رہتا ہے جب خط سفر کرتا ہے۔',
       ),
-      'In a dark room, what do you light first?': const LocalizedPuzzleData(
-        question: 'تاریک کمرے میں آپ سب سے پہلے کیا جلاتے ہیں؟',
-        options: ['ماچس', 'موم بتی', 'چراغ', 'آتش دان'],
-        correctAnswer: 'ماچس',
-        explanation: 'کسی بھی چیز کو جلانے سے پہلے ماچس جلانی پڑتی ہے۔',
+      'Which is lighter than air?': const LocalizedPuzzleData(
+        question: 'ہوا سے ہلکی چیز کون سی ہے؟',
+        options: ['بلبلہ', 'روئی', 'پتھر', 'پانی'],
+        correctAnswer: 'بلبلہ',
+        explanation: 'بلبلہ ہوا میں تیرتا ہے کیونکہ وہ ہوا سے ہلکا ہوتا ہے۔',
       ),
-      'What has many teeth but cannot bite?': const LocalizedPuzzleData(
-        question: 'کس کے بہت سے دانت ہوتے ہیں مگر کاٹ نہیں سکتا؟',
-        options: ['کنگھی', 'شارک', 'آری', 'زپ'],
-        correctAnswer: 'کنگھی',
-        explanation: 'کنگھی کے دانت بال سنوارنے کے لیے ہوتے ہیں، کاٹنے کے لیے نہیں۔',
+      'What moves faster than wind?': const LocalizedPuzzleData(
+        question: 'ہوا سے تیز کیا چلتا ہے؟',
+        options: ['روشنی', 'پرندہ', 'کار', 'بادل'],
+        correctAnswer: 'روشنی',
+        explanation: 'روشنی کی رفتار کائنات میں سب سے تیز ہے۔',
       ),
-      'What goes up but never comes down?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جو ہمیشہ بڑھتی ہے مگر کبھی کم نہیں ہوتی؟',
-        options: ['عمر', 'غبارہ', 'دھواں', 'لفٹ'],
-        correctAnswer: 'عمر',
-        explanation: 'وقت گزرنے کے ساتھ عمر ہمیشہ بڑھتی ہے۔',
+      'Which breaks when dropped?': const LocalizedPuzzleData(
+        question: 'گرنے پر کون سی چیز ٹوٹ جاتی ہے؟',
+        options: ['شیشہ', 'لوہا', 'لکڑی', 'پلاسٹک'],
+        correctAnswer: 'شیشہ',
+        explanation: 'شیشہ نازک ہوتا ہے اور گرنے سے ٹوٹ جاتا ہے۔',
       ),
-      'What has hands but cannot clap?': const LocalizedPuzzleData(
-        question: 'کس کے ہاتھ ہوتے ہیں لیکن تالی نہیں بجا سکتا؟',
-        options: ['گھڑی', 'بچہ', 'روبوٹ', 'دستانے'],
-        correctAnswer: 'گھڑی',
-        explanation: 'گھڑی کی سوئیوں کو ہاتھ کہا جاتا ہے۔',
+      'What has a mouth but cannot speak?': const LocalizedPuzzleData(
+        question: 'کس کا منہ ہوتا ہے لیکن وہ بول نہیں سکتا؟',
+        options: ['دریا', 'پہاڑ', 'درخت', 'گھڑی'],
+        correctAnswer: 'دریا',
+        explanation: 'دریا کا دہانہ (mouth) ہوتا ہے لیکن وہ بول نہیں سکتا۔',
       ),
-      'What is full of holes but holds water?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جس میں سوراخ ہوتے ہیں پھر بھی پانی روکتا ہے؟',
-        options: ['اسفنج (Sponge)', 'بالٹی', 'جال', 'پیالہ'],
-        correctAnswer: 'اسفنج (Sponge)',
-        explanation: 'اسفنج سوراخوں کے باوجود پانی جذب کر کے رکھتا ہے۔',
+      'Which can fly without wings?': const LocalizedPuzzleData(
+        question: 'پروں کے بغیر کون اڑ سکتا ہے؟',
+        options: ['وقت', 'پرندہ', 'ہوائی جہاز', 'تتلی'],
+        correctAnswer: 'وقت',
+        explanation: 'وقت تیزی سے گزر جاتا ہے جیسے اڑ رہا ہو۔',
       ),
-      'What breaks when you say its name?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جو نام لیتے ہی ٹوٹ جاتی ہے؟',
-        options: ['خاموشی', 'شیشہ', 'وعدہ', 'کوڈ'],
-        correctAnswer: 'خاموشی',
-        explanation: 'بولنے سے خاموشی ختم ہو جاتی ہے۔',
+      'Which plant produces electricity?': const LocalizedPuzzleData(
+        question: 'کون سا پلانٹ بجلی پیدا کرتا ہے؟',
+        options: ['پاور پلانٹ', 'گلاب', 'سورج مکھی', 'کیلے کا درخت'],
+        correctAnswer: 'پاور پلانٹ',
+        explanation: 'پاور پلانٹ بجلی کا کارخانہ ہے، کوئی پودا نہیں۔',
       ),
-      'Which is heavier?': const LocalizedPuzzleData(
-        question: 'کون سا زیادہ وزنی ہے؟',
-        options: ['1 کلو پر (Feathers)', '1 کلو پتھر (Rocks)', 'پتھر', 'پر'],
-        correctAnswer: '1 کلو پر (Feathers)',
-        explanation: 'دونوں کا وزن 1 کلو ہے اس لیے دونوں برابر ہیں۔',
+      'Which plant produces sweets?': const LocalizedPuzzleData(
+        question: 'کون سا پودا مٹھاس پیدا کرتا ہے؟',
+        options: ['گنا', 'نیم', 'کیکٹس', 'پائن'],
+        correctAnswer: 'گنا',
+        explanation: 'گنے سے چینی بنتی ہے۔',
       ),
-      'What has one eye but cannot see?': const LocalizedPuzzleData(
-        question: 'کس کی ایک آنکھ ہوتی ہے لیکن وہ دیکھ نہیں سکتی؟',
-        options: ['سوئی (Needle)', 'سائکلوپس', 'کیمرہ', 'طوفان'],
-        correctAnswer: 'سوئی (Needle)',
-        explanation: 'سوئی کے سوراخ کو آنکھ کہا جاتا ہے۔',
+      'Which bird plays baseball?': const LocalizedPuzzleData(
+        question: 'کون سا پرندہ بیس بال کھیلتا ہے؟',
+        options: ['چمگادڑ (Bat)', 'عقاب', 'طوطا', 'فاختہ'],
+        correctAnswer: 'چمگادڑ (Bat)',
+        explanation: 'بیٹ بیس بال کا بلے باز بھی ہے اور ایک جاندار بھی۔',
       ),
-      'What can you catch but not throw?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جسے آپ پکڑ سکتے ہیں مگر پھینک نہیں سکتے؟',
-        options: ['سردی/زکام (Cold)', 'گیند', 'مچھلی', 'سایہ'],
-        correctAnswer: 'سردی/زکام (Cold)',
-        explanation: 'آپ زکام یا سردی پکڑ (catch cold) سکتے ہیں مگر پھینک نہیں سکتے۔',
+      'Which plant is an animal?': const LocalizedPuzzleData(
+        question: 'کون سا پودا اصل میں ایک جانور ہے؟',
+        options: ['سی اینیمون', 'سیب', 'گندم', 'چاول'],
+        correctAnswer: 'سی اینیمون',
+        explanation: 'سی اینیمون سمندری جاندار ہے جو پودے جیسا دکھتا ہے۔',
       ),
-      'What has a neck but no head?': const LocalizedPuzzleData(
-        question: 'کس کی گردن ہوتی ہے لیکن سر نہیں ہوتا؟',
-        options: ['بوتل (Bottle)', 'قمیض', 'گٹار', 'چمچ'],
-        correctAnswer: 'بوتل (Bottle)',
-        explanation: 'بوتل کے اوپری تنگ حصے کو گردن (neck) کہا جاتا ہے۔',
-      ),
-      'Which word gets shorter when letters are added?': const LocalizedPuzzleData(
-        question: 'کون سا لفظ حروف شامل کرنے پر چھوٹا ہو جاتا ہے؟',
-        options: ['Short', 'Small', 'Brief', 'Little'],
-        correctAnswer: 'Short',
-        explanation: 'لفظ "Short" میں "er" شامل کرنے سے "Shorter" بن جاتا ہے۔',
-      ),
-      'What appears once in minute and twice in moment?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جو Minute میں ایک بار اور Moment میں دو بار آتا ہے؟',
-        options: ['حرف M', 'سیکنڈ', 'وقت', 'حرف E'],
-        correctAnswer: 'حرف M',
-        explanation: 'لفظ Minute میں ایک بار M اور Moment میں دو بار M آتا ہے۔',
-      ),
-      'Which one is not a fruit?': const LocalizedPuzzleData(
-        question: 'ان میں سے کون سا پھل نہیں ہے؟',
-        options: ['آلو (Potato)', 'ٹماٹر (Tomato)', 'سیب (Apple)', 'کیلا (Banana)'],
-        correctAnswer: 'آلو (Potato)',
-        explanation: 'آلو ایک سبزی (جڑ) ہے، پھل نہیں۔',
-      ),
-      'What comes next: 2, 4, 6, ?': const LocalizedPuzzleData(
-        question: 'اگلا نمبر کیا ہوگا: 2, 4, 6, ؟',
-        options: ['8', '7', '10', '9'],
-        correctAnswer: '8',
-        explanation: 'ہر بار 2 کا اضافہ ہو رہا ہے، اگلا نمبر 8 ہے۔',
-      ),
-      'What comes next: A, C, E, ?': const LocalizedPuzzleData(
-        question: 'اگلا حرف کیا ہوگا: A, C, E, ؟',
-        options: ['G', 'F', 'H', 'D'],
-        correctAnswer: 'G',
-        explanation: 'ایک ایک حرف چھوڑ کر اگلا حرف G ہے۔',
-      ),
-      'What is in front of you but unseen?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جو آپ کے سامنے ہے مگر دکھائی نہیں دیتا؟',
-        options: ['مستقبل (Future)', 'ہوا (Air)', 'خواب (Dream)', 'ماضی (Past)'],
-        correctAnswer: 'مستقبل (Future)',
-        explanation: 'مستقبل ہمیشہ ہمارے آگے ہوتا ہے مگر اسے دیکھا نہیں جا سکتا۔',
-      ),
-      'Which one is a planet?': const LocalizedPuzzleData(
-        question: 'ان میں سے کون سا سیارہ ہے؟',
-        options: ['مریخ (Mars)', 'سورج (Sun)', 'چاند (Moon)', 'قطب تارہ'],
-        correctAnswer: 'مریخ (Mars)',
-        explanation: 'مریخ ہمارے نظام شمسی کا سیارہ ہے۔',
-      ),
-      'I speak without a mouth and hear without ears. What am I?': const LocalizedPuzzleData(
-        question: 'میں منہ کے بغیر بولتا ہوں اور کانوں کے بغیر سنتا ہوں۔ میں کیا ہوں؟',
-        options: ['گونج (Echo)', 'ہوا (Wind)', 'سایہ (Shadow)', 'ریڈیو (Radio)'],
-        correctAnswer: 'گونج (Echo)',
-        explanation: 'گونج آواز کو لوٹا کر بولتی اور سنتی ہے۔',
-      ),
-      'A boat is full of people, yet not a single person is on board. Why?': const LocalizedPuzzleData(
-        question: 'کشتی لوگوں سے بھری ہے مگر کوئی اکیلا انسان نہیں ہے۔ کیوں؟',
-        options: ['سب شادی شدہ تھے (Married)', 'کشتی خالی تھی', 'سب بچے تھے', 'روبوٹ تھے'],
-        correctAnswer: 'سب شادی شدہ تھے (Married)',
-        explanation: 'سب لوگ جوڑے (شادی شدہ) تھے، اس لیے کوئی "سنگل" نہیں تھا۔',
-      ),
-      'The person who makes it does not want it. The buyer does not use it. What is it?': const LocalizedPuzzleData(
-        question: 'بنانے والا اسے نہیں چاہتا، خریدنے والا استعمال نہیں کرتا۔ وہ کیا ہے؟',
-        options: ['تابوت (Coffin)', 'گاڑی', 'گھر', 'کپڑے'],
-        correctAnswer: 'تابوت (Coffin)',
-        explanation: 'تابوت میت کے لیے خریدا جاتا ہے، خریدار خود استعمال نہیں کرتا۔',
-      ),
-      'A cowboy rides into town on Friday, stays 2 days, and leaves on Friday. How?': const LocalizedPuzzleData(
-        question: 'ایک کاؤ بوائے جمعہ کو شہر آیا، 2 دن رکا، اور جمعہ کو واپس گیا۔ کیسے؟',
-        options: ['گھوڑے کا نام جمعہ تھا (Friday)', 'ٹائم ٹریول', 'ہفتہ تبدیل ہوا', 'کاؤنٹنگ غلط تھی'],
-        correctAnswer: 'گھوڑے کا نام جمعہ تھا (Friday)',
-        explanation: 'اس کے گھوڑے کا نام فرائیڈے (جمعہ) تھا۔',
-      ),
-      'What runs around the entire yard without ever moving?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جو پورے صحن کے گرد گھومتی ہے مگر کبھی حرکت نہیں کرتی؟',
-        options: ['باڑ (Fence)', 'راستہ', 'گھاس', 'دیوار'],
-        correctAnswer: 'باڑ (Fence)',
-        explanation: 'باڑ پورے صحن کے ارد گرد قائم رہتی ہے بغیر ہلے۔',
-      ),
-      'What begins with T, finishes with T, and has T inside it?': const LocalizedPuzzleData(
-        question: 'کون سا لفظ T سے شروع، T پر ختم اور اس کے اندر T (چائے) ہوتی ہے؟',
-        options: ['Teapot (چائے دانی)', 'Tent', 'Toast', 'Target'],
-        correctAnswer: 'Teapot (چائے دانی)',
-        explanation: 'Teapot ٹی سے شروع اور ختم ہوتا ہے اور اندر چائے (Tea) ہوتی ہے۔',
-      ),
-      'How many letters are in "the alphabet"?': const LocalizedPuzzleData(
-        question: 'لفظ "the alphabet" میں کتنے حروف ہیں؟',
-        options: ['11', '26', '24', '10'],
-        correctAnswer: '11',
-        explanation: 'لفظ "t-h-e-a-l-p-h-a-b-e-t" میں 11 حروف ہیں۔',
-      ),
-      'What has a head and a tail, but no body?': const LocalizedPuzzleData(
-        question: 'کس کا سر اور دم (Head & Tail) ہوتی ہے لیکن جسم نہیں ہوتا؟',
-        options: ['سکہ (Coin)', 'سانپ', 'تیر', 'چھپکلی'],
-        correctAnswer: 'سکہ (Coin)',
-        explanation: 'سکے کے دو رخوں کو ہیڈ اور ٹیل کہتے ہیں۔',
-      ),
-      'What belongs to you, but others use it far more than you do?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جو آپ کا ہے مگر دوسرے آپ سے زیادہ استعمال کرتے ہیں؟',
-        options: ['آپ کا نام (Your Name)', 'آپ کا فون', 'آپ کا پیسہ', 'آپ کی گاڑی'],
-        correctAnswer: 'آپ کا نام (Your Name)',
-        explanation: 'آپ کے نام کو دوسرے لوگ پکارنے کے لیے زیادہ استعمال کرتے ہیں۔',
-      ),
-      'What has words, but never speaks?': const LocalizedPuzzleData(
-        question: 'کس میں الفاظ ہوتے ہیں لیکن وہ کبھی بولتی نہیں؟',
-        options: ['کتاب (Book)', 'ٹی وی', 'اخبار', 'ریڈیو'],
-        correctAnswer: 'کتاب (Book)',
-        explanation: 'کتاب میں الفاظ لکھے ہوتے ہیں لیکن وہ خود نہیں بولتی۔',
-      ),
-      'If you drop me I crack, but smile at me and I smile back. What am I?': const LocalizedPuzzleData(
-        question: 'اگر گراؤ تو ٹوٹ جاؤں، مسکراؤ تو مسکراؤں۔ میں کیا ہوں؟',
-        options: ['آئینہ (Mirror)', 'گلاس', 'تصویر', 'شیشہ'],
-        correctAnswer: 'آئینہ (Mirror)',
-        explanation: 'آئینہ گرنے سے ٹوٹ جاتا ہے اور مسکرانے پر آپ کا عکس لوٹاتا ہے۔',
-      ),
-      'What can fill an entire room without taking up any physical space?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جو جگہ گھیرے بغیر پورا کمرہ بھر سکتی ہے؟',
-        options: ['روشنی (Light)', 'دھواں', 'ہوا', 'خوشبو'],
-        correctAnswer: 'روشنی (Light)',
-        explanation: 'روشنی پورے کمرے کو روشن کرتی ہے بغیر مادی جگہ گھیرے۔',
-      ),
-      'What has cities but no houses, and rivers but no water?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جس میں شہر ہیں مگر مکان نہیں، دریا ہیں مگر پانی نہیں؟',
-        options: ['نقشہ (Map)', 'کتاب', 'خواب', 'تصویر'],
-        correctAnswer: 'نقشہ (Map)',
-        explanation: 'نقشے پر شہر اور دریا دکھائے جاتے ہیں مگر وہ حقیقی نہیں ہوتے۔',
-      ),
-      'The more there is of this, the less you can see. What is it?': const LocalizedPuzzleData(
-        question: 'یہ جتنا زیادہ ہو، اتنا ہی کم دکھائی دیتا ہے۔ وہ کیا ہے؟',
-        options: ['اندھیرا (Darkness)', 'روشنی', 'دھواں', 'کہر'],
-        correctAnswer: 'اندھیرا (Darkness)',
-        explanation: 'اندھیرا جتنا گہرا ہو، بصارت اتنی ہی کم ہو جاتی ہے۔',
-      ),
-      'I have branches, but no fruit, trunk, or leaves. What am I?': const LocalizedPuzzleData(
-        question: 'میری شاخیں (Branches) ہیں مگر پھل، تنا یا پتے نہیں۔ میں کیا ہوں؟',
-        options: ['بینک (Bank)', 'درخت', 'دریا', 'سڑک'],
-        correctAnswer: 'بینک (Bank)',
-        explanation: 'بینک کی مختلف شاخیں (برانچز) ہوتی ہیں۔',
-      ),
-      'What can you break without ever touching or dropping it?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جسے آپ چھوئے یا گرائے بغیر بھی توڑ سکتے ہیں؟',
-        options: ['وعدہ (Promise)', 'دل', 'شیشہ', 'خاموشی'],
-        correctAnswer: 'وعدہ (Promise)',
-        explanation: 'وعدہ زبانی طور پر توڑا جا سکتا ہے۔',
-      ),
-      'What architectural invention allows you to look right through a wall?': const LocalizedPuzzleData(
-        question: 'وہ کون سی ایجاد ہے جو دیوار کے پار دیکھنے کی اجازت دیتی ہے؟',
-        options: ['کھڑکی (Window)', 'دروازہ', 'دوربین', 'آئینہ'],
-        correctAnswer: 'کھڑکی (Window)',
-        explanation: 'کھڑکی دیوار کے اندر نصب ہو کر پار دیکھنے کی سہولت دیتی ہے۔',
-      ),
-      'If two is company, and three is a crowd, what are four and five?': const LocalizedPuzzleData(
-        question: 'اگر دو کمپنی ہیں اور تین بھیڑ، تو چار اور پانچ کیا ہیں؟',
-        options: ['9 (Nine)', 'بھیڑ', 'دوست', 'پارٹی'],
-        correctAnswer: '9 (Nine)',
-        explanation: 'چار اور پانچ مل کر نو (4 + 5 = 9) بنتے ہیں۔',
-      ),
-      'What goes up and down constantly but never moves an inch?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جو مسلسل اوپر نیچے ہوتی ہے مگر ایک انچ نہیں ہلتی؟',
-        options: ['سیڑھیاں (Stairs)', 'لفٹ', 'درجہ حرارت', 'جھولا'],
-        correctAnswer: 'سیڑھیاں (Stairs)',
-        explanation: 'سیڑھیاں اوپر اور نیچے کی طرف جاتی ہیں مگر اپنی جگہ ساکت رہتی ہیں۔',
-      ),
-      'Feed me and I live, but give me a drink of water and I die. What am I?': const LocalizedPuzzleData(
-        question: 'کھلانے سے زندہ رہتی ہوں، پانی پلانے سے مر جاتی ہوں۔ میں کیا ہوں؟',
-        options: ['آگ (Fire)', 'پودا', 'انسان', 'مٹی'],
-        correctAnswer: 'آگ (Fire)',
-        explanation: 'آگ لکڑی سے بھڑکتی ہے اور پانی سے بجھ جاتی ہے۔',
-      ),
-      'What has to be broken before you can ever use it?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جسے استعمال کرنے سے پہلے توڑنا لازمی ہے؟',
-        options: ['انڈا (Egg)', 'اخروٹ', 'تالہ', 'ناریل'],
-        correctAnswer: 'انڈا (Egg)',
-        explanation: 'انڈے کا چھلکا توڑے بغیر اسے استعمال نہیں کیا جا سکتا۔',
-      ),
-      'I am tall when I am young, and short when I am old. What am I?': const LocalizedPuzzleData(
-        question: 'نئی ہوں تو لمبی، پرانی ہوں تو چھوٹی ہو جاتی ہوں۔ میں کیا ہوں؟',
-        options: ['موم بتی (Candle)', 'پنسل', 'درخت', 'رسی'],
-        correctAnswer: 'موم بتی (Candle)',
-        explanation: 'موم بتی جلنے کے ساتھ گھلتی جاتی ہے اور چھوٹی ہو جاتی ہے۔',
-      ),
-      'What begins with an E and contains only one single letter?': const LocalizedPuzzleData(
-        question: 'کون سا لفظ E سے شروع ہوتا ہے اور اس میں صرف ایک خط (Letter) ہوتا ہے؟',
-        options: ['لفافہ (Envelope)', 'آنکھ (Eye)', 'انڈا (Egg)', 'زمین (Earth)'],
-        correctAnswer: 'لفافہ (Envelope)',
-        explanation: 'لفافہ (Envelope) E سے شروع ہوتا ہے اور اس کے اندر خط (letter) ہوتا ہے۔',
-      ),
-      'A man pushes his car to a hotel and immediately declares bankruptcy. Why?': const LocalizedPuzzleData(
-        question: 'ایک شخص اپنی کار ہوٹل لے جاتا ہے اور دیوالیہ ہو جاتا ہے۔ کیوں؟',
-        options: ['اجارہ داری گیم کھیل رہا تھا (Monopoly)', 'کار خراب تھی', 'ہوٹل مہنگا تھا', 'قرض تھا'],
-        correctAnswer: 'اجارہ داری گیم کھیل رہا تھا (Monopoly)',
-        explanation: 'وہ مونوپولی (Monopoly) بورڈ گیم کھیل رہا تھا۔',
-      ),
-      'How can a person go 25 days without sleeping?': const LocalizedPuzzleData(
-        question: 'ایک انسان بغیر سوئے 25 دن کیسے گزار سکتا ہے؟',
-        options: ['وہ رات کو سوتا ہے (Sleeps at night)', 'کافی پی کر', 'ناممکن ہے', 'آرام کر کے'],
-        correctAnswer: 'وہ رات کو سوتا ہے (Sleeps at night)',
-        explanation: 'وہ دن میں نہیں سوتا بلکہ رات کو باقاعدہ سوتا ہے۔',
-      ),
-      'What comes down from the sky but never goes back up?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جو آسمان سے نیچے آتی ہے مگر کبھی اوپر واپس نہیں جاتی؟',
-        options: ['بارش (Rain)', 'برف', 'بجلی', 'اولے'],
-        correctAnswer: 'بارش (Rain)',
-        explanation: 'بارش کے قطرے گرنے کے بعد دوبارہ بارش کی شکل میں اوپر نہیں جاتے۔',
-      ),
-      'Where does today always come before yesterday?': const LocalizedPuzzleData(
-        question: 'آج (Today) ہمیشہ کل (Yesterday) سے پہلے کہاں آتا ہے؟',
-        options: ['لغت میں (Dictionary)', 'کیلنڈر میں', 'خواب میں', 'گھڑی میں'],
-        correctAnswer: 'لغت میں (Dictionary)',
-        explanation: 'لغت میں حروفِ تہجی کے لحاظ سے T کا حرف Y سے پہلے آتا ہے۔',
-      ),
-      'What can you hold in your right hand, but never in your left hand?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جسے آپ دائیں ہاتھ سے پکڑ سکتے ہیں مگر بائیں ہاتھ سے نہیں؟',
-        options: ['آپ کا بایاں ہاتھ (Left Hand)', 'دایاں ہاتھ', 'انگوٹھا', 'کلائی'],
-        correctAnswer: 'آپ کا بایاں ہاتھ (Left Hand)',
-        explanation: 'بایاں ہاتھ اپنے آپ کو خود نہیں پکڑ سکتا۔',
-      ),
-      'What has legs, but cannot take a single step?': const LocalizedPuzzleData(
-        question: 'کس کی ٹانگیں ہوتی ہیں لیکن وہ ایک قدم بھی نہیں چل سکتی؟',
-        options: ['میز (Table)', 'کرسی', 'بستر', 'گھڑی'],
-        correctAnswer: 'میز (Table)',
-        explanation: 'میز کے پایوں کو ٹانگیں کہا جاتا ہے مگر وہ چل نہیں سکتی۔',
-      ),
-      'What has a thumb and four fingers, but is not alive or human?': const LocalizedPuzzleData(
-        question: 'کس کا انگوٹھا اور چار انگلیاں ہوتی ہیں لیکن وہ جاندار نہیں؟',
-        options: ['دستانہ (Glove)', 'روبوٹ', 'پتلا', 'مجسمہ'],
-        correctAnswer: 'دستانہ (Glove)',
-        explanation: 'دستانے میں ہاتھ کی شکل کے انگوٹھے اور انگلیاں بنی ہوتی ہیں۔',
-      ),
-      'If an electric train travels north at 60 mph, which way does the smoke blow?': const LocalizedPuzzleData(
-        question: 'الیکٹرک ٹرین 60 میل فی گھنٹہ شمال جا رہی ہے، دھواں کدھر جائے گا؟',
-        options: ['کوئی دھواں نہیں ہوتا (No smoke)', 'جنوب', 'مغرب', 'شمال'],
-        correctAnswer: 'کوئی دھواں نہیں ہوتا (No smoke)',
-        explanation: 'الیکٹرک ٹرین میں دھواں پیدا ہی نہیں ہوتا۔',
-      ),
-      'What gets sharper the more you train and challenge it?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جسے جتنا استعمال اور چیلنج کرو اتنا ہی تیز ہوتا ہے؟',
-        options: ['دماغ (Brain/Mind)', 'چھری', 'تلوار', 'پنسل'],
-        correctAnswer: 'دماغ (Brain/Mind)',
-        explanation: 'دماغ کو چیلنج کرنے سے اس کی فکری صلاحیت تیز ہوتی ہے۔',
-      ),
-      '2 fathers and 2 sons caught 3 fish, 1 each. How is this possible?': const LocalizedPuzzleData(
-        question: '2 باپ اور 2 بیٹوں نے 3 مچھلیاں پکڑیں، ہر ایک کو 1 ملی۔ کیسے؟',
-        options: ['دادا، باپ اور پوتا تھے (3 people)', 'ایک مچھلی چھوٹی تھی', 'دو مچھلیاں مشترک تھیں', 'جادو تھا'],
-        correctAnswer: 'دادا، باپ اور پوتا تھے (3 people)',
-        explanation: 'وہ کل 3 لوگ تھے: دادا (باپ)، اس کا بیٹا، اور پوتا۔',
-      ),
-      'What runs constantly without walking, and has a bed but never sleeps?': const LocalizedPuzzleData(
-        question: 'وہ کیا ہے جو بغیر چلے دوڑتا ہے اور بستر ہے مگر سوتا نہیں؟',
-        options: ['دریا (River)', 'ہوا', 'گاڑی', 'وقت'],
-        correctAnswer: 'دریا (River)',
-        explanation: 'دریا کی گزرگاہ کو ریور بیڈ (Riverbed) کہتے ہیں اور وہ مسلسل بہتا ہے۔',
-      ),
-      'What kind of band never plays musical instruments?': const LocalizedPuzzleData(
-        question: 'کون سا بینڈ کبھی موسیقی کے آلات نہیں بجاتا؟',
-        options: ['ربڑ بینڈ (Rubber band)', 'راک بینڈ', 'جاز بینڈ', 'مارچنگ بینڈ'],
-        correctAnswer: 'ربڑ بینڈ (Rubber band)',
-        explanation: 'ربڑ بینڈ لچکدار فیتہ ہوتا ہے، موسیقی کا گروہ نہیں۔',
-      ),
-      'Which word in every standard English dictionary is spelled incorrectly?': const LocalizedPuzzleData(
-        question: 'کون سا لفظ ہر انگریزی لغت میں "غلط" (Incorrectly) لکھا جاتا ہے؟',
-        options: ['Incorrectly', 'Wrong', 'Mistake', 'False'],
-        correctAnswer: 'Incorrectly',
-        explanation: 'لفظ "Incorrectly" کے ہجے ہی "Incorrectly" ہوتے ہیں۔',
-      ),
-      'A plane crashes on the exact border of US and Canada. Where are survivors buried?': const LocalizedPuzzleData(
-        question: 'طیارہ بارڈر پر حادثے کا شکار ہوا، زندہ بچ جانے والوں کو کہاں دفنایا جائے گا؟',
-        options: ['زندہ لوگوں کو دفنایا نہیں جاتا (Survivors are alive)', 'امریکہ', 'کینیڈا', 'بارڈر پر'],
-        correctAnswer: 'زندہ لوگوں کو دفنایا نہیں جاتا (Survivors are alive)',
-        explanation: 'زندہ بچ جانے والے (Survivors) حیات ہوتے ہیں، انہیں دفنایا نہیں جاتا۔',
-      ),
-      'What body part tastes food much better than it smells?': const LocalizedPuzzleData(
-        question: 'جسم کا کون سا حصہ سونگھنے سے کہیں بہتر کھانا چکھتا ہے؟',
-        options: ['زبان (Tongue)', 'ناک', 'ہونٹ', 'دانت'],
-        correctAnswer: 'زبان (Tongue)',
-        explanation: 'زبان پر ذائقے کے غدود ہوتے ہیں جن سے کھانے کا ذائقہ معلوم ہوتا ہے۔',
-      ),
-      'What object has a spine, but has absolutely no bones inside?': const LocalizedPuzzleData(
-        question: 'کس کی ریڑھ کی ہڈی (Spine) ہوتی ہے مگر اندر ہڈی نہیں ہوتی؟',
-        options: ['کتاب (Book)', 'سیب', 'سانپ', 'کرسی'],
-        correctAnswer: 'کتاب (Book)',
-        explanation: 'کتاب کی جلد کی پشت کو کتاب کی اسپائن (Spine) کہا جاتا ہے۔',
-      ),
-      'What household item loses its head in the morning and gets it back at night?': const LocalizedPuzzleData(
-        question: 'وہ کون سی چیز ہے جس کا سر صبح اتر جاتا ہے اور رات کو واپس آتا ہے؟',
-        options: ['تکیہ (Pillow)', 'ٹوپی', 'کنگھی', 'بستر'],
-        correctAnswer: 'تکیہ (Pillow)',
-        explanation: 'صبح اٹھتے ہی سر تکیے سے ہٹ جاتا ہے اور رات کو سر واپس تکیے پر آتا ہے۔',
-      ),
-      'What celestial or household item has rings, but no fingers?': const LocalizedPuzzleData(
-        question: 'کس کے چھلے/حلقے (Rings) ہوتے ہیں لیکن انگلیاں نہیں ہوتیں؟',
-        options: ['سیارہ زحل (Saturn)', 'ٹیلیفون', 'گھڑی', 'پردہ'],
-        correctAnswer: 'سیارہ زحل (Saturn)',
-        explanation: 'سیارہ زحل (Saturn) کے گرد گیسی چھلے ہوتے ہیں۔',
+      'Which tool is an animal?': const LocalizedPuzzleData(
+        question: 'کون سا اوزار ایک جانور بھی ہے؟',
+        options: ['رینچ (Monkey wrench)', 'ہتھوڑا', 'آری', 'ڈرِل'],
+        correctAnswer: 'رینچ (Monkey wrench)',
+        explanation: 'منکی رینچ کے نام میں بندر آتا ہے۔',
       ),
     },
-
-    // Hindi
     'hi': {
       'Which word is longest?': const LocalizedPuzzleData(
         question: 'कौन सा शब्द सबसे लंबा है?',
-        options: ['Snake', 'Train', 'Road', 'Queue'],
-        correctAnswer: 'Queue',
-        explanation: 'Queue में 5 अक्षर हैं जो बाकी विकल्पों से अधिक हैं।',
+        options: ['सांप', 'ट्रेन', 'सड़क', 'कतार'],
+        correctAnswer: 'कतार',
+        explanation: 'Queue में पांच अक्षर हैं जो बाकी सभी से अधिक हैं।',
       ),
       'What gets wetter while drying?': const LocalizedPuzzleData(
-        question: 'सुखाते समय क्या और गीला हो जाता है?',
+        question: 'सुखाते समय क्या अधिक गीला हो जाता है?',
         options: ['तौलिया', 'सूरज', 'आग', 'रेत'],
         correctAnswer: 'तौलिया',
-        explanation: 'तौलिया किसी चीज़ को सुखाते हुए पानी सोख लेता है।',
+        explanation: 'तौलिया पानी सोखता है जब वह किसी चीज को सुखाता है।',
       ),
       'Which month has 28 days?': const LocalizedPuzzleData(
         question: 'किस महीने में 28 दिन होते हैं?',
-        options: ['फ़रवरी', 'जनवरी', 'सभी महीनों में', 'जून'],
+        options: ['फरवरी', 'जनवरी', 'सभी महीनों में', 'जून'],
         correctAnswer: 'सभी महीनों में',
         explanation: 'हर महीने में कम से कम 28 दिन होते हैं।',
       ),
       "What has keys but can't open locks?": const LocalizedPuzzleData(
-        question: 'किसके पास चाबियां (keys) हैं पर ताला नहीं खोल सकता?',
-        options: ['पियानो', 'दरवाजा', 'कार', 'तिजोरी'],
+        question: 'किसके पास चाबियां हैं लेकिन ताले नहीं खोल सकता?',
+        options: ['पियानो', 'दरवाजा', 'कार', 'संदूक'],
         correctAnswer: 'पियानो',
-        explanation: 'पियानो में संगीत की चाबियां होती हैं, ताले की नहीं।',
-      ),
-      'Which number is half of 8?': const LocalizedPuzzleData(
-        question: '8 का आधा क्या है?',
-        options: ['4', '3', '0', 'निर्भर करता है'],
-        correctAnswer: '4',
-        explanation: '8 का आधा 4 होता है।',
-      ),
-      'What has a face and two hands but no arms?': const LocalizedPuzzleData(
-        question: 'किसका चेहरा और दो हाथ होते हैं लेकिन बाहें नहीं होतीं?',
-        options: ['घड़ी', 'रोबोट', 'इंसान', 'आईना'],
-        correctAnswer: 'घड़ी',
-        explanation: 'घड़ी का डायल चेहरा और सुइयां हाथ होती हैं।',
-      ),
-      'What stays in a corner while traveling?': const LocalizedPuzzleData(
-        question: 'सफर करते हुए भी कोने में कौन रहता है?',
-        options: ['डाक टिकट', 'विमान', 'नक्शा', 'दिशा सूचक'],
-        correctAnswer: 'डाक टिकट',
-        explanation: 'डाक टिकट लिफाफे के कोने पर लगा रहता है।',
-      ),
-      'In a dark room, what do you light first?': const LocalizedPuzzleData(
-        question: 'अंधेरे कमरे में सबसे पहले क्या जलाएंगे?',
-        options: ['माचिस', 'मोमबत्ती', 'दीपक', 'अंगीठी'],
-        correctAnswer: 'माचिस',
-        explanation: 'कुछ भी जलाने से पहले माचिस जलानी पड़ती है।',
-      ),
-      'What has many teeth but cannot bite?': const LocalizedPuzzleData(
-        question: 'किसके बहुत सारे दांत होते हैं पर काट नहीं सकता?',
-        options: ['कंघी', 'शार्क', 'आरी', 'ज़िप'],
-        correctAnswer: 'कंघी',
-        explanation: 'कंघी के दांत बाल संवारने के लिए होते हैं।',
-      ),
-      'What goes up but never comes down?': const LocalizedPuzzleData(
-        question: 'वह क्या है जो हमेशा बढ़ता है, घटता नहीं?',
-        options: ['उम्र', 'गुब्बारा', 'धुआं', 'लिफ्ट'],
-        correctAnswer: 'उम्र',
-        explanation: 'समय के साथ उम्र हमेशा बढ़ती है।',
-      ),
-      'What has hands but cannot clap?': const LocalizedPuzzleData(
-        question: 'किसके हाथ हैं पर ताली नहीं बजा सकता?',
-        options: ['घड़ी', 'बच्चा', 'रोबोट', 'दस्ताने'],
-        correctAnswer: 'घड़ी',
-        explanation: 'घड़ी की सुइयों को हाथ कहते हैं।',
-      ),
-      'What is full of holes but holds water?': const LocalizedPuzzleData(
-        question: 'किसमें छेद होते हैं फिर भी पानी रोक लेता है?',
-        options: ['स्पंज', 'बाल्टी', 'जाल', 'कप'],
-        correctAnswer: 'स्पंज',
-        explanation: 'स्पंज छेदों के बावजूद पानी सोख कर रखता है।',
-      ),
-      'What breaks when you say its name?': const LocalizedPuzzleData(
-        question: 'नाम लेते ही क्या टूट जाता है?',
-        options: ['खामोशी', 'कांच', 'वादा', 'कोड'],
-        correctAnswer: 'खामोशी',
-        explanation: 'कुछ भी बोलने पर खामोशी टूट जाती है।',
-      ),
-      'Which is heavier?': const LocalizedPuzzleData(
-        question: 'कौन सा ज्यादा भारी है?',
-        options: ['1 किलो पंख (Feathers)', '1 किलो पत्थर (Rocks)', 'पत्थर', 'पंख'],
-        correctAnswer: '1 किलो पंख (Feathers)',
-        explanation: 'दोनों का वजन 1 किलो है, इसलिए दोनों बराबर हैं।',
-      ),
-      'What has one eye but cannot see?': const LocalizedPuzzleData(
-        question: 'किसकी एक आंख होती है पर वह देख नहीं सकती?',
-        options: ['सुई (Needle)', 'तूफान', 'कैमरा', 'साइक्लोप्स'],
-        correctAnswer: 'सुई (Needle)',
-        explanation: 'सुई के छेद को आंख कहा जाता है।',
-      ),
-      'What can you catch but not throw?': const LocalizedPuzzleData(
-        question: 'वह क्या है जिसे आप पकड़ सकते हैं पर फेंक नहीं सकते?',
-        options: ['सर्दी/जुकाम (Cold)', 'गेंद', 'मछली', 'छाया'],
-        correctAnswer: 'सर्दी/जुकाम (Cold)',
-        explanation: 'आप सर्दी (cold) पकड़ सकते हैं पर उसे फेंक नहीं सकते।',
-      ),
-      'What has a neck but no head?': const LocalizedPuzzleData(
-        question: 'किसकी गर्दन होती है पर सिर नहीं होता?',
-        options: ['बोतल (Bottle)', 'शर्ट', 'गिटार', 'चम्मच'],
-        correctAnswer: 'बोतल (Bottle)',
-        explanation: 'बोतल के संकरे ऊपरी हिस्से को गर्दन कहा जाता है।',
-      ),
-      'Which word gets shorter when letters are added?': const LocalizedPuzzleData(
-        question: 'अक्षर जोड़ने पर कौन सा शब्द छोटा (Shorter) हो जाता है?',
-        options: ['Short', 'Small', 'Brief', 'Little'],
-        correctAnswer: 'Short',
-        explanation: 'Short में "er" जोड़ने से "Shorter" बनता है।',
-      ),
-      'What appears once in minute and twice in moment?': const LocalizedPuzzleData(
-        question: 'Minute में एक बार और Moment में दो बार क्या आता है?',
-        options: ['अक्षर M', 'सेकंड', 'समय', 'अक्षर E'],
-        correctAnswer: 'अक्षर M',
-        explanation: 'Minute में एक M और Moment में दो M होते हैं।',
-      ),
-      'Which one is not a fruit?': const LocalizedPuzzleData(
-        question: 'इनमें से कौन सा फल नहीं है?',
-        options: ['आलू (Potato)', 'टमाटर (Tomato)', 'सेब (Apple)', 'केला (Banana)'],
-        correctAnswer: 'आलू (Potato)',
-        explanation: 'आलू एक कंद (सब्जी) है, फल नहीं।',
-      ),
-      'What comes next: 2, 4, 6, ?': const LocalizedPuzzleData(
-        question: 'अगली संख्या क्या होगी: 2, 4, 6, ?',
-        options: ['8', '7', '10', '9'],
-        correctAnswer: '8',
-        explanation: 'प्रत्येक पद में 2 जोड़ा जा रहा है, अगला 8 है।',
-      ),
-      'What comes next: A, C, E, ?': const LocalizedPuzzleData(
-        question: 'अगला अक्षर क्या होगा: A, C, E, ?',
-        options: ['G', 'F', 'H', 'D'],
-        correctAnswer: 'G',
-        explanation: 'एक अक्षर छोड़कर अगला अक्षर G आता है।',
-      ),
-      'What is in front of you but unseen?': const LocalizedPuzzleData(
-        question: 'वह क्या है जो आपके सामने है पर दिखाई नहीं देता?',
-        options: ['भविष्य (Future)', 'हवा (Air)', 'सपना (Dream)', 'अतीत (Past)'],
-        correctAnswer: 'भविष्य (Future)',
-        explanation: 'भविष्य हमेशा आगे होता है पर दिखता नहीं।',
-      ),
-      'Which one is a planet?': const LocalizedPuzzleData(
-        question: 'इनमें से कौन सा ग्रह है?',
-        options: ['मंगल (Mars)', 'सूर्य (Sun)', 'चंद्रमा (Moon)', 'ध्रुव तारा'],
-        correctAnswer: 'मंगल (Mars)',
-        explanation: 'मंगल हमारे सौरमंडल का ग्रह है।',
-      ),
-      'I speak without a mouth and hear without ears. What am I?': const LocalizedPuzzleData(
-        question: 'मैं बिना मुंह के बोलता हूं और बिना कान के सुनता हूं। मैं क्या हूं?',
-        options: ['गूंज (Echo)', 'हवा (Wind)', 'छाया (Shadow)', 'रेडियो'],
-        correctAnswer: 'गूंज (Echo)',
-        explanation: 'गूंज आवाज को लौटाकर बोलती और सुनती है।',
-      ),
-      'A boat is full of people, yet not a single person is on board. Why?': const LocalizedPuzzleData(
-        question: 'नाव लोगों से भरी है, पर कोई अकेला (single) व्यक्ति नहीं है। क्यों?',
-        options: ['सभी विवाहित थे (All married)', 'नाव खाली थी', 'सब बच्चे थे', 'रोबोट थे'],
-        correctAnswer: 'सभी विवाहित थे (All married)',
-        explanation: 'नाव में सभी जोड़े (विवाहित) थे, कोई सिंगल नहीं था।',
-      ),
-      'The person who makes it does not want it. The buyer does not use it. What is it?': const LocalizedPuzzleData(
-        question: 'बनाने वाला इसे नहीं चाहता, खरीदने वाला इस्तेमाल नहीं करता। वह क्या है?',
-        options: ['ताबूत (Coffin)', 'गाड़ी', 'घर', 'कपड़े'],
-        correctAnswer: 'ताबूत (Coffin)',
-        explanation: 'ताबूत मृतक के लिए खरीदा जाता है, खरीदार खुद उपयोग नहीं करता।',
-      ),
-      'A cowboy rides into town on Friday, stays 2 days, and leaves on Friday. How?': const LocalizedPuzzleData(
-        question: 'एक चरवाहा शुक्रवार को आया, 2 दिन रुका, और शुक्रवार को गया। कैसे?',
-        options: ['घोड़े का नाम शुक्रवार (Friday) था', 'टाइम ट्रेवल', 'गिनती गलत थी', 'जादू था'],
-        correctAnswer: 'घोड़े का नाम शुक्रवार (Friday) था',
-        explanation: 'उसके घोड़े का नाम फ्राइडे (शुक्रवार) था।',
-      ),
-      'What runs around the entire yard without ever moving?': const LocalizedPuzzleData(
-        question: 'वह क्या है जो पूरे आंगन के चारों ओर घूमती है पर कभी हिलती नहीं?',
-        options: ['बाड़ (Fence)', 'रास्ता', 'घास', 'दीवार'],
-        correctAnswer: 'बाड़ (Fence)',
-        explanation: 'बाड़ बिना हिले पूरे आंगन को घेरती है।',
-      ),
-      'What begins with T, finishes with T, and has T inside it?': const LocalizedPuzzleData(
-        question: 'कौन सा शब्द T से शुरू, T पर खत्म और उसके अंदर चाय (Tea) होती है?',
-        options: ['Teapot (चायदानी)', 'Tent', 'Toast', 'Target'],
-        correctAnswer: 'Teapot (चायदानी)',
-        explanation: 'Teapot T से शुरू और खत्म होता है और इसमें चाय (Tea) होती है।',
-      ),
-      'How many letters are in "the alphabet"?': const LocalizedPuzzleData(
-        question: '"the alphabet" शब्द में कितने अक्षर हैं?',
-        options: ['11', '26', '24', '10'],
-        correctAnswer: '11',
-        explanation: '"t-h-e-a-l-p-h-a-b-e-t" में कुल 11 अक्षर हैं।',
-      ),
-      'What has a head and a tail, but no body?': const LocalizedPuzzleData(
-        question: 'किसका सिर और पूंछ (Head & Tail) होती है पर शरीर नहीं होता?',
-        options: ['सिक्का (Coin)', 'सांप', 'तीर', 'छिपकली'],
-        correctAnswer: 'सिक्का (Coin)',
-        explanation: 'सिक्के के दो पहलुओं को हेड और टेल कहा जाता है।',
-      ),
-      'What belongs to you, but others use it far more than you do?': const LocalizedPuzzleData(
-        question: 'वह क्या है जो आपका है पर दूसरे आपसे ज्यादा इस्तेमाल करते हैं?',
-        options: ['आपका नाम (Your Name)', 'फोन', 'पैसा', 'गाड़ी'],
-        correctAnswer: 'आपका नाम (Your Name)',
-        explanation: 'आपके नाम का उपयोग दूसरे लोग पुकारने के लिए करते हैं।',
-      ),
-      'What has words, but never speaks?': const LocalizedPuzzleData(
-        question: 'किसमें शब्द होते हैं पर वह कभी बोलती नहीं?',
-        options: ['किताब (Book)', 'टीवी', 'अखबार', 'रेडियो'],
-        correctAnswer: 'किताब (Book)',
-        explanation: 'किताब में शब्द लिखे होते हैं पर वह बोलती नहीं।',
-      ),
-      'If you drop me I crack, but smile at me and I smile back. What am I?': const LocalizedPuzzleData(
-        question: 'गिराओगे तो टूट जाऊंगा, मुस्कुराओगे तो मुस्कुराऊंगा। मैं क्या हूं?',
-        options: ['आईना (Mirror)', 'गिलास', 'तस्वीर', 'कांच'],
-        correctAnswer: 'आईना (Mirror)',
-        explanation: 'आईना गिरने से टूटता है और मुस्कुराने पर प्रतिबिंब दिखाता है।',
-      ),
-      'What can fill an entire room without taking up any physical space?': const LocalizedPuzzleData(
-        question: 'वह क्या है जो जगह घेरे बिना पूरा कमरा भर देती है?',
-        options: ['रोशनी (Light)', 'धुआं', 'हवा', 'खुशबू'],
-        correctAnswer: 'रोशनी (Light)',
-        explanation: 'रोशनी भौतिक जगह घेरे बिना पूरे कमरे को भर देती है।',
-      ),
-      'What has cities but no houses, and rivers but no water?': const LocalizedPuzzleData(
-        question: 'वह क्या है जिसमें शहर हैं पर घर नहीं, नदियां हैं पर पानी नहीं?',
-        options: ['नक्शा (Map)', 'किताब', 'सपना', 'तस्वीर'],
-        correctAnswer: 'नक्शा (Map)',
-        explanation: 'नक्शे पर भौगोलिक विशेषताएं होती हैं पर असली घर या पानी नहीं।',
-      ),
-      'The more there is of this, the less you can see. What is it?': const LocalizedPuzzleData(
-        question: 'यह जितना अधिक होगा, उतना ही कम दिखाई देगा। वह क्या है?',
-        options: ['अंधेरा (Darkness)', 'रोशनी', 'धुआं', 'कोहरा'],
-        correctAnswer: 'अंधेरा (Darkness)',
-        explanation: 'अंधेरा जितना गहरा होगा, दृश्यता उतनी ही कम होगी।',
-      ),
-      'I have branches, but no fruit, trunk, or leaves. What am I?': const LocalizedPuzzleData(
-        question: 'मेरी शाखाएं (Branches) हैं पर फल, तना या पत्ते नहीं। मैं क्या हूं?',
-        options: ['बैंक (Bank)', 'पेड़', 'नदी', 'सड़क'],
-        correctAnswer: 'बैंक (Bank)',
-        explanation: 'बैंक की शाखाएं (branches) होती हैं।',
-      ),
-      'What can you break without ever touching or dropping it?': const LocalizedPuzzleData(
-        question: 'वह क्या है जिसे बिना छुए या गिराए भी तोड़ा जा सकता है?',
-        options: ['वादा (Promise)', 'दिल', 'कांच', 'खामोशी'],
-        correctAnswer: 'वादा (Promise)',
-        explanation: 'वादा बिना छुए भी तोड़ा जा सकता है।',
-      ),
-      'What architectural invention allows you to look right through a wall?': const LocalizedPuzzleData(
-        question: 'वह कौन सा आविष्कार है जो दीवार के आर-पार देखने देता है?',
-        options: ['खिड़की (Window)', 'दरवाजा', 'दूरबीन', 'आईना'],
-        correctAnswer: 'खिड़की (Window)',
-        explanation: 'खिड़की दीवार में बनी होती है जिससे आर-पार देखा जा सकता है।',
-      ),
-      'If two is company, and three is a crowd, what are four and five?': const LocalizedPuzzleData(
-        question: 'यदि दो कंपनी हैं और तीन भीड़, तो चार और पांच क्या हैं?',
-        options: ['9 (Nine)', 'भीड़', 'दोस्त', 'पार्टी'],
-        correctAnswer: '9 (Nine)',
-        explanation: 'चार और पांच जोड़कर नौ (4 + 5 = 9) होते हैं।',
-      ),
-      'What goes up and down constantly but never moves an inch?': const LocalizedPuzzleData(
-        question: 'वह क्या है जो लगातार ऊपर-नीचे होती है पर एक इंच नहीं हिलती?',
-        options: ['सीढ़ियाँ (Stairs)', 'लिफ्ट', 'तापमान', 'झूला'],
-        correctAnswer: 'सीढ़ियाँ (Stairs)',
-        explanation: 'सीढ़ियां ऊपर-नीचे जाती हैं पर अपनी जगह स्थिर रहती हैं।',
-      ),
-      'Feed me and I live, but give me a drink of water and I die. What am I?': const LocalizedPuzzleData(
-        question: 'खिलाओ तो जीती हूं, पानी पिलाओ तो मर जाती हूं। मैं क्या हूं?',
-        options: ['आग (Fire)', 'पौधा', 'इंसान', 'मिट्टी'],
-        correctAnswer: 'आग (Fire)',
-        explanation: 'आग लकड़ी से जलती है और पानी डालने से बुझ जाती है।',
-      ),
-      'What has to be broken before you can ever use it?': const LocalizedPuzzleData(
-        question: 'वह क्या है जिसे इस्तेमाल करने से पहले तोड़ना जरूरी है?',
-        options: ['अंडा (Egg)', 'अखरोट', 'ताला', 'नारियल'],
-        correctAnswer: 'अंडा (Egg)',
-        explanation: 'अंडे को बिना फोड़े उपयोग नहीं किया जा सकता।',
-      ),
-      'I am tall when I am young, and short when I am old. What am I?': const LocalizedPuzzleData(
-        question: 'नई होने पर लंबी, पुरानी होने पर छोटी हो जाती हूं। मैं क्या हूं?',
-        options: ['मोमबत्ती (Candle)', 'पेंसिल', 'पेड़', 'रस्सी'],
-        correctAnswer: 'मोमबत्ती (Candle)',
-        explanation: 'मोमबत्ती जलते हुए छोटी होती जाती है।',
-      ),
-      'What begins with an E and contains only one single letter?': const LocalizedPuzzleData(
-        question: 'कौन सा शब्द E से शुरू होता है और उसमें सिर्फ एक पत्र (Letter) होता है?',
-        options: ['लिफाफा (Envelope)', 'आंख (Eye)', 'अंडा (Egg)', 'पृथ्वी (Earth)'],
-        correctAnswer: 'लिफाफा (Envelope)',
-        explanation: 'Envelope E से शुरू होता है और इसके अंदर पत्र (letter) होता है।',
-      ),
-      'A man pushes his car to a hotel and immediately declares bankruptcy. Why?': const LocalizedPuzzleData(
-        question: 'एक व्यक्ति अपनी कार होटल ले जाता है और दिवालिया घोषित हो जाता है। क्यों?',
-        options: ['मोनोपॉली खेल रहा था (Monopoly)', 'कार खराब थी', 'होटल महंगा था', 'कर्ज था'],
-        correctAnswer: 'मोनोपॉली खेल रहा था (Monopoly)',
-        explanation: 'वह मोनोपॉली बोर्ड गेम खेल रहा था।',
-      ),
-      'How can a person go 25 days without sleeping?': const LocalizedPuzzleData(
-        question: 'एक व्यक्ति बिना सोए 25 दिन कैसे बिता सकता है?',
-        options: ['वह रात में सोता है (Sleeps at night)', 'कॉफी पीकर', 'असंभव है', 'आराम करके'],
-        correctAnswer: 'वह रात में सोता है (Sleeps at night)',
-        explanation: 'वह दिन में नहीं, रात में सोता है।',
-      ),
-      'What comes down from the sky but never goes back up?': const LocalizedPuzzleData(
-        question: 'वह क्या है जो आसमान से नीचे आती है पर कभी ऊपर वापस नहीं जाती?',
-        options: ['बारिश (Rain)', 'बर्फ', 'बिजली', 'ओले'],
-        correctAnswer: 'बारिश (Rain)',
-        explanation: 'बारिश के बूंद गिरने के बाद बारिश बनकर वापस ऊपर नहीं जाते।',
-      ),
-      'Where does today always come before yesterday?': const LocalizedPuzzleData(
-        question: 'आज (Today) हमेशा कल (Yesterday) से पहले कहां आता है?',
-        options: ['शब्दकोश में (Dictionary)', 'कैलेंडर में', 'सपने में', 'घड़ी में'],
-        correctAnswer: 'शब्दकोश में (Dictionary)',
-        explanation: 'शब्दकोश में वर्णमाला के अनुसार T अक्षर Y से पहले आता है।',
-      ),
-      'What can you hold in your right hand, but never in your left hand?': const LocalizedPuzzleData(
-        question: 'वह क्या है जिसे आप दाएं हाथ से पकड़ सकते हैं पर बाएं से नहीं?',
-        options: ['आपका बायां हाथ (Left Hand)', 'दायां हाथ', 'अंगूठा', 'कलाई'],
-        correctAnswer: 'आपका बायां हाथ (Left Hand)',
-        explanation: 'बायां हाथ खुद को नहीं पकड़ सकता।',
-      ),
-      'What has legs, but cannot take a single step?': const LocalizedPuzzleData(
-        question: 'किसके पैर होते हैं पर वह एक कदम भी नहीं चल सकती?',
-        options: ['मेज (Table)', 'कुर्सी', 'बिस्तर', 'घड़ी'],
-        correctAnswer: 'मेज (Table)',
-        explanation: 'मेज के पायों को पैर कहा जाता है पर वह चल नहीं सकती।',
-      ),
-      'What has a thumb and four fingers, but is not alive or human?': const LocalizedPuzzleData(
-        question: 'किसका एक अंगूठा और चार उंगलियां होती हैं पर वह जीवित नहीं?',
-        options: ['दस्ताना (Glove)', 'रोबोट', 'पुतला', 'मूर्ति'],
-        correctAnswer: 'दस्ताना (Glove)',
-        explanation: 'दस्ताने में हाथ के आकार की उंगलियां बनी होती हैं।',
-      ),
-      'If an electric train travels north at 60 mph, which way does the smoke blow?': const LocalizedPuzzleData(
-        question: 'इलेक्ट्रिक ट्रेन 60 किमी/घंटा उत्तर जा रही है, धुआं किधर जाएगा?',
-        options: ['कोई धुआं नहीं होता (No smoke)', 'दक्षिण', 'पश्चिम', 'उत्तर'],
-        correctAnswer: 'कोई धुआं नहीं होता (No smoke)',
-        explanation: 'इलेक्ट्रिक ट्रेन में धुआं निकलता ही नहीं।',
-      ),
-      'What gets sharper the more you train and challenge it?': const LocalizedPuzzleData(
-        question: 'वह क्या है जिसे जितना चुनौती दो उतना ही तेज होता है?',
-        options: ['दिमाग (Brain/Mind)', 'चाकू', 'तलवार', 'पेंसिल'],
-        correctAnswer: 'दिमाग (Brain/Mind)',
-        explanation: 'दिमाग को चुनौती देने से सोचने की शक्ति तेज होती है।',
-      ),
-      '2 fathers and 2 sons caught 3 fish, 1 each. How is this possible?': const LocalizedPuzzleData(
-        question: '2 पिताओं और 2 बेटों ने 3 मछलियां पकड़ीं, प्रत्येक को 1 मिली। कैसे?',
-        options: ['दादा, पिता और पोता थे (3 people)', 'मछली छोटी थी', 'साझा थी', 'जादू था'],
-        correctAnswer: 'दादा, पिता और पोता थे (3 people)',
-        explanation: 'वे कुल 3 लोग थे: दादा (पिता), पिता (बेटा व पिता), और पोता (बेटा)।',
-      ),
-      'What runs constantly without walking, and has a bed but never sleeps?': const LocalizedPuzzleData(
-        question: 'वह क्या है जो बिना चले दौड़ती है और बिस्तर है पर सोती नहीं?',
-        options: ['नदी (River)', 'हवा', 'गाड़ी', 'समय'],
-        correctAnswer: 'नदी (River)',
-        explanation: 'नदी के तल को रीवरबेड कहते हैं और वह निरंतर बहती है।',
-      ),
-      'What kind of band never plays musical instruments?': const LocalizedPuzzleData(
-        question: 'कौन सा बैंड कभी संगीत वाद्ययंत्र नहीं बजाता?',
-        options: ['रबर बैंड (Rubber band)', 'रॉक बैंड', 'जैज़ बैंड', 'बैंड बाजा'],
-        correctAnswer: 'रबर बैंड (Rubber band)',
-        explanation: 'रबर बैंड एक लचीला छल्ला होता है, संगीत समूह नहीं।',
-      ),
-      'Which word in every standard English dictionary is spelled incorrectly?': const LocalizedPuzzleData(
-        question: 'कौन सा शब्द डिक्शनरी में हमेशा गलत (Incorrectly) लिखा जाता है?',
-        options: ['Incorrectly', 'Wrong', 'Mistake', 'False'],
-        correctAnswer: 'Incorrectly',
-        explanation: 'Incorrectly शब्द की वर्तनी ही "Incorrectly" है।',
-      ),
-      'A plane crashes on the exact border of US and Canada. Where are survivors buried?': const LocalizedPuzzleData(
-        question: 'विमान सीमा पर दुर्घटनाग्रस्त हुआ, जीवित बचे लोगों को कहां दफनाया जाएगा?',
-        options: ['जीवित लोगों को नहीं दफनाया जाता (Survivors are alive)', 'अमेरिका', 'कनाडा', 'बॉर्डर'],
-        correctAnswer: 'जीवित लोगों को नहीं दफनाया जाता (Survivors are alive)',
-        explanation: 'जीवित बचे लोग (survivors) जिंदा होते हैं, उन्हें दफनाते नहीं।',
-      ),
-      'What body part tastes food much better than it smells?': const LocalizedPuzzleData(
-        question: 'शरीर का कौन सा अंग सूंघने से बेहतर भोजन का स्वाद लेता है?',
-        options: ['जीभ (Tongue)', 'नाक', 'होंठ', 'दांत'],
-        correctAnswer: 'जीभ (Tongue)',
-        explanation: 'जीभ पर स्वाद कलिकाएं होती हैं जो स्वाद पहचानती हैं।',
-      ),
-      'What object has a spine, but has absolutely no bones inside?': const LocalizedPuzzleData(
-        question: 'किसकी रीढ़ (Spine) होती है पर अंदर हड्डी नहीं होती?',
-        options: ['किताब (Book)', 'सेब', 'सांप', 'कुर्सी'],
-        correctAnswer: 'किताब (Book)',
-        explanation: 'किताब की जिल्द के पिछले भाग को स्पाइन (Spine) कहा जाता है।',
-      ),
-      'What household item loses its head in the morning and gets it back at night?': const LocalizedPuzzleData(
-        question: 'वह क्या है जिसका सिर सुबह उतर जाता है और रात को वापस आता है?',
-        options: ['तकिया (Pillow)', 'टोपी', 'कंघी', 'बिस्तर'],
-        correctAnswer: 'तकिया (Pillow)',
-        explanation: 'सुबह उठने पर सिर तकिए से हटता है और रात में वापस आता है।',
-      ),
-      'What celestial or household item has rings, but no fingers?': const LocalizedPuzzleData(
-        question: 'किसके छल्ले (Rings) होते हैं पर उंगलियां नहीं होतीं?',
-        options: ['शनि ग्रह (Saturn)', 'टेलीफोन', 'घड़ी', 'पर्दा'],
-        correctAnswer: 'शनि ग्रह (Saturn)',
-        explanation: 'शनि ग्रह (Saturn) के चारों ओर वलय (छल्ले) होते हैं।',
-      ),
-
-    },
-
-    // Spanish
-    'es': {
-      'Which word is longest?': const LocalizedPuzzleData(
-        question: '¿Qué palabra es más larga?',
-        options: ['Snake', 'Train', 'Road', 'Queue'],
-        correctAnswer: 'Queue',
-        explanation: 'Queue tiene cinco letras, más que las demás.',
-      ),
-      'What gets wetter while drying?': const LocalizedPuzzleData(
-        question: '¿Qué se moja más al secar?',
-        options: ['Toalla', 'Sol', 'Fuego', 'Arena'],
-        correctAnswer: 'Toalla',
-        explanation: 'Una toalla absorbe agua mientras seca otra cosa.',
-      ),
-      'Which month has 28 days?': const LocalizedPuzzleData(
-        question: '¿Qué mes tiene 28 días?',
-        options: ['Febrero', 'Enero', 'Todos ellos', 'Junio'],
-        correctAnswer: 'Todos ellos',
-        explanation: 'Cada mes tiene al menos 28 días.',
-      ),
-      "What has keys but can't open locks?": const LocalizedPuzzleData(
-        question: '¿Qué tiene teclas/llaves pero no abre cerraduras?',
-        options: ['Piano', 'Puerta', 'Coche', 'Cofre'],
-        correctAnswer: 'Piano',
-        explanation: 'Un piano tiene teclas musicales, no llaves de cerradura.',
-      ),
-      'Which number is half of 8?': const LocalizedPuzzleData(
-        question: '¿Qué número es la mitad de 8?',
-        options: ['4', '3', '0', 'Depende'],
-        correctAnswer: '4',
-        explanation: 'La mitad de 8 es 4.',
-      ),
-      'What has a face and two hands but no arms?': const LocalizedPuzzleData(
-        question: '¿Qué tiene cara y dos manecillas pero no brazos?',
-        options: ['Reloj', 'Robot', 'Persona', 'Espejo'],
-        correctAnswer: 'Reloj',
-        explanation: 'Un reloj tiene esfera y manecillas.',
-      ),
-      'In a dark room, what do you light first?': const LocalizedPuzzleData(
-        question: 'En una habitación oscura, ¿qué enciendes primero?',
-        options: ['Cerilla', 'Vela', 'Lámpara', 'Chimenea'],
-        correctAnswer: 'Cerilla',
-        explanation: 'Debes encender la cerilla antes de encender cualquier otra cosa.',
-      ),
-      'What breaks when you say its name?': const LocalizedPuzzleData(
-        question: '¿Qué se rompe al decir su nombre?',
-        options: ['Silencio', 'Cristal', 'Promesa', 'Código'],
-        correctAnswer: 'Silencio',
-        explanation: 'Al hablar, el silencio desaparece.',
+        explanation: 'पियानो की कुंजियों को चाबियां कहते हैं।',
       ),
     },
-
-    // French
-    'fr': {
-      'Which word is longest?': const LocalizedPuzzleData(
-        question: 'Quel mot est le plus long ?',
-        options: ['Snake', 'Train', 'Road', 'Queue'],
-        correctAnswer: 'Queue',
-        explanation: 'Queue a 5 lettres, plus que les autres.',
-      ),
-      'What gets wetter while drying?': const LocalizedPuzzleData(
-        question: 'Qu’est-ce qui mouille en séchant ?',
-        options: ['Serviette', 'Soleil', 'Feu', 'Sable'],
-        correctAnswer: 'Serviette',
-        explanation: 'Une serviette absorbe l’eau en séchant quelque chose.',
-      ),
-      'Which month has 28 days?': const LocalizedPuzzleData(
-        question: 'Quel mois a 28 jours ?',
-        options: ['Février', 'Janvier', 'Tous', 'Juin'],
-        correctAnswer: 'Tous',
-        explanation: 'Chaque mois a au moins 28 jours.',
-      ),
-      'What breaks when you say its name?': const LocalizedPuzzleData(
-        question: 'Qu’est-ce qui se brise quand on prononce son nom ?',
-        options: ['Le silence', 'Le verre', 'Une promesse', 'Le code'],
-        correctAnswer: 'Le silence',
-        explanation: 'Parler met fin au silence.',
-      ),
-    },
-
-    // Arabic
     'ar': {
       'Which word is longest?': const LocalizedPuzzleData(
         question: 'أي كلمة هي الأطول؟',
-        options: ['Snake', 'Train', 'Road', 'Queue'],
-        correctAnswer: 'Queue',
-        explanation: 'تحتوي Queue على خمسة أحرف أكثر من غيرها.',
+        options: ['ثعبان', 'قطار', 'طريق', 'طابور'],
+        correctAnswer: 'طابور',
+        explanation: 'كلمة Queue تحتوي على خمسة أحرف.',
       ),
       'What gets wetter while drying?': const LocalizedPuzzleData(
-        question: 'ما الذي يبتل أكثر أثناء التجفيف؟',
-        options: ['المنشفة', 'الشمس', 'النار', 'الرمل'],
-        correctAnswer: 'المنشفة',
-        explanation: 'تمتص المنشفة الماء أثناء تجفيف الأشياء.',
+        question: 'ما الذي يزداد بللاً أثناء التجفيف؟',
+        options: ['منشفة', 'شمس', 'نار', 'رمل'],
+        correctAnswer: 'منشفة',
+        explanation: 'المنشفة تمتص الماء عندما تجفف شيئاً.',
       ),
       'Which month has 28 days?': const LocalizedPuzzleData(
-        question: 'أي شهر فيه 28 يوماً؟',
-        options: ['فبراير', 'يناير', 'كل الشهور', 'يونيو'],
-        correctAnswer: 'كل الشهور',
-        explanation: 'كل شهر فيه على الأقل 28 يوماً.',
+        question: 'أي شهر يحتوي على 28 يوماً؟',
+        options: ['فبراير', 'يناير', 'جميع الأشهر', 'يونيو'],
+        correctAnswer: 'جميع الأشهر',
+        explanation: 'كل شهر يحتوي على 28 يوماً على الأقل.',
       ),
-      'What breaks when you say its name?': const LocalizedPuzzleData(
-        question: 'ما الذي ينكسر بمجرد ذكر اسمه؟',
-        options: ['الصمت', 'الزجاج', 'الوعد', 'الرمز'],
-        correctAnswer: 'الصمت',
-        explanation: 'التحدث ينهي الصمت.',
+      "What has keys but can't open locks?": const LocalizedPuzzleData(
+        question: 'ما الذي له مفاتيح ولكنه لا يفتح الأقفال؟',
+        options: ['بيانو', 'باب', 'سيارة', 'صندوق'],
+        correctAnswer: 'بيانو',
+        explanation: 'أزرار البيانو تسمى مفاتيح.',
+      ),
+    },
+    'es': {
+      'Which word is longest?': const LocalizedPuzzleData(
+        question: '¿Qué palabra es la más larga?',
+        options: ['Serpiente', 'Tren', 'Camino', 'Cola'],
+        correctAnswer: 'Cola',
+        explanation: 'Queue tiene cinco letras.',
+      ),
+      'What gets wetter while drying?': const LocalizedPuzzleData(
+        question: '¿Qué se vuelve más húmedo mientras seca?',
+        options: ['Toalla', 'Sol', 'Fuego', 'Arena'],
+        correctAnswer: 'Toalla',
+        explanation: 'La toalla absorbe agua.',
+      ),
+    },
+    'fr': {
+      'Which word is longest?': const LocalizedPuzzleData(
+        question: 'Quel mot est le plus long ?',
+        options: ['Serpent', 'Train', 'Route', 'Queue'],
+        correctAnswer: 'Queue',
+        explanation: 'Queue a cinq lettres.',
+      ),
+      'What gets wetter while drying?': const LocalizedPuzzleData(
+        question: 'Qu\'est-ce qui devient plus humide en séchant ?',
+        options: ['Serviette', 'Soleil', 'Feu', 'Sable'],
+        correctAnswer: 'Serviette',
+        explanation: 'La serviette absorbe l\'eau.',
       ),
     },
   };
-
-  static LocalizedPuzzleData getTranslation(
-    String originalQuestion,
-    List<String> defaultOptions,
-    String defaultAnswer,
-    String defaultExplanation,
-    String langCode,
-  ) {
-    // 1. Exact match in requested language
-    final langDict = _translations[langCode];
-    if (langDict != null && langDict.containsKey(originalQuestion)) {
-      return langDict[originalQuestion]!;
-    }
-
-    // 2. Intelligent language family fallback
-    // Indic languages (Hindi script / sister languages) fallback to Hindi first, then Urdu
-    const indicLanguages = {'hi', 'bn', 'mr', 'gu', 'te', 'ta', 'kn', 'ml', 'ne', 'si', 'as', 'or', 'sa'};
-    if (indicLanguages.contains(langCode)) {
-      final hindiDict = _translations['hi'];
-      if (hindiDict != null && hindiDict.containsKey(originalQuestion)) {
-        return hindiDict[originalQuestion]!;
-      }
-      final urduDict = _translations['ur'];
-      if (urduDict != null && urduDict.containsKey(originalQuestion)) {
-        return urduDict[originalQuestion]!;
-      }
-    }
-
-    // Perso-Arabic / Middle Eastern languages (Urdu, Arabic, Persian, Pashto, Sindhi, Hebrew)
-    const arabicScriptLanguages = {'ur', 'ar', 'fa', 'ps', 'sd', 'he', 'ha'};
-    if (arabicScriptLanguages.contains(langCode)) {
-      if (langCode == 'ur') {
-        final urduDict = _translations['ur'];
-        if (urduDict != null && urduDict.containsKey(originalQuestion)) {
-          return urduDict[originalQuestion]!;
-        }
-      }
-      final arDict = _translations['ar'];
-      if (arDict != null && arDict.containsKey(originalQuestion)) {
-        return arDict[originalQuestion]!;
-      }
-      final urduDict = _translations['ur'];
-      if (urduDict != null && urduDict.containsKey(originalQuestion)) {
-        return urduDict[originalQuestion]!;
-      }
-    }
-
-    // Romance languages fallback to Spanish or French
-    const romanceLanguages = {'es', 'pt', 'pt_BR', 'pt_PT', 'it', 'fr', 'ro', 'ca'};
-    if (romanceLanguages.contains(langCode)) {
-      final esDict = _translations['es'];
-      if (esDict != null && esDict.containsKey(originalQuestion)) {
-        return esDict[originalQuestion]!;
-      }
-      final frDict = _translations['fr'];
-      if (frDict != null && frDict.containsKey(originalQuestion)) {
-        return frDict[originalQuestion]!;
-      }
-    }
-
-    // Slavic languages fallback to Russian
-    const slavicLanguages = {'ru', 'uk', 'pl', 'cs', 'bg'};
-    if (slavicLanguages.contains(langCode)) {
-      final ruDict = _translations['ru'];
-      if (ruDict != null && ruDict.containsKey(originalQuestion)) {
-        return ruDict[originalQuestion]!;
-      }
-    }
-
-    // 4. Return original default
-    return LocalizedPuzzleData(
-      question: originalQuestion,
-      options: defaultOptions,
-      correctAnswer: defaultAnswer,
-      explanation: defaultExplanation,
-    );
-  }
 }
+

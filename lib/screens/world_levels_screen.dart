@@ -53,7 +53,7 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
     final world = widget.world;
 
     int totalWorldStars = 0;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < world.levelsCount; i++) {
       totalWorldStars += _starsForLevel(i);
     }
 
@@ -197,7 +197,7 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
                                 ),
                                 const SizedBox(width: 5),
                                 Text(
-                                  '$totalWorldStars/30',
+                                  '$totalWorldStars/${world.maxStars}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w900,
@@ -245,7 +245,7 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
 
                     const SizedBox(height: 6),
 
-                    // 10 Levels Grid
+                    // Levels Grid (Up to 1000 Total Levels)
                     Expanded(
                       child: GridView.builder(
                         padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
@@ -256,7 +256,7 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
                           mainAxisSpacing: 14,
                           childAspectRatio: 0.94,
                         ),
-                        itemCount: 10,
+                        itemCount: world.levelsCount,
                         itemBuilder: (context, levelIndex) {
                           final unlocked = _isLevelUnlocked(levelIndex);
                           final stars = _starsForLevel(levelIndex);
@@ -266,7 +266,7 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
                             world: world,
                             levelIndex: levelIndex,
                             levelNumber: levelIndex + 1,
-                            styleName: atmosphere.styleName,
+                            styleName: atmosphere.localizedStyleName,
                             isUnlocked: unlocked,
                             stars: stars,
                             onTap: () async {
@@ -398,7 +398,7 @@ class _LevelCard extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          '${tr('level').toUpperCase()} $levelNumber',
+                          '${tr('level').toUpperCase()} ${formatNumber(levelNumber)}',
                           style: TextStyle(
                             color: isUnlocked ? Colors.white : Colors.white60,
                             fontWeight: FontWeight.w900,
@@ -457,7 +457,7 @@ class _LevelCard extends StatelessWidget {
                           child: Center(
                             child: isUnlocked
                                 ? Text(
-                                    '$levelNumber',
+                                    formatNumber(levelNumber),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 20,

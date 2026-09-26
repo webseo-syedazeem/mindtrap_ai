@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
-<<<<<<< HEAD
 import 'localization/app_language.dart';
 import 'localization/language_controller.dart';
 import 'localization/puzzle_localizer.dart';
@@ -17,11 +16,11 @@ import 'screens/auth_screen.dart';
 import 'screens/language_selection_screen.dart';
 import 'screens/store_screen.dart';
 import 'screens/worlds_screen.dart';
+import 'services/audio_service.dart';
 import 'services/auth_service.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/level_background_builder.dart';
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
+import 'widgets/professional_game_icons.dart';
 
 const supabaseUrl = 'https://zahklkpxzcbfrxathphy.supabase.co';
 const supabaseAnonKey = 'sb_publishable_GnKSc1T827R5ZkYDLnHpbA_KZ-9DR2F';
@@ -29,11 +28,9 @@ bool isSupabaseReady = false;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AudioService.instance.init();
   await initializeSupabaseSafely();
-<<<<<<< HEAD
   await AuthService.instance.init();
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -65,6 +62,7 @@ class GuestUserService {
   static const _uuid = Uuid();
   static bool _isEnsuringGuest = false;
   static bool _isSyncingProgress = false;
+  static bool _hasFetchedInitialData = false;
 
   static Future<String?> get localGuestId async {
     final storage = await GameStorage.prefs;
@@ -94,9 +92,12 @@ class GuestUserService {
       }
 
       debugPrint('Supabase guest local id found: $savedGuestId');
-      final guestData = await fetchGuestData(savedGuestId);
-      if (guestData != null) {
-        GameStorage.applyGuestData(guestData);
+      if (!_hasFetchedInitialData) {
+        _hasFetchedInitialData = true;
+        final guestData = await fetchGuestData(savedGuestId);
+        if (guestData != null) {
+          GameStorage.applyGuestData(guestData);
+        }
       }
       return savedGuestId;
     } catch (error, stackTrace) {
@@ -191,7 +192,7 @@ class GuestUserService {
 
     _isSyncingProgress = true;
     try {
-      final guestId = await ensureGuestUser();
+      final guestId = await localGuestId ?? await ensureGuestUser();
       if (guestId == null || guestId.isEmpty) {
         debugPrint('Supabase guest update skipped: missing guest id');
         return null;
@@ -350,10 +351,7 @@ class GameStorage {
   static const coinBalanceKey = 'store_coin_balance';
   static const gemBalanceKey = 'store_gem_balance';
   static const hintBalanceKey = 'store_hint_balance';
-<<<<<<< HEAD
   static const selectedLanguageKey = 'app_selected_language_code';
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
 
   static const Map<String, int> _intDefaults = {
     bestScoreKey: 0,
@@ -383,10 +381,7 @@ class GameStorage {
     dailyWeekCompletionKey: '',
     stageLevelStarsKey: '',
     dailyRewardClaimedDateKey: '',
-<<<<<<< HEAD
     selectedLanguageKey: '',
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   };
   static const Map<String, bool> _boolDefaults = {
     dailyAttemptedCorrectKey: false,
@@ -420,10 +415,7 @@ class GameStorage {
   static Map<String, int> stageLevelStars = {};
   static Set<String> storeLoginDates = {};
   static String dailyRewardClaimedDate = '';
-<<<<<<< HEAD
   static String selectedLanguageCode = '';
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   static int coinBalance = 0;
   static int gemBalance = 0;
   static int hintBalance = 0;
@@ -546,7 +538,8 @@ class GameStorage {
       return starsForStageLevel(stageIndex, levelIndex - 1) > 0;
     }
 
-    return starsForStageLevel(stageIndex - 1, 9) > 0;
+    return starsForStageLevel(stageIndex - 1, 39) > 0 ||
+        starsForStageLevel(stageIndex - 1, 9) > 0;
   }
 
   static Future<void> saveStageLevelStars({
@@ -756,12 +749,9 @@ class GameStorage {
     comebackWins = savedInt(storage, comebackWinsKey);
     completedChallenges = savedInt(storage, completedChallengesKey);
     dailyRewardClaimedDate = savedString(storage, dailyRewardClaimedDateKey);
-<<<<<<< HEAD
     selectedLanguageCode = savedString(storage, selectedLanguageKey);
     LanguageController.instance.init(selectedLanguageCode);
     LanguageController.instance.onLanguageSaved = (code) => setSelectedLanguageCode(code);
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
     coinBalance = savedInt(storage, coinBalanceKey);
     gemBalance = savedInt(storage, gemBalanceKey);
     hintBalance = savedInt(storage, hintBalanceKey);
@@ -807,10 +797,7 @@ class GameStorage {
       storage.setInt(comebackWinsKey, comebackWins),
       storage.setInt(completedChallengesKey, completedChallenges),
       storage.setString(dailyRewardClaimedDateKey, dailyRewardClaimedDate),
-<<<<<<< HEAD
       storage.setString(selectedLanguageKey, selectedLanguageCode),
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
       storage.setInt(coinBalanceKey, coinBalance),
       storage.setInt(gemBalanceKey, gemBalance),
       storage.setInt(hintBalanceKey, hintBalance),
@@ -864,7 +851,6 @@ class GameStorage {
     debugPrint(
       'Daily reward claimed: ${reward.quantity} ${reward.label} on $todayKey',
     );
-<<<<<<< HEAD
     await _saveAll(notifyAchievementUnlocks: false);
     return true;
   }
@@ -938,8 +924,6 @@ class GameStorage {
     await storage.setInt(hintBalanceKey, hintBalance);
     await _saveAll(notifyAchievementUnlocks: false);
     debugPrint('Hint used. Remaining hints: $hintBalance');
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
     return true;
   }
 
@@ -988,15 +972,6 @@ class GameStorage {
 
     final remoteSettings = data['settings'];
     if (remoteSettings is Map) {
-      soundEnabled = remoteSettings['sound'] is bool
-          ? remoteSettings['sound'] as bool
-          : soundEnabled;
-      musicEnabled = remoteSettings['music'] is bool
-          ? remoteSettings['music'] as bool
-          : musicEnabled;
-      vibrationEnabled = remoteSettings['vibration'] is bool
-          ? remoteSettings['vibration'] as bool
-          : vibrationEnabled;
       final remoteFirstInstallDate = remoteSettings['daily_first_install_date'];
       if (remoteFirstInstallDate is String &&
           remoteFirstInstallDate.isNotEmpty &&
@@ -1188,12 +1163,9 @@ class GameStorage {
     comebackWins = 0;
     completedChallenges = 0;
     stageLevelStars = {};
-<<<<<<< HEAD
     coinBalance = 0;
     gemBalance = 0;
     hintBalance = 0;
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
     _achievementProgress.clear();
     _achievementUnlocked.clear();
     _pendingAchievementPopups.clear();
@@ -1303,51 +1275,35 @@ class GameStorage {
 }
 
 void playTapSound() {
-  if (!GameStorage.soundEnabled) {
-    return;
-  }
-
-  // TODO: Connect tap sound asset when audio files are available.
+  AudioService.instance.playTap(isSoundEnabled: GameStorage.soundEnabled);
 }
 
 void playCorrectSound() {
-  if (!GameStorage.soundEnabled) {
-    return;
-  }
-
-  // TODO: Connect correct-answer sound asset when audio files are available.
+  AudioService.instance.playCorrect(isSoundEnabled: GameStorage.soundEnabled);
 }
 
 void playWrongSound() {
-  if (!GameStorage.soundEnabled) {
-    return;
-  }
-
-  // TODO: Connect wrong-answer sound asset when audio files are available.
+  AudioService.instance.playWrong(isSoundEnabled: GameStorage.soundEnabled);
 }
 
 void playWinSound() {
-  if (!GameStorage.soundEnabled) {
-    return;
-  }
-
-  // TODO: Connect win sound asset when audio files are available.
+  AudioService.instance.playWin(isSoundEnabled: GameStorage.soundEnabled);
 }
 
 void playLoseSound() {
-  if (!GameStorage.soundEnabled) {
-    return;
-  }
+  AudioService.instance.playLose(isSoundEnabled: GameStorage.soundEnabled);
+}
 
-  // TODO: Connect lose sound asset when audio files are available.
+void playCoinSound() {
+  AudioService.instance.playCoin(isSoundEnabled: GameStorage.soundEnabled);
 }
 
 void updateBackgroundMusicSetting() {
-  if (!GameStorage.musicEnabled) {
-    return;
+  if (GameStorage.musicEnabled) {
+    AudioService.instance.startBackgroundMusic(isMusicEnabled: true);
+  } else {
+    AudioService.instance.stopBackgroundMusic();
   }
-
-  // TODO: Start or resume background music when music assets are available.
 }
 
 void triggerLightFeedback() {
@@ -1380,6 +1336,79 @@ VoidCallback? withButtonFeedback(VoidCallback? action) {
     triggerButtonFeedback();
     action();
   };
+}
+
+void showGameNotification({
+  required BuildContext context,
+  required String message,
+  IconData icon = Icons.auto_awesome_rounded,
+  Color accentColor = const Color(0xFF0284C7),
+  Color iconColor = const Color(0xFF38BDF8),
+  Duration duration = const Duration(milliseconds: 2200),
+}) {
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      padding: EdgeInsets.zero,
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      duration: duration,
+      content: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F172A).withAlpha(245),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: accentColor.withAlpha(204),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withAlpha(90),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+            const BoxShadow(
+              color: Colors.black54,
+              blurRadius: 10,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: accentColor.withAlpha(51),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 void queueAchievementUnlockPopups(List<AchievementItem> achievements) {
@@ -1588,11 +1617,7 @@ class AchievementUnlockCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-<<<<<<< HEAD
                           color: Color(0xFF0284C7),
-=======
-                          color: Color(0xFF7445F4),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0,
@@ -1642,10 +1667,33 @@ class MindTrapApp extends StatefulWidget {
   State<MindTrapApp> createState() => _MindTrapAppState();
 }
 
-class _MindTrapAppState extends State<MindTrapApp> {
+class _MindTrapAppState extends State<MindTrapApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    AudioService.instance.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      AudioService.instance.pauseBackgroundMusic();
+    } else if (state == AppLifecycleState.resumed) {
+      AudioService.instance.resumeBackgroundMusic(
+        isMusicEnabled: GameStorage.musicEnabled,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, langCode, _) {
@@ -1668,18 +1716,6 @@ class _MindTrapAppState extends State<MindTrapApp> {
           home: const AppStartupGate(),
         );
       },
-=======
-    return MaterialApp(
-      navigatorKey: appNavigatorKey,
-      title: 'MindTrap AI',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF10121A),
-        fontFamily: 'Roboto',
-      ),
-      home: const AppStartupGate(),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
     );
   }
 }
@@ -1702,6 +1738,7 @@ class _AppStartupGateState extends State<AppStartupGate> {
 
   Future<void> loadStartupDataAndMedia() async {
     await GameStorage.load();
+    updateBackgroundMusicSetting();
     if (!mounted) {
       return;
     }
@@ -1810,16 +1847,12 @@ class _SplashScreenState extends State<SplashScreen>
       return;
     }
 
-<<<<<<< HEAD
     final hasSelectedLanguage = GameStorage.selectedLanguageCode.isNotEmpty;
 
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
     Navigator.of(context).pushReplacement(
       PageRouteBuilder<void>(
         transitionDuration: const Duration(milliseconds: 720),
         pageBuilder: (context, animation, secondaryAnimation) {
-<<<<<<< HEAD
           if (!hasSelectedLanguage) {
             return LanguageSelectionScreen(
               onLanguageChosen: () {
@@ -1832,8 +1865,6 @@ class _SplashScreenState extends State<SplashScreen>
               },
             );
           }
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
           return const HomeScreen();
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -2102,6 +2133,7 @@ class _DailyRewardDialogState extends State<DailyRewardDialog> {
     }
     setState(() => isClaiming = true);
     await GameStorage.claimDailyReward(widget.reward);
+    playCoinSound();
     if (!mounted) {
       return;
     }
@@ -2348,15 +2380,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-<<<<<<< HEAD
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   @override
   void initState() {
     super.initState();
     unawaited(GuestUserService.ensureGuestUser());
+    updateBackgroundMusicSetting();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(showDailyRewardPopup());
     });
@@ -2374,15 +2404,11 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) =>
           DailyRewardDialog(reward: dailyRewardForDate(DateTime.now())),
     );
-<<<<<<< HEAD
     if (mounted) setState(() {});
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   }
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, langCode, _) {
@@ -2565,125 +2591,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
-=======
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final safePadding = MediaQuery.paddingOf(context);
-          final isCompact = constraints.maxHeight < 700;
-          final contentHeight = max(620.0, constraints.maxHeight);
-
-          return Stack(
-            children: [
-              const Positioned.fill(
-                child: Image(
-                  image: AssetImage('assets/images/home_background.webp'),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
-                ),
-              ),
-              SafeArea(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    22,
-                    isCompact ? 14 : 22,
-                    22,
-                    22 + safePadding.bottom,
-                  ),
-                  child: SizedBox(
-                    height: contentHeight - safePadding.vertical - 22,
-                    child: Stack(
-                      children: [
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const HomeTopBar(),
-                              SizedBox(height: isCompact ? 2 : 8),
-                              const NeonBrainLogo(),
-                              const SizedBox(height: 10),
-                              const Text(
-                                'MindTrap AI',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 30,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0,
-                                  color: Color(0xFF10184C),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                'Train your mind. Escape the trap.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF35406E),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Center(
-                          child: HomePlayButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                smoothPageRoute(const LevelSelectScreen()),
-                              );
-                            },
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              bottom: isCompact ? 20 : 28,
-                            ),
-                            child: HomeFeatureGrid(
-                              onDailyPressed: () {
-                                Navigator.push(
-                                  context,
-                                  smoothPageRoute(
-                                    const DailyPuzzleLandingScreen(),
-                                  ),
-                                );
-                              },
-                              onStatsPressed: () {
-                                Navigator.push(
-                                  context,
-                                  smoothPageRoute(const StatsScreen()),
-                                );
-                              },
-                              onAchievementsPressed: () {
-                                Navigator.push(
-                                  context,
-                                  smoothPageRoute(const AchievementsScreen()),
-                                );
-                              },
-                              onStorePressed: () {
-                                Navigator.push(
-                                  context,
-                                  smoothPageRoute(
-                                    const StoreComingSoonScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
     );
   }
 }
@@ -2759,13 +2666,9 @@ class HomeGlowOrb extends StatelessWidget {
 }
 
 class HomeTopBar extends StatelessWidget {
-<<<<<<< HEAD
   final VoidCallback? onMenuPressed;
 
   const HomeTopBar({super.key, this.onMenuPressed});
-=======
-  const HomeTopBar({super.key});
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
 
   @override
   Widget build(BuildContext context) {
@@ -2773,14 +2676,17 @@ class HomeTopBar extends StatelessWidget {
       children: [
         Row(
           children: [
-<<<<<<< HEAD
-            HomeCircleButton(
-              icon: Icons.menu_rounded,
+            ProfessionalCircleButton(
+              size: 42,
+              customIcon: const ProfessionalMenuIcon(size: 21),
+              tooltip: 'Menu',
               onPressed: onMenuPressed ?? () => Scaffold.maybeOf(context)?.openDrawer(),
             ),
             const SizedBox(width: 8),
-            HomeCircleButton(
-              icon: Icons.person_rounded,
+            ProfessionalCircleButton(
+              size: 42,
+              customIcon: const ProfessionalProfileIcon(size: 23),
+              tooltip: 'Profile',
               onPressed: () {
                 Navigator.push(context, smoothPageRoute(const AuthScreen()));
               },
@@ -2793,8 +2699,12 @@ class HomeTopBar extends StatelessWidget {
                 ),
               ),
             ),
-            HomeCircleButton(
-              icon: Icons.public_rounded,
+            ProfessionalCircleButton(
+              size: 42,
+              customIcon: const ProfessionalWorldsIcon(size: 23),
+              tooltip: 'Worlds',
+              hasGlow: true,
+              glowColor: const Color(0x330D9488),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -2807,12 +2717,10 @@ class HomeTopBar extends StatelessWidget {
               },
             ),
             const SizedBox(width: 8),
-=======
-            const HomeCircleButton(icon: Icons.menu_rounded),
-            Expanded(child: Center(child: const HomeCurrencyRow())),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
-            HomeCircleButton(
-              icon: Icons.settings_rounded,
+            ProfessionalCircleButton(
+              size: 42,
+              customIcon: const ProfessionalSettingsIcon(size: 23),
+              tooltip: 'Settings',
               onPressed: () {
                 Navigator.push(context, smoothPageRoute(const SettingsScreen()));
               },
@@ -2823,8 +2731,7 @@ class HomeTopBar extends StatelessWidget {
         Row(
           children: [
             const Spacer(),
-            HomeCircleButton(
-              iconAsset: 'assets/images/daily-reward-icon.png',
+            ProfessionalGiftButton(
               onPressed: () {
                 Navigator.push(
                   context,
@@ -2839,7 +2746,6 @@ class HomeTopBar extends StatelessWidget {
   }
 }
 
-<<<<<<< HEAD
 class HomeCurrencyRow extends StatefulWidget {
   const HomeCurrencyRow({super.key});
 
@@ -2858,12 +2764,6 @@ class _HomeCurrencyRowState extends State<HomeCurrencyRow> {
   }
 
   @override
-=======
-class HomeCurrencyRow extends StatelessWidget {
-  const HomeCurrencyRow({super.key});
-
-  @override
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -2871,7 +2771,6 @@ class HomeCurrencyRow extends StatelessWidget {
         HomeCurrencyPill(
           iconAsset: 'assets/images/coin.webp',
           value: GameStorage.coinBalance,
-<<<<<<< HEAD
           onTap: () => _openStore(1),
         ),
         const SizedBox(width: 5),
@@ -2885,24 +2784,6 @@ class HomeCurrencyRow extends StatelessWidget {
           iconAsset: 'assets/images/hint-icon.webp',
           value: GameStorage.hintBalance,
           onAddPressed: () => _openStore(2),
-=======
-        ),
-        const SizedBox(width: 8),
-        HomeCurrencyPill(
-          iconAsset: 'assets/images/gem.webp',
-          value: GameStorage.gemBalance,
-        ),
-        const SizedBox(width: 8),
-        HomeCurrencyPill(
-          iconAsset: 'assets/images/hint-icon.webp',
-          value: GameStorage.hintBalance,
-          onAddPressed: () {
-            Navigator.push(
-              context,
-              smoothPageRoute(const StoreComingSoonScreen()),
-            );
-          },
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
         ),
       ],
     );
@@ -2914,117 +2795,23 @@ class HomeCurrencyPill extends StatelessWidget {
     super.key,
     required this.iconAsset,
     required this.value,
-<<<<<<< HEAD
     this.onTap,
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
     this.onAddPressed,
   });
 
   final String iconAsset;
   final int value;
-<<<<<<< HEAD
   final VoidCallback? onTap;
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   final VoidCallback? onAddPressed;
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
-    Widget content = Container(
-      height: 32,
-      padding: EdgeInsets.only(left: 6, right: onAddPressed == null ? 8 : 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(235),
-        borderRadius: BorderRadius.circular(16),
-=======
-    return Container(
-      height: 34,
-      padding: EdgeInsets.only(left: 7, right: onAddPressed == null ? 10 : 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(235),
-        borderRadius: BorderRadius.circular(17),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
-        border: Border.all(color: Colors.white, width: 1.2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x335D8BDC),
-            blurRadius: 6,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-<<<<<<< HEAD
-          Image.asset(iconAsset, width: 16, height: 16, fit: BoxFit.contain),
-          const SizedBox(width: 4),
-=======
-          Image.asset(iconAsset, width: 18, height: 18, fit: BoxFit.contain),
-          const SizedBox(width: 5),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
-          Text(
-            '$value',
-            style: const TextStyle(
-              color: Color(0xFF25346D),
-<<<<<<< HEAD
-              fontSize: 12,
-=======
-              fontSize: 13,
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          if (onAddPressed != null) ...[
-<<<<<<< HEAD
-            const SizedBox(width: 3),
-=======
-            const SizedBox(width: 4),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
-            Material(
-              color: const Color(0xFF34C264),
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: withButtonFeedback(onAddPressed!),
-                child: const SizedBox(
-<<<<<<< HEAD
-                  width: 20,
-                  height: 20,
-                  child: Icon(
-                    Icons.add_rounded,
-                    color: Colors.white,
-                    size: 14,
-=======
-                  width: 22,
-                  height: 22,
-                  child: Icon(
-                    Icons.add_rounded,
-                    color: Colors.white,
-                    size: 16,
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
+    return ProfessionalCurrencyPill(
+      iconAsset: iconAsset,
+      value: value,
+      onTap: onTap != null ? withButtonFeedback(onTap!) : null,
+      onAddPressed: onAddPressed != null ? withButtonFeedback(onAddPressed!) : null,
     );
-<<<<<<< HEAD
-
-    if (onTap != null && onAddPressed == null) {
-      return InkWell(
-        onTap: withButtonFeedback(onTap!),
-        borderRadius: BorderRadius.circular(16),
-        child: content,
-      );
-    }
-    return content;
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   }
 }
 
@@ -3034,33 +2821,42 @@ class HomeCircleButton extends StatelessWidget {
     this.icon,
     this.iconAsset,
     this.onPressed,
+    this.iconColor,
+    this.isSpecialReward = false,
   }) : assert(icon != null || iconAsset != null);
 
   final IconData? icon;
   final String? iconAsset;
   final VoidCallback? onPressed;
+  final Color? iconColor;
+  final bool isSpecialReward;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withAlpha(235),
-      shape: const CircleBorder(),
-      elevation: 3,
-      shadowColor: const Color(0x335D8BDC),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: withButtonFeedback(onPressed ?? () {}),
-        child: SizedBox(
-          width: 38,
-          height: 38,
-          child: iconAsset != null
-              ? Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Image.asset(iconAsset!, fit: BoxFit.contain),
-                )
-              : Icon(icon, color: const Color(0xFF33406C), size: 23),
-        ),
-      ),
+    if (isSpecialReward) {
+      return ProfessionalGiftButton(
+        onPressed: onPressed != null ? withButtonFeedback(onPressed!) : null,
+      );
+    }
+
+    Widget? custom;
+    if (icon == Icons.menu_rounded) {
+      custom = const ProfessionalMenuIcon(size: 21);
+    } else if (icon == Icons.person_rounded) {
+      custom = const ProfessionalProfileIcon(size: 23);
+    } else if (icon == Icons.public_rounded) {
+      custom = const ProfessionalWorldsIcon(size: 23);
+    } else if (icon == Icons.settings_rounded) {
+      custom = const ProfessionalSettingsIcon(size: 23);
+    } else if (iconAsset != null) {
+      custom = Image.asset(iconAsset!, width: 22, height: 22, fit: BoxFit.contain);
+    }
+
+    return ProfessionalCircleButton(
+      icon: custom == null ? icon : null,
+      customIcon: custom,
+      iconColor: iconColor,
+      onPressed: onPressed != null ? withButtonFeedback(onPressed!) : null,
     );
   }
 }
@@ -3147,7 +2943,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final safePadding = MediaQuery.paddingOf(context);
 
-<<<<<<< HEAD
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, langCode, _) {
@@ -3177,33 +2972,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ),
-=======
-    return Scaffold(
-      body: Stack(
-        children: [
-          const Positioned.fill(
-            child: Image(
-              image: AssetImage('assets/images/home_background.webp'),
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
-          ),
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withAlpha(12),
-                    const Color(0x3354B7FF),
-                    const Color(0x556E35E8),
-                  ],
-                ),
-              ),
-            ),
-          ),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
           SafeArea(
             child: Center(
               child: ConstrainedBox(
@@ -3248,7 +3016,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         },
                         onResetPressed: resetProgress,
                         onAboutPressed: openAboutGame,
-<<<<<<< HEAD
                         onLanguagePressed: () {
                           Navigator.push(
                             context,
@@ -3268,8 +3035,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             if (mounted) setState(() {});
                           });
                         },
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                       ),
                       const SizedBox(height: 22),
                       const SettingsThanksCard(),
@@ -3282,11 +3047,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
-<<<<<<< HEAD
       },
     );
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   }
 }
 
@@ -3497,7 +3259,6 @@ class AboutGameScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final safePadding = MediaQuery.paddingOf(context);
 
-<<<<<<< HEAD
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, langCode, _) {
@@ -3527,33 +3288,6 @@ class AboutGameScreen extends StatelessWidget {
                   ),
                 ),
               ),
-=======
-    return Scaffold(
-      body: Stack(
-        children: [
-          const Positioned.fill(
-            child: Image(
-              image: AssetImage('assets/images/home_background.webp'),
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
-          ),
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withAlpha(12),
-                    const Color(0x3354B7FF),
-                    const Color(0x556E35E8),
-                  ],
-                ),
-              ),
-            ),
-          ),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
           SafeArea(
             child: Center(
               child: ConstrainedBox(
@@ -3598,11 +3332,8 @@ class AboutGameScreen extends StatelessWidget {
         ],
       ),
     );
-<<<<<<< HEAD
       },
     );
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   }
 }
 
@@ -4114,11 +3845,7 @@ class AboutInfoRow extends StatelessWidget {
         border: Border.all(color: Colors.white.withAlpha(205), width: 1.2),
         boxShadow: const [
           BoxShadow(
-<<<<<<< HEAD
             color: Color(0x18000000),
-=======
-            color: Color(0x183D2491),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
             blurRadius: 9,
             offset: Offset(0, 4),
           ),
@@ -4130,11 +3857,7 @@ class AboutInfoRow extends StatelessWidget {
             width: 40,
             height: 40,
             child: iconAssetPath == null
-<<<<<<< HEAD
                 ? Icon(icon, color: const Color(0xFF0284C7), size: 30)
-=======
-                ? Icon(icon, color: const Color(0xFF7445F4), size: 30)
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                 : Image.asset(iconAssetPath!, fit: BoxFit.contain),
           ),
           const SizedBox(width: 18),
@@ -4142,11 +3865,7 @@ class AboutInfoRow extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-<<<<<<< HEAD
                 color: Color(0xFF0284C7),
-=======
-                color: Color(0xFF7445F4),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                 fontSize: 17,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0,
@@ -4387,10 +4106,7 @@ class SettingsPanel extends StatelessWidget {
     required this.onVibrationChanged,
     required this.onResetPressed,
     required this.onAboutPressed,
-<<<<<<< HEAD
     this.onLanguagePressed,
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   });
 
   final bool isLoading;
@@ -4402,10 +4118,7 @@ class SettingsPanel extends StatelessWidget {
   final ValueChanged<bool> onVibrationChanged;
   final VoidCallback onResetPressed;
   final VoidCallback onAboutPressed;
-<<<<<<< HEAD
   final VoidCallback? onLanguagePressed;
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
 
   @override
   Widget build(BuildContext context) {
@@ -4417,11 +4130,7 @@ class SettingsPanel extends StatelessWidget {
         border: Border.all(color: Colors.white.withAlpha(210), width: 2),
         boxShadow: const [
           BoxShadow(
-<<<<<<< HEAD
             color: Color(0x18000000),
-=======
-            color: Color(0x385D39CA),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
             blurRadius: 22,
             offset: Offset(0, 12),
           ),
@@ -4434,7 +4143,6 @@ class SettingsPanel extends StatelessWidget {
       ),
       child: Column(
         children: [
-<<<<<<< HEAD
           ValueListenableBuilder<bool>(
             valueListenable: AuthService.instance.isLoggedIn,
             builder: (context, loggedIn, _) {
@@ -4472,12 +4180,6 @@ class SettingsPanel extends StatelessWidget {
             icon: Icons.volume_up_rounded,
             iconColor: const Color(0xFF0284C7),
             label: tr('sound'),
-=======
-          SettingsRow(
-            icon: Icons.volume_up_rounded,
-            iconColor: const Color(0xFF7445F4),
-            label: 'Sound',
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
             trailing: SettingsSwitch(
               value: soundEnabled,
               onChanged: isLoading ? null : onSoundChanged,
@@ -4487,11 +4189,7 @@ class SettingsPanel extends StatelessWidget {
           SettingsRow(
             icon: Icons.music_note_rounded,
             iconColor: const Color(0xFFE84A70),
-<<<<<<< HEAD
             label: tr('music'),
-=======
-            label: 'Music',
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
             trailing: SettingsSwitch(
               value: musicEnabled,
               onChanged: isLoading ? null : onMusicChanged,
@@ -4501,11 +4199,7 @@ class SettingsPanel extends StatelessWidget {
           SettingsRow(
             icon: Icons.vibration_rounded,
             iconColor: const Color(0xFF2F87F2),
-<<<<<<< HEAD
             label: tr('vibration'),
-=======
-            label: 'Vibration',
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
             subtitle: 'Device support may vary',
             trailing: SettingsSwitch(
               value: vibrationEnabled,
@@ -4516,7 +4210,6 @@ class SettingsPanel extends StatelessWidget {
           SettingsRow(
             icon: Icons.restart_alt_rounded,
             iconColor: const Color(0xFFE84A70),
-<<<<<<< HEAD
             label: tr('reset_progress'),
             onPressed: onResetPressed,
             trailing: const Icon(
@@ -4526,17 +4219,6 @@ class SettingsPanel extends StatelessWidget {
               shadows: [
                 Shadow(
                   color: Color(0x330284C7),
-=======
-            label: 'Reset Progress',
-            onPressed: onResetPressed,
-            trailing: const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFF7445F4),
-              size: 38,
-              shadows: [
-                Shadow(
-                  color: Color(0x557445F4),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                   blurRadius: 5,
                   offset: Offset(0, 2),
                 ),
@@ -4546,7 +4228,6 @@ class SettingsPanel extends StatelessWidget {
           const SizedBox(height: 12),
           SettingsRow(
             icon: Icons.info_rounded,
-<<<<<<< HEAD
             iconColor: const Color(0xFF0284C7),
             label: tr('about_game'),
             onPressed: onAboutPressed,
@@ -4557,18 +4238,6 @@ class SettingsPanel extends StatelessWidget {
               shadows: [
                 Shadow(
                   color: Color(0x330284C7),
-=======
-            iconColor: const Color(0xFF7544F3),
-            label: 'About Game',
-            onPressed: onAboutPressed,
-            trailing: const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFF7445F4),
-              size: 38,
-              shadows: [
-                Shadow(
-                  color: Color(0x557445F4),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                   blurRadius: 5,
                   offset: Offset(0, 2),
                 ),
@@ -5161,32 +4830,18 @@ class _HomePlayButtonState extends State<HomePlayButton> {
                     ),
                   ],
                 ),
-<<<<<<< HEAD
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(
-=======
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                       Icons.play_arrow_rounded,
                       size: 30,
                       color: Colors.white,
                     ),
-<<<<<<< HEAD
                     const SizedBox(width: 10),
                     Text(
                       tr('play'),
                       style: const TextStyle(
-=======
-                    SizedBox(width: 10),
-                    Text(
-                      'Play Challenge',
-                      style: TextStyle(
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0,
@@ -5229,66 +4884,38 @@ class HomeFeatureGrid extends StatelessWidget {
         HomeFeatureCard(
           icon: Icons.calendar_month_rounded,
           iconColor: const Color(0xFF4D75FF),
-<<<<<<< HEAD
           label: tr('daily_challenge'),
           subtitle: "Daily puzzle",
           iconSize: 40,
           labelFontSize: 13,
-=======
-          label: 'Daily\nPuzzle',
-          subtitle: "Today's challenge",
-          iconSize: 40,
-          labelFontSize: 16,
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
           onPressed: onDailyPressed,
         ),
         HomeFeatureCard(
           icon: Icons.bar_chart_rounded,
           iconColor: const Color(0xFF2F74E8),
-<<<<<<< HEAD
           label: tr('statistics'),
           subtitle: 'Progress',
           iconSize: 40,
           labelFontSize: 13,
-=======
-          label: 'Stats',
-          subtitle: 'Your progress',
-          iconSize: 40,
-          labelFontSize: 16,
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
           onPressed: onStatsPressed,
         ),
         HomeFeatureCard(
           icon: Icons.emoji_events_rounded,
           iconColor: const Color(0xFFFFB11F),
-<<<<<<< HEAD
           label: tr('achievements'),
           subtitle: 'Milestones',
           iconSize: 40,
           labelFontSize: 12,
-=======
-          label: 'Achievements',
-          subtitle: 'Your milestones',
-          iconSize: 40,
-          labelFontSize: 13,
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
           subtitleFontSize: 7.5,
           onPressed: onAchievementsPressed,
         ),
         HomeFeatureCard(
           icon: Icons.shopping_bag_rounded,
           iconColor: const Color(0xFFE84A70),
-<<<<<<< HEAD
           label: tr('store'),
           subtitle: 'Hints & gems',
           iconSize: 40,
           labelFontSize: 13,
-=======
-          label: 'Store',
-          subtitle: 'Coming soon',
-          iconSize: 40,
-          labelFontSize: 16,
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
           onPressed: onStorePressed,
         ),
       ],
@@ -5320,57 +4947,97 @@ class HomeFeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withAlpha(232),
-      borderRadius: BorderRadius.circular(16),
-      elevation: 5,
-      shadowColor: const Color(0x245E79BD),
-      child: InkWell(
-        onTap: withButtonFeedback(onPressed ?? () {}),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withAlpha(190), width: 1.3),
+    return TactileBounce(
+      onTap: withButtonFeedback(onPressed ?? () {}),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white,
+              Color(0xFFF8FAFC),
+              Color(0xFFF1F5F9),
+            ],
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: iconColor, size: iconSize),
-              const SizedBox(width: 9),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: labelFontSize,
-                      height: 0.95,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0,
-                      color: const Color(0xFF202B58),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: subtitleFontSize,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF5D688D),
-                    ),
+          border: Border.all(color: Colors.white, width: 1.4),
+          boxShadow: [
+            const BoxShadow(
+              color: Color(0x201E293B),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+            BoxShadow(
+              color: iconColor.withAlpha(25),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: iconSize + 6,
+              height: iconSize + 6,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color.lerp(iconColor, Colors.white, 0.25) ?? iconColor,
+                    iconColor,
+                    Color.lerp(iconColor, Colors.black, 0.2) ?? iconColor,
+                  ],
+                ),
+                border: Border.all(color: Colors.white.withAlpha(200), width: 1.3),
+                boxShadow: [
+                  BoxShadow(
+                    color: iconColor.withAlpha(90),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-            ],
-          ),
+              child: Center(
+                child: Icon(icon, color: Colors.white, size: iconSize * 0.58),
+              ),
+            ),
+            const SizedBox(width: 9),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: labelFontSize,
+                    height: 0.95,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: subtitleFontSize,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -5382,7 +5049,6 @@ class StoreComingSoonScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     return const StoreScreen();
   }
 }
@@ -5406,12 +5072,12 @@ class _DailyRewardScreenState extends State<DailyRewardScreen> {
     playWinSound();
     triggerSuccessFeedback();
     setState(() => isClaiming = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('+${reward.quantity} ${reward.label} claimed!'),
-        backgroundColor: const Color(0xFF16A947),
-        duration: const Duration(seconds: 2),
-      ),
+    showGameNotification(
+      context: context,
+      message: '+${reward.quantity} ${reward.label} claimed!',
+      icon: Icons.check_circle_rounded,
+      accentColor: const Color(0xFF16A947),
+      iconColor: const Color(0xFF4ADE80),
     );
   }
 
@@ -5450,35 +5116,6 @@ class _DailyRewardScreenState extends State<DailyRewardScreen> {
                   ),
                 ),
               ),
-=======
-    final safePadding = MediaQuery.paddingOf(context);
-
-    return Scaffold(
-      body: Stack(
-        children: [
-          const Positioned.fill(
-            child: Image(
-              image: AssetImage('assets/images/home_background.webp'),
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
-          ),
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withAlpha(12),
-                    const Color(0x3354B7FF),
-                    const Color(0x556E35E8),
-                  ],
-                ),
-              ),
-            ),
-          ),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
           SafeArea(
             child: Center(
               child: ConstrainedBox(
@@ -5499,28 +5136,20 @@ class _DailyRewardScreenState extends State<DailyRewardScreen> {
                             onPressed: () => Navigator.of(context).maybePop(),
                           ),
                           const Spacer(),
-<<<<<<< HEAD
                           const HomeCurrencyRow(),
                           const Spacer(),
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                           SettingsBackButton(
                             icon: Icons.settings_rounded,
                             onPressed: () => Navigator.push(
                               context,
                               smoothPageRoute(const SettingsScreen()),
-<<<<<<< HEAD
                             ).then((_) {
                               if (mounted) setState(() {});
                             }),
-=======
-                            ),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                           ),
                         ],
                       ),
                       const SizedBox(height: 0),
-<<<<<<< HEAD
                       SettingsRibbon(
                         title: tr('daily_reward'),
                         assetPath: 'assets/images/daily-reward-heading.webp',
@@ -5614,28 +5243,6 @@ class _DailyRewardScreenState extends State<DailyRewardScreen> {
                             ],
                           ),
                         ),
-=======
-                      const SettingsRibbon(
-                        title: 'STORE',
-                        assetPath: 'assets/images/store-title.webp',
-                      ),
-                      const SizedBox(height: 12),
-                      const StoreHintSection(
-                        title: 'BUY HINTS (COINS)',
-                        currencyAsset: 'assets/images/coin.webp',
-                        prices: [100, 250, 400, 1000],
-                        buttonColors: [Color(0xFF61DA77), Color(0xFF16A947)],
-                      ),
-                      const SizedBox(height: 18),
-                      const StoreHintSection(
-                        title: 'BUY HINTS (GEMS)',
-                        currencyAsset: 'assets/images/gem.webp',
-                        prices: [10, 25, 45, 120],
-                        buttonColors: [Color(0xFFA454F4), Color(0xFF6423C9)],
-                      ),
-                      const SizedBox(height: 16),
-                      const StoreHelpPill(),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                     ],
                   ),
                 ),
@@ -5645,89 +5252,7 @@ class _DailyRewardScreenState extends State<DailyRewardScreen> {
         ],
       ),
     );
-<<<<<<< HEAD
       },
-=======
-  }
-}
-
-class DailyRewardScreen extends StatelessWidget {
-  const DailyRewardScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final safePadding = MediaQuery.paddingOf(context);
-
-    return Scaffold(
-      body: Stack(
-        children: [
-          const Positioned.fill(
-            child: Image(
-              image: AssetImage('assets/images/home_background.webp'),
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
-          ),
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withAlpha(12),
-                    const Color(0x3354B7FF),
-                    const Color(0x556E35E8),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 430),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    18,
-                    18,
-                    18,
-                    24 + safePadding.bottom,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          SettingsBackButton(
-                            onPressed: () => Navigator.of(context).maybePop(),
-                          ),
-                          const Spacer(),
-                          SettingsBackButton(
-                            icon: Icons.settings_rounded,
-                            onPressed: () => Navigator.push(
-                              context,
-                              smoothPageRoute(const SettingsScreen()),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 0),
-                      const SettingsRibbon(
-                        title: 'DAILY REWARD',
-                        assetPath: 'assets/images/daily-reward-heading.webp',
-                      ),
-                      const SizedBox(height: 12),
-                      const StoreMonthlyRewards(),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
     );
   }
 }
@@ -5941,20 +5466,14 @@ class StoreHintSection extends StatelessWidget {
     required this.currencyAsset,
     required this.prices,
     required this.buttonColors,
-<<<<<<< HEAD
     this.onBuy,
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   });
 
   final String title;
   final String currencyAsset;
   final List<int> prices;
   final List<Color> buttonColors;
-<<<<<<< HEAD
   final void Function(int count, int price)? onBuy;
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
 
   static const hintCounts = [1, 3, 5, 15];
 
@@ -5983,12 +5502,9 @@ class StoreHintSection extends StatelessWidget {
                   price: prices[index],
                   currencyAsset: currencyAsset,
                   buttonColors: buttonColors,
-<<<<<<< HEAD
                   onTap: onBuy != null
                       ? () => onBuy!(hintCounts[index], prices[index])
                       : null,
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                 ),
               );
             },
@@ -6006,20 +5522,14 @@ class StoreHintPack extends StatelessWidget {
     required this.price,
     required this.currencyAsset,
     required this.buttonColors,
-<<<<<<< HEAD
     this.onTap,
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   });
 
   final int count;
   final int price;
   final String currencyAsset;
   final List<Color> buttonColors;
-<<<<<<< HEAD
   final VoidCallback? onTap;
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
 
   @override
   Widget build(BuildContext context) {
@@ -6047,11 +5557,7 @@ class StoreHintPack extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-<<<<<<< HEAD
             '$count ${count == 1 ? tr('hint') : tr('hints')}',
-=======
-            '$count ${count == 1 ? 'Hint' : 'Hints'}',
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
             maxLines: 1,
             style: const TextStyle(
               color: Color(0xFF26366F),
@@ -6060,7 +5566,6 @@ class StoreHintPack extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 7),
-<<<<<<< HEAD
           Material(
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(13),
@@ -6099,38 +5604,6 @@ class StoreHintPack extends StatelessWidget {
                   ],
                 ),
               ),
-=======
-          Container(
-            height: 34,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: buttonColors),
-              borderRadius: BorderRadius.circular(13),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x33253670),
-                  blurRadius: 4,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(currencyAsset, width: 20, height: 20),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    '$price',
-                    maxLines: 1,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ],
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
             ),
           ),
         ],
@@ -7137,7 +6610,6 @@ class AchievementsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, langCode, _) {
@@ -7189,56 +6661,6 @@ class AchievementsScreen extends StatelessWidget {
                               letterSpacing: 0,
                             ),
                           ),
-=======
-    final completedItems = completedAchievementItems;
-    final inProgressItems = progressItemsWithOrderedGifts(
-      inProgressAchievementItems,
-    );
-    final lockedItems = lockedAchievementItems;
-    final completedCount = completedItems.length;
-    final inProgressCount = inProgressItems.length;
-    final lockedCount = lockedItems.length;
-
-    return Scaffold(
-      body: Stack(
-        children: [
-          const Positioned.fill(
-            child: OptionalAssetImage(
-              assetPath: 'assets/images/achievements_background.webp',
-              fallbackAssetPath:
-                  'assets/images/puzzle_complete_background.webp',
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
-          ),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 430),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(18, 20, 18, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: StatsCircleButton(
-                          icon: Icons.arrow_back_ios_new_rounded,
-                          onPressed: () => Navigator.of(context).maybePop(),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Achievements',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xFF10234D),
-                          fontSize: 34,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0,
-                        ),
-                      ),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                       const SizedBox(height: 8),
                       const Text(
                         'Unlock achievements and earn rewards!',
@@ -7303,11 +6725,8 @@ class AchievementsScreen extends StatelessWidget {
         ],
       ),
     );
-<<<<<<< HEAD
       },
     );
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   }
 }
 
@@ -8177,7 +7596,6 @@ class StatsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, langCode, _) {
@@ -8215,42 +7633,6 @@ class StatsScreen extends StatelessWidget {
                             tr('statistics'),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-=======
-    return Scaffold(
-      body: Stack(
-        children: [
-          const Positioned.fill(
-            child: Image(
-              image: AssetImage(
-                'assets/images/puzzle_complete_background.webp',
-              ),
-              fit: BoxFit.cover,
-              alignment: Alignment.center,
-            ),
-          ),
-          const LevelCompleteConfettiLayer(),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 430),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 26),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: StatsCircleButton(
-                          icon: Icons.arrow_back_ios_new_rounded,
-                          onPressed: () => Navigator.of(context).maybePop(),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Your Stats',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                           color: Color(0xFF11224D),
                           fontSize: 36,
                           fontWeight: FontWeight.w900,
@@ -8290,11 +7672,8 @@ class StatsScreen extends StatelessWidget {
         ],
       ),
     );
-<<<<<<< HEAD
       },
     );
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   }
 }
 
@@ -9227,7 +8606,6 @@ List<PuzzleLevel> buildMindTrapPuzzleBank() {
       correctAnswer: 'Silence',
       explanation: 'Saying anything ends silence.',
     ),
-<<<<<<< HEAD
     const PuzzleLevel(
       question: 'I speak without a mouth and hear without ears. What am I?',
       options: ['Echo', 'Shadow', 'Whistle', 'Radio'],
@@ -9480,8 +8858,6 @@ List<PuzzleLevel> buildMindTrapPuzzleBank() {
       correctAnswer: 'A sponge',
       explanation: 'A sponge is porous with holes, yet absorbs and holds water.',
     ),
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   ];
 
   puzzles
@@ -11009,12 +10385,8 @@ class DailyLandingDayDot extends StatelessWidget {
 class LevelSelectScreen extends StatefulWidget {
   const LevelSelectScreen({super.key});
 
-  static const int levelsPerStage = 10;
-<<<<<<< HEAD
-  static const int stageCount = 10;
-=======
-  static const int stageCount = 7;
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
+  static const int levelsPerStage = 40;
+  static const int stageCount = 25;
 
   static int get currentGlobalLevelIndex {
     for (var stageIndex = 0; stageIndex < stageCount; stageIndex++) {
@@ -11413,7 +10785,6 @@ LevelTheme levelThemeForStage(int stageIndex) {
       accentDark: Color(0xFF4D5BE8),
       shadow: Color(0xFF4D5BE8),
     ),
-<<<<<<< HEAD
     LevelTheme(
       title: 'Cosmic Nebula',
       titleColor: Color(0xFFFFFFFF),
@@ -11438,8 +10809,6 @@ LevelTheme levelThemeForStage(int stageIndex) {
       accentDark: Color(0xFFC51162),
       shadow: Color(0xFFFF4081),
     ),
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   ];
   return themes[stageIndex.clamp(0, themes.length - 1)];
 }
@@ -11509,23 +10878,14 @@ class LevelHeaderPlayButton extends StatelessWidget {
 }
 
 String levelBackgroundAssetForStage(int stageIndex) {
-<<<<<<< HEAD
   final safeIndex = (stageIndex % 7).abs();
   return 'assets/images/Stage-${safeIndex + 1}.webp';
-=======
-  final safeStageIndex = stageIndex.clamp(0, LevelSelectScreen.stageCount - 1);
-  return 'assets/images/Stage-${safeStageIndex + 1}.webp';
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
 }
 
 class StageSelectScreen extends StatefulWidget {
   const StageSelectScreen({super.key});
 
-<<<<<<< HEAD
   static const int stageCount = 10;
-=======
-  static const int stageCount = 7;
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   static const int levelsPerStage = 10;
 
   @override
@@ -12153,7 +11513,6 @@ class DailyPuzzleScreen extends StatefulWidget {
 }
 
 class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
-<<<<<<< HEAD
   PuzzleLevel get dailyPuzzle {
     final localized = PuzzleLocalizer.getTranslation(
       "What has keys but can't open locks?",
@@ -12169,14 +11528,6 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
       explanation: localized.explanation,
     );
   }
-=======
-  static const PuzzleLevel dailyPuzzle = PuzzleLevel(
-    question: "What has keys but can't open locks?",
-    options: ['Piano', 'Door', 'Car', 'Chest'],
-    correctAnswer: 'Piano',
-    explanation: 'A piano has musical keys, not keys for opening locks.',
-  );
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
 
   int streak = 0;
   bool solvedToday = false;
@@ -12185,42 +11536,11 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
   bool lastAnswerWasCorrect = false;
   bool isLoadingDailyState = true;
   String? selectedAnswer;
-  int _timerSeconds = 15;
-  Timer? _dailyTimer;
 
   @override
   void initState() {
     super.initState();
     loadDailyStreak();
-  }
-
-  void _startDailyTimer() {
-    _dailyTimer?.cancel();
-    setState(() => _timerSeconds = 15);
-    _dailyTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      if (attemptedToday) {
-        t.cancel();
-        return;
-      }
-      if (_timerSeconds <= 1) {
-        t.cancel();
-        if (!attemptedToday && !isShowingFeedback) {
-          checkAnswer('__timeout__');
-        }
-      } else {
-        setState(() => _timerSeconds--);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _dailyTimer?.cancel();
-    super.dispose();
   }
 
   String formatDate(DateTime date) {
@@ -12282,17 +11602,12 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
       selectedAnswer = hasAttemptedToday ? restoredAnswer : null;
       isLoadingDailyState = false;
     });
-
-    if (!hasAttemptedToday) {
-      _startDailyTimer();
-    }
   }
 
   Future<void> checkAnswer(String answer) async {
     if (attemptedToday || isShowingFeedback) {
       return;
     }
-    _dailyTimer?.cancel();
 
     final isCorrect = answer == dailyPuzzle.correctAnswer;
     if (isCorrect) {
@@ -12402,67 +11717,62 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
       return const PremiumLoading();
     }
 
-<<<<<<< HEAD
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, langCode, _) {
-        return Scaffold(
-=======
-    return Scaffold(
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
-      body: Stack(
-        children: [
-          const Positioned.fill(
-            child: Image(
-              image: AssetImage('assets/images/quiz_background.webp'),
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
-          ),
-          Positioned.fill(
-            child: AnimatedOpacity(
-              opacity: isShowingFeedback && lastAnswerWasCorrect ? 1 : 0,
-              duration: const Duration(milliseconds: 950),
-              curve: Curves.easeInOutCubic,
-              child: const Image(
-                image: AssetImage('assets/images/quiz_correct_background.webp'),
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: AnimatedOpacity(
-              opacity: isShowingFeedback && !lastAnswerWasCorrect ? 1 : 0,
-              duration: const Duration(milliseconds: 950),
-              curve: Curves.easeInOutCubic,
-              child: const Image(
-                image: AssetImage('assets/images/quiz_wrong_background.webp'),
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 430),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 18, 28, 22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      DailyPuzzleTopHud(
-                        canPop: canPop,
-                        streak: streak,
-                        isSolved: solvedToday,
-                        timerSeconds: _timerSeconds,
-                        showTimer: !attemptedToday,
-                        onBack: () => Navigator.of(context).maybePop(),
-                      ),
-                      const SizedBox(height: 20),
-                      DailyPuzzleHeader(isSolved: solvedToday, streak: streak),
-                      const SizedBox(height: 18),
+        return Directionality(
+          textDirection: LanguageController.instance.directionality,
+          child: Scaffold(
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: LevelBackgroundBuilder(
+                    worldIndex: (DateTime.now().year + DateTime.now().month) % 7,
+                    levelIndex: DateTime.now().day,
+                  ),
+                ),
+                Positioned.fill(
+                  child: AnimatedOpacity(
+                    opacity: isShowingFeedback && lastAnswerWasCorrect ? 1 : 0,
+                    duration: const Duration(milliseconds: 950),
+                    curve: Curves.easeInOutCubic,
+                    child: const Image(
+                      image: AssetImage('assets/images/quiz_correct_background.webp'),
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: AnimatedOpacity(
+                    opacity: isShowingFeedback && !lastAnswerWasCorrect ? 1 : 0,
+                    duration: const Duration(milliseconds: 950),
+                    curve: Curves.easeInOutCubic,
+                    child: const Image(
+                      image: AssetImage('assets/images/quiz_wrong_background.webp'),
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                    ),
+                  ),
+                ),
+                SafeArea(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 430),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(28, 18, 28, 22),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            DailyPuzzleTopHud(
+                              canPop: canPop,
+                              streak: streak,
+                              isSolved: solvedToday,
+                              onBack: () => Navigator.of(context).maybePop(),
+                            ),
+                            const SizedBox(height: 20),
+                            DailyPuzzleHeader(isSolved: solvedToday, streak: streak),
+                            const SizedBox(height: 18),
                       Expanded(
                         child: LevelEntranceTransition(
                           child: SingleChildScrollView(
@@ -12525,12 +11835,10 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
           ),
         ],
       ),
-    );
-<<<<<<< HEAD
+    ),
+  );
       },
     );
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   }
 }
 
@@ -12560,10 +11868,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   bool hasRecordedGameResult = false;
   String? selectedAnswer;
   bool? resultOverlayWasCorrect;
-  int _timerSeconds = 15;
-  Timer? _questionTimer;
   int levelRetryCount = 0;
-<<<<<<< HEAD
   final Set<String> eliminatedOptions = {};
 
   Future<void> useHint() async {
@@ -12578,12 +11883,13 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
           eliminatedOptions.addAll(wrongOptions.take(2));
         });
         triggerSuccessFeedback();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(tr('hint_eliminated')),
-            backgroundColor: const Color(0xFF0284C7),
-            duration: const Duration(seconds: 2),
-          ),
+        playCoinSound();
+        showGameNotification(
+          context: context,
+          message: tr('hint_eliminated'),
+          icon: Icons.lightbulb_rounded,
+          accentColor: const Color(0xFF0284C7),
+          iconColor: const Color(0xFF38BDF8),
         );
       }
     } else {
@@ -12635,8 +11941,12 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                 setState(() {});
                 await useHint();
               } else if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(tr('not_enough_coins')), backgroundColor: const Color(0xFFE53935)),
+                showGameNotification(
+                  context: context,
+                  message: tr('not_enough_coins'),
+                  icon: Icons.monetization_on_rounded,
+                  accentColor: const Color(0xFFEF4444),
+                  iconColor: const Color(0xFFFCA5A5),
                 );
               }
             },
@@ -12655,8 +11965,12 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                 setState(() {});
                 await useHint();
               } else if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(tr('not_enough_gems')), backgroundColor: const Color(0xFFE53935)),
+                showGameNotification(
+                  context: context,
+                  message: tr('not_enough_gems'),
+                  icon: Icons.diamond_rounded,
+                  accentColor: const Color(0xFFEF4444),
+                  iconColor: const Color(0xFFFCA5A5),
                 );
               }
             },
@@ -12682,10 +11996,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       explanation: localized.explanation,
     );
   }
-=======
-
-  PuzzleLevel get currentLevel => sessionLevels[currentLevelIndex];
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   LevelTheme get currentTheme => widget.isStageMode
       ? levelThemeForStage(widget.stageIndex!)
       : levelThemeForStage(2);
@@ -12693,46 +12003,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   @override
   void initState() {
     super.initState();
+    updateBackgroundMusicSetting();
     startNewGame();
-  }
-
-  void _startTimer() {
-    _questionTimer?.cancel();
-    setState(() => _timerSeconds = 15);
-    _questionTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      if (_timerSeconds <= 1) {
-        t.cancel();
-        _onTimerExpired();
-      } else {
-        setState(() => _timerSeconds--);
-      }
-    });
-  }
-
-  void _stopTimer() {
-    _questionTimer?.cancel();
-    _questionTimer = null;
-  }
-
-  void _onTimerExpired() {
-    if (isShowingFeedback ||
-        isShowingLevelCompletePage ||
-        isShowingWrongAnswerPage ||
-        hasWon ||
-        hasGameOver) {
-      return;
-    }
-    checkAnswer('__timeout__');
-  }
-
-  @override
-  void dispose() {
-    _questionTimer?.cancel();
-    super.dispose();
   }
 
   @override
@@ -12776,10 +12048,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   }
 
   void startNewGame() {
-<<<<<<< HEAD
     eliminatedOptions.clear();
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
     final randomSeed = widget.isStageMode
         ? ((widget.stageIndex! + 1) * 1000 +
               widget.levelIndex! +
@@ -12807,23 +12076,17 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     hasRecordedGameResult = false;
     selectedAnswer = null;
     resultOverlayWasCorrect = null;
-    _startTimer();
   }
 
   void checkAnswer(String answer) {
-<<<<<<< HEAD
     if (eliminatedOptions.contains(answer) ||
         isShowingFeedback ||
-=======
-    if (isShowingFeedback ||
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
         isShowingLevelCompletePage ||
         isShowingWrongAnswerPage ||
         hasWon ||
         hasGameOver) {
       return;
     }
-    _stopTimer();
 
     final isCorrect = answer == currentLevel.correctAnswer;
     final nextLives = isCorrect ? lives : lives - 1;
@@ -12968,10 +12231,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     var finishedLevels = correctAnswers;
 
     setState(() {
-<<<<<<< HEAD
       eliminatedOptions.clear();
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
       if (widget.isStageMode && currentLevelIndex == sessionLevels.length - 1) {
         hasWon = true;
         didFinish = true;
@@ -13013,7 +12273,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     });
     if (didFinish && !hasRecordedGameResult) {
       hasRecordedGameResult = true;
-<<<<<<< HEAD
       if (didWin) {
         unawaited(GameStorage.awardLevelDiamonds(5));
         final isStageCompletion = widget.isStageMode &&
@@ -13024,8 +12283,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
           unawaited(GameStorage.awardStageCoins(100));
         }
       }
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
       unawaited(
         GameStorage.recordGameFinished(
           didWin: didWin,
@@ -13050,10 +12307,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       );
       return;
     }
-
-    if (!didFinish) {
-      _startTimer();
-    }
   }
 
   void playAgain() {
@@ -13064,7 +12317,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, currentLang, _) {
@@ -13096,230 +12348,106 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
           );
         }
 
-        return Stack(
-          children: [
-            Scaffold(
-              body: Stack(
-                children: [
-                  if (widget.isStageMode)
-                    Positioned.fill(
-                      child: LevelBackgroundBuilder(
-                        worldIndex: widget.stageIndex!,
-                        levelIndex: widget.levelIndex!,
-                      ),
-                    )
-                  else
-                    const Positioned.fill(
-                      child: Image(
-                        image: AssetImage('assets/images/quiz_background.webp'),
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                      ),
-                    ),
-                  Positioned.fill(
-                    child: AnimatedOpacity(
-                      opacity: 0.0,
-                      duration: const Duration(milliseconds: 950),
-                      curve: Curves.easeInOutCubic,
-                      child: const Image(
-                        image: AssetImage(
-                          'assets/images/quiz_correct_background.webp',
-                        ),
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: AnimatedOpacity(
-                      opacity: 0.0,
-                      duration: const Duration(milliseconds: 950),
-                      curve: Curves.easeInOutCubic,
-                      child: const Image(
-                        image: AssetImage(
-                          'assets/images/quiz_wrong_background.webp',
-                        ),
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                      ),
-                    ),
-                  ),
-                  SafeArea(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 430),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(28, 18, 28, 22),
-                          child: buildGameplayContent(canPop: canPop),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isShowingLevelCompletePage)
-              LevelCompleteScreen(
-                score: 10,
-                accuracy: 100,
-                isExiting: isDismissingLevelCompletePage,
-                isStageComplete: widget.isStageMode &&
-                    widget.levelIndex == (StageSelectScreen.levelsPerStage - 1),
-                onNextPuzzle: dismissLevelCompletePageThenAdvance,
-              ),
-            if (isShowingWrongAnswerPage)
-              if (selectedAnswer == '__timeout__')
-                TimeOutScreen(
-                  selectedAnswer: 'Time ran out',
-                  correctAnswer: currentLevel.correctAnswer,
-                  isExiting: isDismissingWrongAnswerPage,
-                  continueLabel: widget.isStageMode ? 'Try Again' : 'Continue',
-                  onContinue: dismissWrongAnswerPageThenAdvance,
-                  onBackToHome: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  },
-                )
-              else
-                WrongAnswerScreen(
-                  selectedAnswer: selectedAnswer ?? 'No answer',
-                  correctAnswer: currentLevel.correctAnswer,
-                  explanation: getCorrectAnswerExplanation(currentLevel),
-                  isExiting: isDismissingWrongAnswerPage,
-                  continueLabel: widget.isStageMode ? 'Try Again' : 'Continue',
-                  onContinue: dismissWrongAnswerPageThenAdvance,
-                  onBackToHome: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  },
-                ),
-          ],
-        );
-      },
-=======
-    final canPop = Navigator.canPop(context);
-
-    if (hasWon || hasGameOver) {
-      if (hasGameOver) {
-        return GameOverScreen(
-          finalScore: score,
-          levelsCompleted: correctAnswers,
-          correctAnswers: correctAnswers,
-          totalAnswers: totalAnswers,
-          onTryAgain: playAgain,
-          onBackToHome: () {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          },
-        );
-      }
-      return GameSummaryScreen(
-        didWin: hasWon,
-        finalScore: score,
-        levelsCompleted: totalAnswers,
-        correctAnswers: correctAnswers,
-        totalAnswers: totalAnswers,
-        onPlayAgain: playAgain,
-        onBackToHome: () {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        },
-      );
-    }
-
-    return Stack(
-      children: [
-        Scaffold(
-          body: Stack(
+        return Directionality(
+          textDirection: LanguageController.instance.directionality,
+          child: Stack(
             children: [
-              const Positioned.fill(
-                child: Image(
-                  image: AssetImage('assets/images/quiz_background.webp'),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
+              Scaffold(
+                body: Stack(
+                  children: [
+                    if (widget.isStageMode)
+                      Positioned.fill(
+                        child: LevelBackgroundBuilder(
+                          worldIndex: widget.stageIndex!,
+                          levelIndex: (widget.levelIndex! * 3) + currentLevelIndex,
+                        ),
+                      )
+                    else
+                      Positioned.fill(
+                        child: LevelBackgroundBuilder(
+                          worldIndex: currentLevelIndex ~/ 3,
+                          levelIndex: currentLevelIndex,
+                        ),
+                      ),
+                    Positioned.fill(
+                      child: AnimatedOpacity(
+                        opacity: 0.0,
+                        duration: const Duration(milliseconds: 950),
+                        curve: Curves.easeInOutCubic,
+                        child: const Image(
+                          image: AssetImage(
+                            'assets/images/quiz_correct_background.webp',
+                          ),
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: AnimatedOpacity(
+                        opacity: 0.0,
+                        duration: const Duration(milliseconds: 950),
+                        curve: Curves.easeInOutCubic,
+                        child: const Image(
+                          image: AssetImage(
+                            'assets/images/quiz_wrong_background.webp',
+                          ),
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                        ),
+                      ),
+                    ),
+                    SafeArea(
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 430),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(28, 18, 28, 22),
+                            child: buildGameplayContent(canPop: canPop),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              if (widget.isStageMode)
-                Positioned.fill(
-                  child: Image(
-                    image: AssetImage(
-                      levelBackgroundAssetForStage(widget.stageIndex!),
-                    ),
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                  ),
+              if (isShowingLevelCompletePage)
+                LevelCompleteScreen(
+                  score: 10,
+                  accuracy: 100,
+                  isExiting: isDismissingLevelCompletePage,
+                  isStageComplete: widget.isStageMode &&
+                      widget.levelIndex == (StageSelectScreen.levelsPerStage - 1),
+                  onNextPuzzle: dismissLevelCompletePageThenAdvance,
                 ),
-              Positioned.fill(
-                child: AnimatedOpacity(
-                  opacity: 0.0,
-                  duration: const Duration(milliseconds: 950),
-                  curve: Curves.easeInOutCubic,
-                  child: const Image(
-                    image: AssetImage(
-                      'assets/images/quiz_correct_background.webp',
-                    ),
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
+              if (isShowingWrongAnswerPage)
+                if (selectedAnswer == '__timeout__')
+                  TimeOutScreen(
+                    selectedAnswer: 'Time ran out',
+                    correctAnswer: currentLevel.correctAnswer,
+                    isExiting: isDismissingWrongAnswerPage,
+                    continueLabel: widget.isStageMode ? 'Try Again' : 'Continue',
+                    onContinue: dismissWrongAnswerPageThenAdvance,
+                    onBackToHome: () {
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    },
+                  )
+                else
+                  WrongAnswerScreen(
+                    selectedAnswer: selectedAnswer ?? 'No answer',
+                    correctAnswer: currentLevel.correctAnswer,
+                    explanation: getCorrectAnswerExplanation(currentLevel),
+                    isExiting: isDismissingWrongAnswerPage,
+                    continueLabel: widget.isStageMode ? 'Try Again' : 'Continue',
+                    onContinue: dismissWrongAnswerPageThenAdvance,
+                    onBackToHome: () {
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    },
                   ),
-                ),
-              ),
-              Positioned.fill(
-                child: AnimatedOpacity(
-                  opacity: 0.0,
-                  duration: const Duration(milliseconds: 950),
-                  curve: Curves.easeInOutCubic,
-                  child: const Image(
-                    image: AssetImage(
-                      'assets/images/quiz_wrong_background.webp',
-                    ),
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                  ),
-                ),
-              ),
-              SafeArea(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 430),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(28, 18, 28, 22),
-                      child: buildGameplayContent(canPop: canPop),
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
-        ),
-        if (isShowingLevelCompletePage)
-          LevelCompleteScreen(
-            score: 10,
-            accuracy: 100,
-            isExiting: isDismissingLevelCompletePage,
-            onNextPuzzle: dismissLevelCompletePageThenAdvance,
-          ),
-        if (isShowingWrongAnswerPage)
-          if (selectedAnswer == '__timeout__')
-            TimeOutScreen(
-              selectedAnswer: 'Time ran out',
-              correctAnswer: currentLevel.correctAnswer,
-              isExiting: isDismissingWrongAnswerPage,
-              continueLabel: widget.isStageMode ? 'Try Again' : 'Continue',
-              onContinue: dismissWrongAnswerPageThenAdvance,
-              onBackToHome: () {
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              },
-            )
-          else
-            WrongAnswerScreen(
-              selectedAnswer: selectedAnswer ?? 'No answer',
-              correctAnswer: currentLevel.correctAnswer,
-              explanation: getCorrectAnswerExplanation(currentLevel),
-              isExiting: isDismissingWrongAnswerPage,
-              continueLabel: widget.isStageMode ? 'Try Again' : 'Continue',
-              onContinue: dismissWrongAnswerPageThenAdvance,
-              onBackToHome: () {
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              },
-            ),
-      ],
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
+        );
+      },
     );
   }
 
@@ -13335,7 +12463,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
               ? lastAnswerWasCorrect
               : null,
           onBack: () => Navigator.of(context).maybePop(),
-<<<<<<< HEAD
           onHint: useHint,
           onLanguage: () {
             Navigator.of(context).push(
@@ -13355,14 +12482,11 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
               if (mounted) setState(() {});
             });
           },
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
         ),
         const SizedBox(height: 20),
         ProgressHeader(
           currentPuzzle: currentLevelIndex + 1,
           totalPuzzles: sessionLevels.length,
-          timerSeconds: _timerSeconds,
           theme: currentTheme,
         ),
         const SizedBox(height: 18),
@@ -13388,7 +12512,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
           ),
           const SizedBox(height: 20),
           for (var index = 0; index < currentLevel.options.length; index++) ...[
-<<<<<<< HEAD
             Builder(
               builder: (context) {
                 final opt = currentLevel.options[index];
@@ -13410,16 +12533,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                   ),
                 );
               },
-=======
-            PuzzleAnswerButton(
-              label: currentLevel.options[index],
-              optionIndex: index,
-              backgroundColor: getAnswerColor(currentLevel.options[index]),
-              theme: currentTheme,
-              trailingIcon: getAnswerIcon(currentLevel.options[index]),
-              onPressed: () => checkAnswer(currentLevel.options[index]),
-              isEnabled: !isShowingFeedback,
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
             ),
             const SizedBox(height: 14),
           ],
@@ -13647,11 +12760,8 @@ class PuzzleTopHud extends StatelessWidget {
     required this.score,
     required this.scoreFeedbackWasCorrect,
     required this.onBack,
-<<<<<<< HEAD
     this.onHint,
     this.onLanguage,
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   });
 
   final bool canPop;
@@ -13659,11 +12769,8 @@ class PuzzleTopHud extends StatelessWidget {
   final int score;
   final bool? scoreFeedbackWasCorrect;
   final VoidCallback onBack;
-<<<<<<< HEAD
   final VoidCallback? onHint;
   final VoidCallback? onLanguage;
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
 
   @override
   Widget build(BuildContext context) {
@@ -13699,11 +12806,7 @@ class PuzzleTopHud extends StatelessWidget {
             ),
           ),
         ),
-<<<<<<< HEAD
         const SizedBox(width: 12),
-=======
-        const SizedBox(width: 16),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
         for (var index = 0; index < lives; index++) ...[
           const Icon(
             Icons.favorite_rounded,
@@ -13721,7 +12824,6 @@ class PuzzleTopHud extends StatelessWidget {
           const SizedBox(width: 4),
         ],
         const Spacer(),
-<<<<<<< HEAD
         if (onLanguage != null) ...[
           Material(
             color: Colors.white,
@@ -13765,7 +12867,7 @@ class PuzzleTopHud extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '${GameStorage.hintBalance}',
+                    formatNumber(GameStorage.hintBalance),
                     style: const TextStyle(
                       fontFamily: 'Roboto',
                       fontSize: 14,
@@ -13782,11 +12884,6 @@ class PuzzleTopHud extends StatelessWidget {
         Container(
           height: 42,
           padding: const EdgeInsets.symmetric(horizontal: 14),
-=======
-        Container(
-          height: 42,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(999),
@@ -13810,11 +12907,7 @@ class PuzzleTopHud extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                   color: scoreLabelColor,
                 ),
-<<<<<<< HEAD
                 child: Text('${tr('score')}: '),
-=======
-                child: const Text('Score: '),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
               ),
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 240),
@@ -13825,7 +12918,7 @@ class PuzzleTopHud extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                   color: scoreValueColor,
                 ),
-                child: Text('$score'),
+                child: Text(formatNumber(score)),
               ),
             ],
           ),
@@ -13842,8 +12935,8 @@ class DailyPuzzleTopHud extends StatelessWidget {
     required this.streak,
     required this.isSolved,
     required this.onBack,
-    required this.timerSeconds,
-    required this.showTimer,
+    this.timerSeconds = 0,
+    this.showTimer = false,
   });
 
   final bool canPop;
@@ -13880,7 +12973,7 @@ class DailyPuzzleTopHud extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        if (showTimer)
+        if (showTimer && timerSeconds > 0)
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
             child: Container(
@@ -14340,7 +13433,10 @@ class _PuzzleAnswerButtonState extends State<PuzzleAnswerButton> {
         ? FontWeight.w600
         : FontWeight.w700;
     const letterBadgeSize = 40.0;
-    final letters = const ['A', 'B', 'C', 'D'];
+    final isRtl = LanguageController.instance.isRtl;
+    final urduLetters = const ['الف', 'ب', 'ج', 'د'];
+    final englishLetters = const ['A', 'B', 'C', 'D'];
+    final letters = isRtl ? urduLetters : englishLetters;
     final letter = widget.optionIndex < letters.length
         ? letters[widget.optionIndex]
         : '${widget.optionIndex + 1}';
@@ -14572,78 +13668,80 @@ class GameOverScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          const Positioned.fill(
-            child: Image(
-              image: AssetImage(
-                'assets/images/game over background image.webp',
+    return Directionality(
+      textDirection: LanguageController.instance.directionality,
+      child: Scaffold(
+        body: Stack(
+          children: [
+            const Positioned.fill(
+              child: Image(
+                image: AssetImage(
+                  'assets/images/game over background image.webp',
+                ),
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
               ),
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
             ),
-          ),
-          const PinkPetalAnimationLayer(),
-          SafeArea(
-            child: TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 720),
-              curve: Curves.easeOutBack,
-              builder: (context, value, child) {
-                return Opacity(
-                  opacity: value.clamp(0.0, 1.0),
-                  child: Transform.scale(
-                    scale: 0.94 + (value * 0.06),
-                    child: child,
-                  ),
-                );
-              },
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 430),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(18, 24, 18, 24),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight - 48,
-                          ),
-                          child: IntrinsicHeight(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const Spacer(),
-                                const Image(
-                                  image: AssetImage(
-                                    'assets/images/brain image.webp',
+            const PinkPetalAnimationLayer(),
+            SafeArea(
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 720),
+                curve: Curves.easeOutBack,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value.clamp(0.0, 1.0),
+                    child: Transform.scale(
+                      scale: 0.94 + (value * 0.06),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 430),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(18, 24, 18, 24),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight - 48,
+                            ),
+                            child: IntrinsicHeight(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Spacer(),
+                                  const Image(
+                                    image: AssetImage(
+                                      'assets/images/brain image.webp',
+                                    ),
+                                    width: 148,
+                                    height: 148,
+                                    fit: BoxFit.contain,
                                   ),
-                                  width: 148,
-                                  height: 148,
-                                  fit: BoxFit.contain,
-                                ),
-                                const SizedBox(height: 18),
-                                const Text(
-                                  'Game Over',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 34,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0,
-                                    color: Color(0xFF11224D),
+                                  const SizedBox(height: 18),
+                                  Text(
+                                    tr('game_over'),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 34,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0,
+                                      color: Color(0xFF11224D),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 7),
-                                const Text(
-                                  'The trap caught you.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF38466F),
+                                  const SizedBox(height: 7),
+                                  Text(
+                                    tr('try_better'),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF38466F),
+                                    ),
                                   ),
-                                ),
                                 const SizedBox(height: 22),
                                 Container(
                                   padding: const EdgeInsets.fromLTRB(
@@ -14672,9 +13770,9 @@ class GameOverScreen extends StatelessWidget {
                                     builder: (context, value, child) {
                                       return Column(
                                         children: [
-                                          const Text(
-                                            'Final Score',
-                                            style: TextStyle(
+                                          Text(
+                                            tr('score'),
+                                            style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w800,
                                               color: Color(0xFF26355D),
@@ -14730,12 +13828,12 @@ class GameOverScreen extends StatelessWidget {
                                               size: 35,
                                             ),
                                             const SizedBox(height: 4),
-                                            const Text(
-                                              'Levels Completed',
+                                            Text(
+                                              tr('levels_completed'),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               textAlign: TextAlign.center,
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w800,
                                                 color: Color(0xFF3B466A),
@@ -14787,12 +13885,12 @@ class GameOverScreen extends StatelessWidget {
                                               size: 35,
                                             ),
                                             const SizedBox(height: 4),
-                                            const Text(
-                                              'Accuracy',
+                                            Text(
+                                              tr('accuracy'),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               textAlign: TextAlign.center,
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w800,
                                                 color: Color(0xFF3B466A),
@@ -14822,9 +13920,9 @@ class GameOverScreen extends StatelessWidget {
                                       Icons.refresh_rounded,
                                       color: Colors.white,
                                     ),
-                                    label: const Text(
-                                      'Try Again',
-                                      style: TextStyle(
+                                    label: Text(
+                                      tr('try_again'),
+                                      style: const TextStyle(
                                         fontSize: 17,
                                         fontWeight: FontWeight.w800,
                                         color: Colors.white,
@@ -14850,9 +13948,9 @@ class GameOverScreen extends StatelessWidget {
                                       Icons.home_rounded,
                                       color: Color(0xFF11224D),
                                     ),
-                                    label: const Text(
-                                      'Back to Home',
-                                      style: TextStyle(
+                                    label: Text(
+                                      tr('back_home'),
+                                      style: const TextStyle(
                                         fontSize: 17,
                                         fontWeight: FontWeight.w800,
                                         color: Color(0xFF11224D),
@@ -14883,7 +13981,8 @@ class GameOverScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -14918,20 +14017,15 @@ class GameSummaryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     final title = didWin ? tr('you_win') : tr('game_over');
     final subtitle = didWin
         ? tr('mind_escaped')
         : tr('try_better');
-=======
-    final title = didWin ? 'You Win!' : 'Game Over';
-    final subtitle = didWin
-        ? 'Your mind escaped the trap.'
-        : 'Can you do better next time?';
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
 
-    return Scaffold(
-      body: Stack(
+    return Directionality(
+      textDirection: LanguageController.instance.directionality,
+      child: Scaffold(
+        body: Stack(
         children: [
           const Positioned.fill(
             child: Image(
@@ -15060,7 +14154,7 @@ class GameSummaryScreen extends StatelessWidget {
                                     Expanded(
                                       child: PuzzleCompleteStatCard(
                                         icon: Icons.workspace_premium_rounded,
-                                        label: 'Levels Completed',
+                                        label: tr('levels_completed'),
                                         value: '$levelsCompleted / 5',
                                       ),
                                     ),
@@ -15068,7 +14162,7 @@ class GameSummaryScreen extends StatelessWidget {
                                     Expanded(
                                       child: PuzzleCompleteStatCard(
                                         icon: Icons.track_changes_rounded,
-                                        label: 'Accuracy',
+                                        label: tr('accuracy'),
                                         value: accuracyLabel,
                                       ),
                                     ),
@@ -15076,22 +14170,14 @@ class GameSummaryScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 22),
                                 PuzzleCompleteActionButton(
-<<<<<<< HEAD
                                   label: tr('play_again'),
-=======
-                                  label: 'Play Again',
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                                   icon: Icons.refresh_rounded,
                                   onPressed: withButtonFeedback(onPlayAgain)!,
                                   isPrimary: true,
                                 ),
                                 const SizedBox(height: 13),
                                 PuzzleCompleteActionButton(
-<<<<<<< HEAD
                                   label: tr('back_home'),
-=======
-                                  label: 'Back to Home',
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                                   icon: Icons.home_rounded,
                                   onPressed: withButtonFeedback(onBackToHome)!,
                                   isPrimary: false,
@@ -15110,7 +14196,8 @@ class GameSummaryScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -15689,20 +14776,14 @@ class LevelCompleteScreen extends StatelessWidget {
     required this.accuracy,
     required this.isExiting,
     required this.onNextPuzzle,
-<<<<<<< HEAD
     this.isStageComplete = false,
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
   });
 
   final int score;
   final int accuracy;
   final bool isExiting;
   final VoidCallback onNextPuzzle;
-<<<<<<< HEAD
   final bool isStageComplete;
-=======
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
 
   @override
   Widget build(BuildContext context) {
@@ -15817,19 +14898,12 @@ class LevelCompleteScreen extends StatelessWidget {
                                   ),
                                 ),
                                 SizedBox(height: isShort ? 12 : 18),
-<<<<<<< HEAD
                                 Text(
                                   isStageComplete
                                       ? tr('stage_complete')
                                       : tr('level_complete'),
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
-=======
-                                const Text(
-                                  'Level Complete!',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                                     color: Color(0xFF0E2754),
                                     fontSize: 26,
                                     fontWeight: FontWeight.w900,
@@ -15837,23 +14911,15 @@ class LevelCompleteScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-<<<<<<< HEAD
                                 Text(
                                   tr('you_solved_round'),
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
-=======
-                                const Text(
-                                  'You solved this round.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                                     color: Color(0xFF223A63),
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-<<<<<<< HEAD
                                 SizedBox(height: isShort ? 12 : 18),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -15922,39 +14988,18 @@ class LevelCompleteScreen extends StatelessWidget {
                                   ),
                                 ),
                                 SizedBox(height: isShort ? 12 : 18),
-=======
-                                SizedBox(height: isShort ? 18 : 26),
-                                const Text(
-                                  '+10 Score',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Color(0xFF08A66D),
-                                    fontSize: 27,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                SizedBox(height: isShort ? 14 : 20),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                                 Row(
                                   children: [
                                     Expanded(
                                       child: LevelCompleteStatCard(
-<<<<<<< HEAD
                                         label: tr('score'),
-=======
-                                        label: 'Score',
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                                         value: '$score',
                                       ),
                                     ),
                                     const SizedBox(width: 14),
                                     Expanded(
                                       child: LevelCompleteStatCard(
-<<<<<<< HEAD
                                         label: tr('accuracy'),
-=======
-                                        label: 'Accuracy',
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                                         value: '$accuracy%',
                                       ),
                                     ),
@@ -15999,25 +15044,15 @@ class LevelCompleteScreen extends StatelessWidget {
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 22,
                                         ),
-<<<<<<< HEAD
                                         child: Row(
-=======
-                                        child: const Row(
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
                                             Expanded(
                                               child: Text(
-<<<<<<< HEAD
                                                 tr('next_puzzle'),
                                                 textAlign: TextAlign.center,
                                                 style: const TextStyle(
-=======
-                                                'Next Puzzle',
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                                                   fontSize: 19,
                                                   fontWeight: FontWeight.w900,
                                                   color: Colors.white,
@@ -16658,17 +15693,10 @@ class WrongAnswerScreen extends StatelessWidget {
                         children: [
                           const WrongAnswerHeroIcon(),
                           const SizedBox(height: 18),
-<<<<<<< HEAD
                           Text(
                             tr('wrong_answer'),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-=======
-                          const Text(
-                            'Wrong Answer!',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                               color: Color(0xFF0E2754),
                               fontSize: 31,
                               fontWeight: FontWeight.w900,
@@ -16690,29 +15718,17 @@ class WrongAnswerScreen extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: WrongAnswerChoiceCard(
-<<<<<<< HEAD
                                   label: tr('wrong_answer'),
                                   answer: selectedAnswer,
                                   icon: Icons.close_rounded,
                                   accentColor: const Color(0xFFFF4A63),
                                   bubbleColor: const Color(0xFFFFCDD4),
-=======
-                                  label: 'Wrong Answer',
-                                  answer: selectedAnswer,
-                                  icon: Icons.close_rounded,
-                                  accentColor: Color(0xFFFF4A63),
-                                  bubbleColor: Color(0xFFFFCDD4),
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                                 ),
                               ),
                               const SizedBox(width: 14),
                               Expanded(
                                 child: WrongAnswerChoiceCard(
-<<<<<<< HEAD
                                   label: tr('correct_answer'),
-=======
-                                  label: 'Correct Answer',
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                                   answer: correctAnswer,
                                   icon: Icons.check_rounded,
                                   accentColor: Color(0xFF18B978),
@@ -16870,17 +15886,10 @@ class TimeOutScreen extends StatelessWidget {
                         children: [
                           const TimeOutHeroIcon(),
                           const SizedBox(height: 18),
-<<<<<<< HEAD
                           Text(
                             tr('time_out'),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-=======
-                          const Text(
-                            "Time's Up!",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
                               color: Color(0xFF0E2754),
                               fontSize: 36,
                               fontWeight: FontWeight.w900,
@@ -17526,19 +16535,18 @@ class ProgressHeader extends StatelessWidget {
     super.key,
     required this.currentPuzzle,
     required this.totalPuzzles,
-    required this.timerSeconds,
+    this.timerSeconds,
     this.theme,
   });
 
   final int currentPuzzle;
   final int totalPuzzles;
-  final int timerSeconds;
+  final int? timerSeconds;
   final LevelTheme? theme;
 
   @override
   Widget build(BuildContext context) {
     final progress = currentPuzzle / totalPuzzles;
-    final isWarning = timerSeconds <= 5;
     final activeTheme = theme ?? levelThemeForStage(2);
 
     return Column(
@@ -17552,11 +16560,7 @@ class ProgressHeader extends StatelessWidget {
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
               child: Text(
-<<<<<<< HEAD
-                '${tr('level')} $currentPuzzle',
-=======
-                'Level $currentPuzzle',
->>>>>>> 80e4c24dc719c846b438b2ac8f2b0fd1da25f19c
+                '${tr('level')} ${formatNumber(currentPuzzle)}',
                 key: ValueKey(currentPuzzle),
                 textAlign: TextAlign.left,
                 style: TextStyle(
@@ -17575,36 +16579,37 @@ class ProgressHeader extends StatelessWidget {
                 ),
               ),
             ),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Container(
-                key: ValueKey(timerSeconds),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: isWarning
-                      ? const Color(0xFFE53935).withAlpha(220)
-                      : activeTheme.accentDark.withAlpha(220),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.timer_rounded, size: 16, color: Colors.white),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${timerSeconds}s',
-                      style: const TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: activeTheme.accentDark.withAlpha(220),
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.stars_rounded, size: 16, color: Color(0xFFFFD700)),
+                  const SizedBox(width: 5),
+                  Text(
+                    '${formatNumber(currentPuzzle)} / ${formatNumber(totalPuzzles)}',
+                    style: const TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -17652,7 +16657,7 @@ class ProgressHeader extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    '$currentPuzzle / $totalPuzzles',
+                    '${formatNumber(currentPuzzle)} / ${formatNumber(totalPuzzles)}',
                     style: const TextStyle(
                       fontFamily: 'Roboto',
                       fontSize: 18,

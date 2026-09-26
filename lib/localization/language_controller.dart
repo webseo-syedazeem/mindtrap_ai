@@ -39,4 +39,14 @@ class LanguageController {
       await onLanguageSaved!(code);
     }
   }
+
+  /// Formats numbers to standard digits as requested by user
+  static String formatNumber(dynamic value, [String? langCode]) {
+    if (value == null) return '';
+    return value.toString();
+  }
 }
+
+/// Convenience global helper to format numbers according to active language
+String formatNumber(dynamic value, [String? langCode]) =>
+    LanguageController.formatNumber(value, langCode);

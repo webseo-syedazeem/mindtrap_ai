@@ -7,7 +7,7 @@ import 'world_levels_screen.dart';
 
 int getWorldStars(int worldIndex, Map<String, int> stageLevelStars) {
   int total = 0;
-  for (int levelIndex = 0; levelIndex < 10; levelIndex++) {
+  for (int levelIndex = 0; levelIndex < WorldThemes.levelsPerWorld; levelIndex++) {
     final key = '${worldIndex + 1}-${levelIndex + 1}';
     total += stageLevelStars[key] ?? 0;
   }
@@ -16,7 +16,7 @@ int getWorldStars(int worldIndex, Map<String, int> stageLevelStars) {
 
 int getWorldCompletedLevels(int worldIndex, Map<String, int> stageLevelStars) {
   int completed = 0;
-  for (int levelIndex = 0; levelIndex < 10; levelIndex++) {
+  for (int levelIndex = 0; levelIndex < WorldThemes.levelsPerWorld; levelIndex++) {
     final key = '${worldIndex + 1}-${levelIndex + 1}';
     if ((stageLevelStars[key] ?? 0) > 0) {
       completed++;
@@ -29,7 +29,8 @@ bool isWorldUnlocked(int worldIndex, int totalStarsAcrossGame, Map<String, int> 
   if (worldIndex == 0) return true;
   final world = WorldThemes.getWorld(worldIndex);
   if (totalStarsAcrossGame >= world.requiredStarsToUnlock) return true;
-  return getWorldCompletedLevels(worldIndex - 1, stageLevelStars) >= 8;
+  // Progress unlock: at least 15 levels cleared in previous world
+  return getWorldCompletedLevels(worldIndex - 1, stageLevelStars) >= 15;
 }
 
 class WorldsScreen extends StatefulWidget {
@@ -188,7 +189,7 @@ class _WorldsScreenState extends State<WorldsScreen> {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '$totalStars / 300',
+                                  '$totalStars / ${WorldThemes.totalLevelsCount * 3}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w900,
@@ -453,7 +454,7 @@ class _WorldCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '$worldStars/30',
+                                '$worldStars/${world.maxStars}',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
@@ -599,7 +600,7 @@ class _WorldCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '$completedLevels / 10 Levels Cleared',
+                              '$completedLevels / ${world.levelsCount} Levels Cleared',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
@@ -608,7 +609,7 @@ class _WorldCard extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '${((completedLevels / 10) * 100).toInt()}%',
+                              '${((completedLevels / world.levelsCount) * 100).toInt()}%',
                               style: TextStyle(
                                 color: world.glowColor,
                                 fontSize: 11,
@@ -623,7 +624,7 @@ class _WorldCard extends StatelessWidget {
                           child: SizedBox(
                             height: 6,
                             child: LinearProgressIndicator(
-                              value: (completedLevels / 10).clamp(0.0, 1.0),
+                              value: (completedLevels / world.levelsCount).clamp(0.0, 1.0),
                               backgroundColor: Colors.white.withAlpha(40),
                               valueColor: AlwaysStoppedAnimation<Color>(world.primaryColor),
                             ),
