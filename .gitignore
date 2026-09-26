@@ -51,3 +51,6 @@ app.*.map.json
 !.env.exampleMindTrap_AI.apk
 MindTrap_AI.aab
 build/
+MindTrap_AI.apk
+MindTrap_AI.aab
+build/
