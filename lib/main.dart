@@ -256,9 +256,13 @@ Future<void> runSupabaseConnectionTest(BuildContext context) async {
   try {
     await testSupabaseConnection();
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Supabase test completed')));
+      showGameNotification(
+        context: context,
+        message: 'Supabase test completed',
+        icon: Icons.check_circle_rounded,
+        accentColor: const Color(0xFF10B981),
+        iconColor: const Color(0xFF34D399),
+      );
     }
   } catch (error, stackTrace) {
     debugPrint('Supabase test failed unexpectedly: $error');
@@ -419,11 +423,25 @@ class GameStorage {
   static int coinBalance = 0;
   static int gemBalance = 0;
   static int hintBalance = 0;
+  static int runningScore = 0;
+  static final ValueNotifier<int> coinNotifier = ValueNotifier<int>(0);
+  static final ValueNotifier<int> gemNotifier = ValueNotifier<int>(0);
+  static final ValueNotifier<int> hintNotifier = ValueNotifier<int>(0);
+  static final ValueNotifier<int> currencyNotifier = ValueNotifier<int>(0);
+
+  static void notifyCurrencyChanged() {
+    coinNotifier.value = coinBalance;
+    gemNotifier.value = gemBalance;
+    hintNotifier.value = hintBalance;
+    currencyNotifier.value++;
+  }
   static bool soundEnabled = true;
   static bool musicEnabled = true;
   static bool vibrationEnabled = true;
   static final Map<String, int> _achievementProgress = {};
   static final Map<String, bool> _achievementUnlocked = {};
+  static final Set<String> _claimedAchievements = {};
+  static final ValueNotifier<int> unclaimedAchievementsNotifier = ValueNotifier<int>(0);
 
   static Future<SharedPreferences> get prefs async {
     return _prefs ??= await SharedPreferences.getInstance();
@@ -538,8 +556,8 @@ class GameStorage {
       return starsForStageLevel(stageIndex, levelIndex - 1) > 0;
     }
 
-    return starsForStageLevel(stageIndex - 1, 39) > 0 ||
-        starsForStageLevel(stageIndex - 1, 9) > 0;
+    // Must clear all 40 levels of previous stage (level index 39)
+    return starsForStageLevel(stageIndex - 1, 39) > 0;
   }
 
   static Future<void> saveStageLevelStars({
@@ -755,6 +773,7 @@ class GameStorage {
     coinBalance = savedInt(storage, coinBalanceKey);
     gemBalance = savedInt(storage, gemBalanceKey);
     hintBalance = savedInt(storage, hintBalanceKey);
+    notifyCurrencyChanged();
     stageLevelStars = decodeStageLevelStars(
       savedString(storage, stageLevelStarsKey),
     );
@@ -845,6 +864,7 @@ class GameStorage {
         hintBalance += reward.quantity;
         await storage.setInt(hintBalanceKey, hintBalance);
     }
+    notifyCurrencyChanged();
 
     dailyRewardClaimedDate = todayKey;
     await storage.setString(dailyRewardClaimedDateKey, todayKey);
@@ -881,6 +901,7 @@ class GameStorage {
       await storage.setInt(coinBalanceKey, coinBalance);
       await storage.setInt(hintBalanceKey, hintBalance);
     }
+    notifyCurrencyChanged();
     await _saveAll(notifyAchievementUnlocks: false);
     return true;
   }
@@ -889,6 +910,7 @@ class GameStorage {
     gemBalance += amount;
     final storage = await prefs;
     await storage.setInt(gemBalanceKey, gemBalance);
+    notifyCurrencyChanged();
     await _saveAll(notifyAchievementUnlocks: false);
     debugPrint('Level diamonds awarded: +$amount (new total: $gemBalance)');
   }
@@ -897,6 +919,7 @@ class GameStorage {
     coinBalance += amount;
     final storage = await prefs;
     await storage.setInt(coinBalanceKey, coinBalance);
+    notifyCurrencyChanged();
     await _saveAll(notifyAchievementUnlocks: false);
     debugPrint('Stage coins awarded: +$amount (new total: $coinBalance)');
   }
@@ -905,14 +928,18 @@ class GameStorage {
     gemBalance += amount;
     final storage = await prefs;
     await storage.setInt(gemBalanceKey, gemBalance);
+    notifyCurrencyChanged();
     await _saveAll(notifyAchievementUnlocks: false);
     debugPrint('Purchased diamonds awarded: +$amount (new total: $gemBalance)');
   }
+
+  static Future<void> addGems(int amount) => addDiamonds(amount);
 
   static Future<void> addCoins(int amount) async {
     coinBalance += amount;
     final storage = await prefs;
     await storage.setInt(coinBalanceKey, coinBalance);
+    notifyCurrencyChanged();
     await _saveAll(notifyAchievementUnlocks: false);
     debugPrint('Purchased coins awarded: +$amount (new total: $coinBalance)');
   }
@@ -922,6 +949,7 @@ class GameStorage {
     hintBalance--;
     final storage = await prefs;
     await storage.setInt(hintBalanceKey, hintBalance);
+    notifyCurrencyChanged();
     await _saveAll(notifyAchievementUnlocks: false);
     debugPrint('Hint used. Remaining hints: $hintBalance');
     return true;
@@ -1166,8 +1194,12 @@ class GameStorage {
     coinBalance = 0;
     gemBalance = 0;
     hintBalance = 0;
+    runningScore = 0;
+    notifyCurrencyChanged();
     _achievementProgress.clear();
     _achievementUnlocked.clear();
+    _claimedAchievements.clear();
+    unclaimedAchievementsNotifier.value = 0;
     _pendingAchievementPopups.clear();
     _isShowingAchievementPopup = false;
     _isAchievementPopupRetryScheduled = false;
@@ -1175,9 +1207,67 @@ class GameStorage {
     final storage = await prefs;
     final achievementKeys = storage
         .getKeys()
-        .where((key) => key.startsWith('achievement_'))
+        .where((key) => key.startsWith('achievement_') || key == 'achievements_claimed_ids')
         .toList(growable: false);
     await Future.wait(achievementKeys.map(storage.remove));
+    await _saveAll(notifyAchievementUnlocks: false);
+  }
+
+  static int get completedLevelsInWorld1 {
+    int count = 0;
+    for (int l = 0; l < 40; l++) {
+      if (starsForStageLevel(0, l) > 0) count++;
+    }
+    return count;
+  }
+
+  static int get completedWorldsCount {
+    int count = 0;
+    for (int w = 0; w < 25; w++) {
+      int levelsDone = 0;
+      for (int l = 0; l < 40; l++) {
+        if (starsForStageLevel(w, l) > 0) levelsDone++;
+      }
+      if (levelsDone >= 40) count++;
+    }
+    return count;
+  }
+
+  static bool isAchievementClaimed(String id) {
+    return _claimedAchievements.contains(id);
+  }
+
+  static int get unclaimedGiftsCount {
+    int count = 0;
+    for (final item in allAchievements) {
+      if (item.isCompleted && !isAchievementClaimed(item.id)) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  static Future<void> claimAchievement(String id) async {
+    if (_claimedAchievements.contains(id)) return;
+    _claimedAchievements.add(id);
+
+    final item = allAchievements.firstWhere(
+      (a) => a.id == id,
+      orElse: () => baseAchievementItems.firstWhere((a) => a.id == id),
+    );
+
+    if (item.coinReward > 0) {
+      await addCoins(item.coinReward);
+    }
+    if (item.gemReward > 0) {
+      await addGems(item.gemReward);
+    }
+
+    final storage = await prefs;
+    await storage.setStringList('achievements_claimed_ids', _claimedAchievements.toList());
+    await storage.setBool(achievementKey(id, 'claimed'), true);
+
+    unclaimedAchievementsNotifier.value = unclaimedGiftsCount;
     await _saveAll(notifyAchievementUnlocks: false);
   }
 
@@ -1187,6 +1277,9 @@ class GameStorage {
 
   static int achievementProgressFor(AchievementItem item) {
     return switch (item.id) {
+      'world_1_complete' => completedLevelsInWorld1,
+      'world_5_complete' => completedWorldsCount,
+      'world_10_complete' => completedWorldsCount,
       'first_win' => totalWins,
       'perfect_mind' => perfectGames > 0 ? 1 : 0,
       'comeback' => comebackWins > 0 ? 1 : 0,
@@ -1209,7 +1302,11 @@ class GameStorage {
     final current = wasUnlocked
         ? max(item.target, max(savedProgress ?? 0, derivedProgress))
         : max(savedProgress ?? 0, derivedProgress);
-    return item.copyWith(current: current);
+    final claimed = _claimedAchievements.contains(item.id);
+    return item.copyWith(
+      current: current,
+      isClaimed: claimed,
+    );
   }
 
   static int get totalAnswers => totalCorrectAnswers + totalWrongAnswers;
@@ -1258,19 +1355,43 @@ class GameStorage {
           achievement.isCompleted,
         ),
       );
+      if (_claimedAchievements.contains(achievement.id)) {
+        writes.add(
+          storage.setBool(
+            achievementKey(achievement.id, 'claimed'),
+            true,
+          ),
+        );
+      }
     }
+    writes.add(
+      storage.setStringList(
+        'achievements_claimed_ids',
+        _claimedAchievements.toList(),
+      ),
+    );
     await Future.wait(writes);
+    unclaimedAchievementsNotifier.value = unclaimedGiftsCount;
   }
 
   static void _loadAchievementState(SharedPreferences storage) {
     _achievementProgress.clear();
     _achievementUnlocked.clear();
+    _claimedAchievements.clear();
+    final savedClaimed = storage.getStringList('achievements_claimed_ids');
+    if (savedClaimed != null) {
+      _claimedAchievements.addAll(savedClaimed);
+    }
     for (final achievement in baseAchievementItems) {
       _achievementProgress[achievement.id] =
           storage.getInt(achievementKey(achievement.id, 'progress')) ?? 0;
       _achievementUnlocked[achievement.id] =
           storage.getBool(achievementKey(achievement.id, 'unlocked')) ?? false;
+      if (storage.getBool(achievementKey(achievement.id, 'claimed')) == true) {
+        _claimedAchievements.add(achievement.id);
+      }
     }
+    unclaimedAchievementsNotifier.value = unclaimedGiftsCount;
   }
 }
 
@@ -1338,6 +1459,187 @@ VoidCallback? withButtonFeedback(VoidCallback? action) {
   };
 }
 
+OverlayEntry? _currentGameNotificationOverlay;
+
+class _CenteredGameNotificationWidget extends StatefulWidget {
+  final String message;
+  final IconData icon;
+  final Color accentColor;
+  final Color iconColor;
+  final Duration duration;
+  final VoidCallback onDismiss;
+
+  const _CenteredGameNotificationWidget({
+    required this.message,
+    required this.icon,
+    required this.accentColor,
+    required this.iconColor,
+    required this.duration,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_CenteredGameNotificationWidget> createState() =>
+      _CenteredGameNotificationWidgetState();
+}
+
+class _CenteredGameNotificationWidgetState
+    extends State<_CenteredGameNotificationWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _fadeAnimation;
+  Timer? _dismissTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+      reverseDuration: const Duration(milliseconds: 200),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.82, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+
+    _controller.forward();
+
+    _dismissTimer = Timer(widget.duration, () {
+      _dismissWithAnimation();
+    });
+  }
+
+  void _dismissWithAnimation() {
+    if (!mounted) return;
+    _controller.reverse().then((_) {
+      if (mounted) {
+        widget.onDismiss();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _dismissTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: false,
+      child: Material(
+        type: MaterialType.transparency,
+        child: Align(
+          alignment: const Alignment(0.0, -0.08), // Centered slightly above middle
+          child: GestureDetector(
+            onTap: _dismissWithAnimation,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  constraints: const BoxConstraints(maxWidth: 380, minWidth: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFFFFFFFF),
+                        Color(0xFFF8FAFC),
+                        Color(0xFFF1F5F9),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: widget.accentColor.withAlpha(160),
+                      width: 1.8,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.accentColor.withAlpha(50),
+                        blurRadius: 28,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 8),
+                      ),
+                      BoxShadow(
+                        color: const Color(0xFF0F172A).withAlpha(22),
+                        blurRadius: 18,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              widget.accentColor.withAlpha(200),
+                              widget.accentColor,
+                            ],
+                          ),
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2.0,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: widget.accentColor.withAlpha(80),
+                              blurRadius: 12,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Icon(
+                            widget.icon,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Flexible(
+                        child: Text(
+                          widget.message,
+                          style: const TextStyle(
+                            color: Color(0xFF0F172A), // Crisp rich dark navy
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.2,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 void showGameNotification({
   required BuildContext context,
   required String message,
@@ -1346,69 +1648,33 @@ void showGameNotification({
   Color iconColor = const Color(0xFF38BDF8),
   Duration duration = const Duration(milliseconds: 2200),
 }) {
-  final messenger = ScaffoldMessenger.of(context);
-  messenger.hideCurrentSnackBar();
-  messenger.showSnackBar(
-    SnackBar(
-      behavior: SnackBarBehavior.floating,
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      padding: EdgeInsets.zero,
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+  _currentGameNotificationOverlay?.remove();
+  _currentGameNotificationOverlay = null;
+
+  final overlay = Overlay.maybeOf(context) ?? appNavigatorKey.currentState?.overlay;
+  if (overlay == null) return;
+
+  late OverlayEntry entry;
+  entry = OverlayEntry(
+    builder: (context) => _CenteredGameNotificationWidget(
+      message: message,
+      icon: icon,
+      accentColor: accentColor,
+      iconColor: iconColor,
       duration: duration,
-      content: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0F172A).withAlpha(245),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: accentColor.withAlpha(204),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: accentColor.withAlpha(90),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-            const BoxShadow(
-              color: Colors.black54,
-              blurRadius: 10,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: accentColor.withAlpha(51),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      onDismiss: () {
+        if (entry.mounted) {
+          entry.remove();
+          if (_currentGameNotificationOverlay == entry) {
+            _currentGameNotificationOverlay = null;
+          }
+        }
+      },
     ),
   );
+
+  _currentGameNotificationOverlay = entry;
+  overlay.insert(entry);
 }
 
 void queueAchievementUnlockPopups(List<AchievementItem> achievements) {
@@ -2400,7 +2666,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      barrierColor: const Color(0xB30A2B62),
+      barrierColor: Colors.black.withAlpha(90),
       builder: (context) =>
           DailyRewardDialog(reward: dailyRewardForDate(DateTime.now())),
     );
@@ -2414,6 +2680,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, langCode, _) {
         return Scaffold(
           key: _scaffoldKey,
+          drawerScrimColor: const Color(0x350F172A),
           drawer: AppLanguageDrawer(
             onLanguageChanged: (code) async {
               await GameStorage.setSelectedLanguageCode(code);
@@ -2672,9 +2939,12 @@ class HomeTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        // Left Column: Menu (three line side bar) on top, Profile under it
+        Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             ProfessionalCircleButton(
               size: 42,
@@ -2682,7 +2952,7 @@ class HomeTopBar extends StatelessWidget {
               tooltip: 'Menu',
               onPressed: onMenuPressed ?? () => Scaffold.maybeOf(context)?.openDrawer(),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(height: 8),
             ProfessionalCircleButton(
               size: 42,
               customIcon: const ProfessionalProfileIcon(size: 23),
@@ -2691,14 +2961,35 @@ class HomeTopBar extends StatelessWidget {
                 Navigator.push(context, smoothPageRoute(const AuthScreen()));
               },
             ),
-            Expanded(
-              child: Center(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: const HomeCurrencyRow(),
-                ),
+          ],
+        ),
+        const SizedBox(width: 8),
+        // Center: Unified currency bar (ONE bar, 0 overlap)
+        const Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: HomeCurrencyRow(),
               ),
             ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Right Column: Settings on top, World under Settings, Free icon under World
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ProfessionalCircleButton(
+              size: 42,
+              customIcon: const ProfessionalSettingsIcon(size: 23),
+              tooltip: 'Settings',
+              onPressed: () {
+                Navigator.push(context, smoothPageRoute(const SettingsScreen()));
+              },
+            ),
+            const SizedBox(height: 8),
             ProfessionalCircleButton(
               size: 42,
               customIcon: const ProfessionalWorldsIcon(size: 23),
@@ -2716,21 +3007,7 @@ class HomeTopBar extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(width: 8),
-            ProfessionalCircleButton(
-              size: 42,
-              customIcon: const ProfessionalSettingsIcon(size: 23),
-              tooltip: 'Settings',
-              onPressed: () {
-                Navigator.push(context, smoothPageRoute(const SettingsScreen()));
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            const Spacer(),
+            const SizedBox(height: 8),
             ProfessionalGiftButton(
               onPressed: () {
                 Navigator.push(
@@ -2765,27 +3042,20 @@ class _HomeCurrencyRowState extends State<HomeCurrencyRow> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        HomeCurrencyPill(
-          iconAsset: 'assets/images/coin.webp',
-          value: GameStorage.coinBalance,
-          onTap: () => _openStore(1),
-        ),
-        const SizedBox(width: 5),
-        HomeCurrencyPill(
-          iconAsset: 'assets/images/gem.webp',
-          value: GameStorage.gemBalance,
-          onTap: () => _openStore(0),
-        ),
-        const SizedBox(width: 5),
-        HomeCurrencyPill(
-          iconAsset: 'assets/images/hint-icon.webp',
-          value: GameStorage.hintBalance,
-          onAddPressed: () => _openStore(2),
-        ),
-      ],
+    return ValueListenableBuilder<int>(
+      valueListenable: GameStorage.currencyNotifier,
+      builder: (context, _, child) {
+        return UnifiedCurrencyBar(
+          coinBalance: GameStorage.coinBalance,
+          gemBalance: GameStorage.gemBalance,
+          hintBalance: GameStorage.hintBalance,
+          onCoinsTap: () => _openStore(1),
+          onGemsTap: () => _openStore(0),
+          onHintsTap: () => _openStore(2),
+          onHintsAdd: () => _openStore(2),
+          showAddButton: true,
+        );
+      },
     );
   }
 }
@@ -2906,7 +3176,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> resetProgress() async {
     final shouldReset = await showDialog<bool>(
       context: context,
-      barrierColor: const Color(0x990A0D2E),
+      barrierColor: Colors.black.withAlpha(90),
       builder: (context) {
         return const ResetProgressDialog();
       },
@@ -2922,16 +3192,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFF6E35E8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: const Text(
-          'Progress reset',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
-      ),
+    showGameNotification(
+      context: context,
+      message: 'Progress reset',
+      icon: Icons.refresh_rounded,
+      accentColor: const Color(0xFF6E35E8),
+      iconColor: const Color(0xFFA78BFA),
     );
   }
 
@@ -4899,15 +5165,21 @@ class HomeFeatureGrid extends StatelessWidget {
           labelFontSize: 13,
           onPressed: onStatsPressed,
         ),
-        HomeFeatureCard(
-          icon: Icons.emoji_events_rounded,
-          iconColor: const Color(0xFFFFB11F),
-          label: tr('achievements'),
-          subtitle: 'Milestones',
-          iconSize: 40,
-          labelFontSize: 12,
-          subtitleFontSize: 7.5,
-          onPressed: onAchievementsPressed,
+        ValueListenableBuilder<int>(
+          valueListenable: GameStorage.unclaimedAchievementsNotifier,
+          builder: (context, unclaimedCount, _) {
+            return HomeFeatureCard(
+              icon: Icons.emoji_events_rounded,
+              iconColor: const Color(0xFFFFB11F),
+              label: tr('achievements'),
+              subtitle: unclaimedCount > 0 ? '$unclaimedCount Gifts Ready!' : 'Milestones',
+              iconSize: 40,
+              labelFontSize: 12,
+              subtitleFontSize: 7.5,
+              notificationCount: unclaimedCount,
+              onPressed: onAchievementsPressed,
+            );
+          },
         ),
         HomeFeatureCard(
           icon: Icons.shopping_bag_rounded,
@@ -4934,6 +5206,7 @@ class HomeFeatureCard extends StatelessWidget {
     this.iconSize = 33,
     this.labelFontSize = 15,
     this.subtitleFontSize = 8.5,
+    this.notificationCount = 0,
   });
 
   final IconData icon;
@@ -4944,101 +5217,147 @@ class HomeFeatureCard extends StatelessWidget {
   final double iconSize;
   final double labelFontSize;
   final double subtitleFontSize;
+  final int notificationCount;
 
   @override
   Widget build(BuildContext context) {
     return TactileBounce(
       onTap: withButtonFeedback(onPressed ?? () {}),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,
-              Color(0xFFF8FAFC),
-              Color(0xFFF1F5F9),
-            ],
-          ),
-          border: Border.all(color: Colors.white, width: 1.4),
-          boxShadow: [
-            const BoxShadow(
-              color: Color(0x201E293B),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-            BoxShadow(
-              color: iconColor.withAlpha(25),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: iconSize + 6,
-              height: iconSize + 6,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color.lerp(iconColor, Colors.white, 0.25) ?? iconColor,
-                    iconColor,
-                    Color.lerp(iconColor, Colors.black, 0.2) ?? iconColor,
-                  ],
-                ),
-                border: Border.all(color: Colors.white.withAlpha(200), width: 1.3),
-                boxShadow: [
-                  BoxShadow(
-                    color: iconColor.withAlpha(90),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white,
+                  Color(0xFFF8FAFC),
+                  Color(0xFFF1F5F9),
                 ],
               ),
-              child: Center(
-                child: Icon(icon, color: Colors.white, size: iconSize * 0.58),
-              ),
-            ),
-            const SizedBox(width: 9),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: labelFontSize,
-                    height: 0.95,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0,
-                    color: const Color(0xFF1E293B),
-                  ),
+              border: Border.all(color: Colors.white, width: 1.4),
+              boxShadow: [
+                const BoxShadow(
+                  color: Color(0x201E293B),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: subtitleFontSize,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF64748B),
-                  ),
+                BoxShadow(
+                  color: iconColor.withAlpha(25),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
-          ],
-        ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: iconSize + 6,
+                  height: iconSize + 6,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color.lerp(iconColor, Colors.white, 0.25) ?? iconColor,
+                        iconColor,
+                        Color.lerp(iconColor, Colors.black, 0.2) ?? iconColor,
+                      ],
+                    ),
+                    border: Border.all(color: Colors.white.withAlpha(200), width: 1.3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: iconColor.withAlpha(90),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Icon(icon, color: Colors.white, size: iconSize * 0.58),
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: labelFontSize,
+                        height: 0.95,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: subtitleFontSize,
+                        fontWeight: FontWeight.w700,
+                        color: notificationCount > 0 ? const Color(0xFFDC2626) : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (notificationCount > 0)
+            Positioned(
+              top: -5,
+              right: -5,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF334B), Color(0xFFFF6B4A)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x66FF334B),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.notifications_active_rounded,
+                      color: Colors.white,
+                      size: 11,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      '$notificationCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -6410,6 +6729,9 @@ class AchievementItem {
     this.current = 0,
     this.target = 1,
     this.color = const Color(0xFF6F63FF),
+    this.coinReward = 500,
+    this.gemReward = 0,
+    this.isClaimed = false,
   });
 
   final String id;
@@ -6422,15 +6744,22 @@ class AchievementItem {
   final int current;
   final int target;
   final Color color;
+  final int coinReward;
+  final int gemReward;
+  final bool isClaimed;
 
   bool get isCompleted => target > 0 && current >= target;
   bool get isInProgress => current > 0 && !isCompleted;
   bool get isLocked => !isCompleted && !isInProgress;
+  bool get hasUnclaimedGift => isCompleted && !isClaimed;
 
   AchievementItem copyWith({
     String? giftAssetPath,
     int? current,
     Color? color,
+    int? coinReward,
+    int? gemReward,
+    bool? isClaimed,
   }) {
     return AchievementItem(
       id: id,
@@ -6443,6 +6772,9 @@ class AchievementItem {
       current: current ?? this.current,
       target: target,
       color: color ?? this.color,
+      coinReward: coinReward ?? this.coinReward,
+      gemReward: gemReward ?? this.gemReward,
+      isClaimed: isClaimed ?? this.isClaimed,
     );
   }
 }
@@ -6470,7 +6802,9 @@ const completedAchievements = [
     description: 'Win your first\nchallenge round',
     visual: AchievementVisual.shieldTarget,
     assetPath: 'assets/images/achievement_sharpshooter.webp',
+    giftAssetPath: 'assets/images/Speedy_Thinker_gift_icon.png',
     target: 1,
+    coinReward: 500,
     color: Color(0xFF31C882),
   ),
   AchievementItem(
@@ -6479,7 +6813,9 @@ const completedAchievements = [
     description: 'Finish a challenge\nwith 100% accuracy',
     visual: AchievementVisual.shieldStar,
     assetPath: 'assets/images/Smart_Solver.png',
+    giftAssetPath: 'assets/images/Streak_Champion_gift_icon.png',
     target: 1,
+    coinReward: 750,
     color: Color(0xFF2F9DF2),
   ),
   AchievementItem(
@@ -6488,12 +6824,25 @@ const completedAchievements = [
     description: 'Win with exactly\n1 heart left',
     visual: AchievementVisual.shieldCrown,
     assetPath: 'assets/images/Perfect_Master.png',
+    giftAssetPath: 'assets/images/gift_3.png',
     target: 1,
+    coinReward: 1000,
     color: Color(0xFF9F58D9),
   ),
 ];
 
 const inProgressAchievements = [
+  AchievementItem(
+    id: 'world_1_complete',
+    title: 'World 1 Master',
+    description: 'Complete all 40 levels\nof World 1',
+    visual: AchievementVisual.globe,
+    assetPath: 'assets/images/World_Explorer.png',
+    giftAssetPath: 'assets/images/daily_gift.webp',
+    target: 40,
+    coinReward: 1500,
+    color: Color(0xFF31C58A),
+  ),
   AchievementItem(
     id: 'sharp_thinker',
     title: 'Sharp Thinker',
@@ -6502,6 +6851,7 @@ const inProgressAchievements = [
     assetPath: 'assets/images/Speedy_Thinker_main_icon.png',
     giftAssetPath: 'assets/images/Speedy_Thinker_gift_icon.png',
     target: 50,
+    coinReward: 1000,
     color: Color(0xFF9962EA),
   ),
   AchievementItem(
@@ -6512,18 +6862,44 @@ const inProgressAchievements = [
     assetPath: 'assets/images/Streak_Champion_main_icon.png',
     giftAssetPath: 'assets/images/Streak_Champion_gift_icon.png',
     target: 10,
+    coinReward: 1000,
     color: Color(0xFFFF8A22),
   ),
 ];
 
 const lockedAchievements = [
   AchievementItem(
+    id: 'world_5_complete',
+    title: '5 Worlds Champion',
+    description: 'Complete 5 worlds\n(200 levels total)',
+    visual: AchievementVisual.trophy,
+    assetPath: 'assets/images/Knowledge_King.png',
+    giftAssetPath: 'assets/images/gift_4.png',
+    target: 5,
+    coinReward: 5000,
+    color: Color(0xFFFF8A22),
+  ),
+  AchievementItem(
+    id: 'world_10_complete',
+    title: '10 Worlds Legend',
+    description: 'Complete 10 worlds\n(400 levels total)',
+    visual: AchievementVisual.shieldCrown,
+    assetPath: 'assets/images/Streak_Master.png',
+    giftAssetPath: 'assets/images/gift_5.png',
+    target: 10,
+    coinReward: 10000,
+    gemReward: 500,
+    color: Color(0xFF9460E2),
+  ),
+  AchievementItem(
     id: 'perfect_score',
     title: 'Perfect Score',
     description: 'Complete 10 perfect\nchallenge rounds',
     visual: AchievementVisual.medal,
     assetPath: 'assets/images/Puzzle_Pro.png',
+    giftAssetPath: 'assets/images/gift_3.png',
     target: 10,
+    coinReward: 2000,
     color: Color(0xFFFF8A22),
   ),
   AchievementItem(
@@ -6532,7 +6908,9 @@ const lockedAchievements = [
     description: 'Complete 25\nchallenge levels',
     visual: AchievementVisual.book,
     assetPath: 'assets/images/Knowledge_King.png',
+    giftAssetPath: 'assets/images/gift_4.png',
     target: 25,
+    coinReward: 2500,
     color: Color(0xFF2F9DF2),
   ),
   AchievementItem(
@@ -6541,7 +6919,9 @@ const lockedAchievements = [
     description: 'Play daily puzzle\n7 days in a row',
     visual: AchievementVisual.globe,
     assetPath: 'assets/images/World_Explorer.png',
+    giftAssetPath: 'assets/images/gift_3.png',
     target: 7,
+    coinReward: 2000,
     color: Color(0xFF31C882),
   ),
   AchievementItem(
@@ -6550,7 +6930,9 @@ const lockedAchievements = [
     description: 'Reach a 3-day\ndaily streak',
     visual: AchievementVisual.calendar,
     assetPath: 'assets/images/Daily_Champion.png',
+    giftAssetPath: 'assets/images/Speedy_Thinker_gift_icon.png',
     target: 3,
+    coinReward: 1000,
   ),
   AchievementItem(
     id: 'dedicated_mind',
@@ -6558,7 +6940,9 @@ const lockedAchievements = [
     description: 'Reach a 7-day\ndaily streak',
     visual: AchievementVisual.trophy,
     assetPath: 'assets/images/Perfect_Score.png',
+    giftAssetPath: 'assets/images/gift_4.png',
     target: 7,
+    coinReward: 2500,
   ),
   AchievementItem(
     id: 'streak_master',
@@ -6566,7 +6950,10 @@ const lockedAchievements = [
     description: 'Reach a 30-day\ndaily streak',
     visual: AchievementVisual.shield,
     assetPath: 'assets/images/Streak_Master.png',
+    giftAssetPath: 'assets/images/gift_5.png',
     target: 30,
+    coinReward: 5000,
+    gemReward: 250,
   ),
 ];
 
@@ -6599,132 +6986,209 @@ List<AchievementItem> progressItemsWithOrderedGifts(
     for (var index = 0; index < items.length; index++)
       items[index].copyWith(
         giftAssetPath:
+            items[index].giftAssetPath ??
             progressGiftAssetPaths[index % progressGiftAssetPaths.length],
-        color: progressGiftColors[index % progressGiftColors.length],
+        color: items[index].color,
       ),
   ];
 }
 
-class AchievementsScreen extends StatelessWidget {
+class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
 
+  @override
+  State<AchievementsScreen> createState() => _AchievementsScreenState();
+}
+
+class _AchievementsScreenState extends State<AchievementsScreen> {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, langCode, _) {
-        final completedItems = completedAchievementItems;
-        final inProgressItems = progressItemsWithOrderedGifts(
-          inProgressAchievementItems,
-        );
-        final lockedItems = lockedAchievementItems;
-        final completedCount = completedItems.length;
-        final inProgressCount = inProgressItems.length;
-        final lockedCount = lockedItems.length;
+        return ValueListenableBuilder<int>(
+          valueListenable: GameStorage.unclaimedAchievementsNotifier,
+          builder: (context, unclaimedCount, _) {
+            final completedItems = completedAchievementItems;
+            final inProgressItems = progressItemsWithOrderedGifts(
+              inProgressAchievementItems,
+            );
+            final lockedItems = lockedAchievementItems;
+            final completedCount = completedItems.length;
+            final inProgressCount = inProgressItems.length;
+            final lockedCount = lockedItems.length;
 
-        return Scaffold(
-          body: Stack(
-            children: [
-              const Positioned.fill(
-                child: OptionalAssetImage(
-                  assetPath: 'assets/images/achievements_background.webp',
-                  fallbackAssetPath:
-                      'assets/images/puzzle_complete_background.webp',
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
-                ),
-              ),
-              SafeArea(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 430),
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(18, 20, 18, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: StatsCircleButton(
-                              icon: Icons.arrow_back_ios_new_rounded,
-                              onPressed: () => Navigator.of(context).maybePop(),
-                            ),
+            return Scaffold(
+              body: Stack(
+                children: [
+                  const Positioned.fill(
+                    child: OptionalAssetImage(
+                      assetPath: 'assets/images/achievements_background.webp',
+                      fallbackAssetPath:
+                          'assets/images/puzzle_complete_background.webp',
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                    ),
+                  ),
+                  SafeArea(
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 430),
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(18, 20, 18, 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: StatsCircleButton(
+                                  icon: Icons.arrow_back_ios_new_rounded,
+                                  onPressed: () => Navigator.of(context).maybePop(),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                tr('achievements'),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color(0xFF10234D),
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Unlock achievements and earn rewards!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Color(0xFF41557A),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              const AchievementSummaryCard(),
+                              if (unclaimedCount > 0) ...[
+                                const SizedBox(height: 18),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFFF3B30), Color(0xFFFF9500)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x40FF3B30),
+                                        blurRadius: 16,
+                                        offset: Offset(0, 6),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withAlpha(50),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.notifications_active_rounded,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '$unclaimedCount ${unclaimedCount == 1 ? "Gift" : "Gifts"} Ready to Open!',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w900,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            const Text(
+                                              'Tap on completed achievements below to claim your coins!',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 26),
+                              AchievementSectionHeader(
+                                icon: Icons.star_rounded,
+                                iconColor: const Color(0xFFFFB52E),
+                                title: 'Completed',
+                                count: completedCount,
+                              ),
+                              const SizedBox(height: 12),
+                              CompletedAchievementsRail(
+                                items: completedItems,
+                                onClaimed: () => setState(() {}),
+                              ),
+                              const SizedBox(height: 26),
+                              AchievementSectionHeader(
+                                icon: Icons.lock_open_rounded,
+                                iconColor: const Color(0xFF8892AE),
+                                title: 'In Progress',
+                                count: inProgressCount,
+                              ),
+                              const SizedBox(height: 12),
+                              for (
+                                var index = 0;
+                                index < inProgressItems.length;
+                                index++
+                              ) ...[
+                                InProgressAchievementCard(item: inProgressItems[index]),
+                                if (index != inProgressItems.length - 1)
+                                  const SizedBox(height: 12),
+                              ],
+                              const SizedBox(height: 22),
+                              AchievementSectionHeader(
+                                icon: Icons.lock_rounded,
+                                iconColor: const Color(0xFF8892AE),
+                                title: 'Locked',
+                                count: lockedCount,
+                              ),
+                              const SizedBox(height: 12),
+                              LockedAchievementsRail(items: lockedItems),
+                              const SizedBox(height: 26),
+                              StatsHomeButton(
+                                onPressed: () {
+                                  Navigator.of(
+                                    context,
+                                  ).popUntil((route) => route.isFirst);
+                                },
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            tr('achievements'),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Color(0xFF10234D),
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0,
-                            ),
-                          ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Unlock achievements and earn rewards!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xFF41557A),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      const AchievementSummaryCard(),
-                      const SizedBox(height: 26),
-                      AchievementSectionHeader(
-                        icon: Icons.star_rounded,
-                        iconColor: const Color(0xFFFFB52E),
-                        title: 'Completed',
-                        count: completedCount,
-                      ),
-                      const SizedBox(height: 12),
-                      CompletedAchievementsRail(items: completedItems),
-                      const SizedBox(height: 26),
-                      AchievementSectionHeader(
-                        icon: Icons.lock_open_rounded,
-                        iconColor: const Color(0xFF8892AE),
-                        title: 'In Progress',
-                        count: inProgressCount,
-                      ),
-                      const SizedBox(height: 12),
-                      for (
-                        var index = 0;
-                        index < inProgressItems.length;
-                        index++
-                      ) ...[
-                        InProgressAchievementCard(item: inProgressItems[index]),
-                        if (index != inProgressItems.length - 1)
-                          const SizedBox(height: 12),
-                      ],
-                      const SizedBox(height: 22),
-                      AchievementSectionHeader(
-                        icon: Icons.lock_rounded,
-                        iconColor: const Color(0xFF8892AE),
-                        title: 'Locked',
-                        count: lockedCount,
-                      ),
-                      const SizedBox(height: 12),
-                      LockedAchievementsRail(items: lockedItems),
-                      const SizedBox(height: 26),
-                      StatsHomeButton(
-                        onPressed: () {
-                          Navigator.of(
-                            context,
-                          ).popUntil((route) => route.isFirst);
-                        },
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
+            );
+          },
+        );
       },
     );
   }
@@ -6953,9 +7417,14 @@ class AchievementStatusBadge extends StatelessWidget {
 }
 
 class CompletedAchievementsRail extends StatelessWidget {
-  const CompletedAchievementsRail({super.key, required this.items});
+  const CompletedAchievementsRail({
+    super.key,
+    required this.items,
+    this.onClaimed,
+  });
 
   final List<AchievementItem> items;
+  final VoidCallback? onClaimed;
 
   @override
   Widget build(BuildContext context) {
@@ -6965,7 +7434,10 @@ class CompletedAchievementsRail extends StatelessWidget {
       child: Row(
         children: [
           for (var index = 0; index < items.length; index++) ...[
-            CompletedAchievementCard(item: items[index]),
+            CompletedAchievementCard(
+              item: items[index],
+              onClaimed: onClaimed,
+            ),
             if (index != items.length - 1) const SizedBox(width: 12),
           ],
         ],
@@ -6975,84 +7447,173 @@ class CompletedAchievementsRail extends StatelessWidget {
 }
 
 class CompletedAchievementCard extends StatelessWidget {
-  const CompletedAchievementCard({super.key, required this.item});
+  const CompletedAchievementCard({
+    super.key,
+    required this.item,
+    this.onClaimed,
+  });
 
   final AchievementItem item;
+  final VoidCallback? onClaimed;
+
+  void _openGiftDialog(BuildContext context) {
+    if (!item.hasUnclaimedGift) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => GiftOpenCelebrationDialog(
+        item: item,
+        onClaimed: onClaimed,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 128,
-      height: 174,
-      padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(153),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withAlpha(125)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14CA7DA4),
-            blurRadius: 14,
-            offset: Offset(0, 7),
+    final hasUnclaimed = item.hasUnclaimedGift;
+
+    return TactileBounce(
+      onTap: hasUnclaimed ? () => _openGiftDialog(context) : null,
+      child: Container(
+        width: 136,
+        height: 212,
+        padding: const EdgeInsets.fromLTRB(9, 10, 9, 10),
+        decoration: BoxDecoration(
+          color: hasUnclaimed
+              ? Colors.white.withAlpha(210)
+              : Colors.white.withAlpha(153),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: hasUnclaimed
+                ? const Color(0xFFFFB300)
+                : Colors.white.withAlpha(125),
+            width: hasUnclaimed ? 1.8 : 1.0,
           ),
-        ],
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          const AchievementStatusBadge(
-            icon: Icons.check_rounded,
-            color: Color(0xFF37C97B),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AchievementVisualIcon(
-                visual: item.visual,
-                color: item.color,
-                size: 70,
-                assetPath: item.assetPath,
-                locked: false,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                item.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF10234D),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
+          boxShadow: [
+            BoxShadow(
+              color: hasUnclaimed
+                  ? const Color(0x33FFB300)
+                  : const Color(0x14CA7DA4),
+              blurRadius: hasUnclaimed ? 16 : 14,
+              offset: const Offset(0, 7),
+            ),
+          ],
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AchievementStatusBadge(
+              icon: hasUnclaimed
+                  ? Icons.notifications_active_rounded
+                  : Icons.check_rounded,
+              color: hasUnclaimed
+                  ? const Color(0xFFEF4444)
+                  : const Color(0xFF37C97B),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AchievementVisualIcon(
+                  visual: item.visual,
+                  color: item.color,
+                  size: 64,
+                  assetPath: item.assetPath,
+                  locked: false,
                 ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                item.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF40577D),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  height: 1.25,
+                const SizedBox(height: 6),
+                Text(
+                  item.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF10234D),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                item.date ?? '',
-                maxLines: 1,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF15A964),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
+                const SizedBox(height: 4),
+                Text(
+                  item.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF40577D),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                const Spacer(),
+                if (hasUnclaimed)
+                  Container(
+                    height: 32,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF416C), Color(0xFFFF4B2B)],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x40FF416C),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.notifications_active_rounded,
+                          color: Colors.white,
+                          size: 13,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'OPEN GIFT',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_circle_rounded,
+                          color: Color(0xFF2E7D32),
+                          size: 13,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Claimed',
+                          style: TextStyle(
+                            color: Color(0xFF2E7D32),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -7097,7 +7658,7 @@ class InProgressAchievementCard extends StatelessWidget {
                 assetPath: item.assetPath,
                 compact: true,
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -7112,19 +7673,45 @@ class InProgressAchievementCard extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 4),
                     Text(
                       item.description,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Color(0xFF40577D),
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF7ED),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFFFEDD5)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.redeem_rounded, size: 12, color: Color(0xFFEA580C)),
+                          const SizedBox(width: 4),
+                          Text(
+                            item.gemReward > 0
+                                ? '+${item.coinReward} Coins & ${item.gemReward} Gems'
+                                : '+${item.coinReward} Coins',
+                            style: const TextStyle(
+                              color: Color(0xFFEA580C),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Expanded(
@@ -7156,8 +7743,8 @@ class InProgressAchievementCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Container(
-                width: 52,
-                height: 52,
+                width: 54,
+                height: 54,
                 decoration: BoxDecoration(
                   color: item.color.withAlpha(28),
                   borderRadius: BorderRadius.circular(14),
@@ -7214,9 +7801,9 @@ class LockedAchievementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 128,
-      height: 180,
-      padding: const EdgeInsets.fromLTRB(10, 11, 10, 10),
+      width: 136,
+      height: 212,
+      padding: const EdgeInsets.fromLTRB(9, 10, 9, 10),
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(153),
         borderRadius: BorderRadius.circular(18),
@@ -7241,11 +7828,11 @@ class LockedAchievementCard extends StatelessWidget {
               AchievementVisualIcon(
                 visual: item.visual,
                 color: const Color(0xFF9DA0B5),
-                size: 66,
+                size: 64,
                 assetPath: item.assetPath,
                 locked: true,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 item.title,
                 maxLines: 1,
@@ -7253,11 +7840,11 @@ class LockedAchievementCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Color(0xFF566681),
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(height: 7),
+              const SizedBox(height: 4),
               Text(
                 item.description,
                 maxLines: 2,
@@ -7265,23 +7852,354 @@ class LockedAchievementCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Color(0xFF647391),
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  height: 1.25,
+                  height: 1.2,
                 ),
               ),
               const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.redeem_rounded, size: 11, color: Color(0xFF64748B)),
+                    const SizedBox(width: 3),
+                    Text(
+                      item.gemReward > 0
+                          ? '${item.coinReward} + ${item.gemReward} Gems'
+                          : '${item.coinReward} Coins',
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 6),
               Text(
                 '${item.current} / ${item.target}',
                 style: const TextStyle(
                   color: Color(0xFF647391),
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w900,
                 ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class GiftOpenCelebrationDialog extends StatefulWidget {
+  const GiftOpenCelebrationDialog({
+    super.key,
+    required this.item,
+    this.onClaimed,
+  });
+
+  final AchievementItem item;
+  final VoidCallback? onClaimed;
+
+  @override
+  State<GiftOpenCelebrationDialog> createState() => _GiftOpenCelebrationDialogState();
+}
+
+class _GiftOpenCelebrationDialogState extends State<GiftOpenCelebrationDialog>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _giftBounceAnimation;
+  bool _isClaiming = false;
+
+  @override
+  void initState() {
+    super.initState();
+    playWinSound();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+
+    _giftBounceAnimation = Tween<double>(begin: -8.0, end: 8.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _claimReward() async {
+    if (_isClaiming) return;
+    setState(() => _isClaiming = true);
+    playCoinSound();
+    await GameStorage.claimAchievement(widget.item.id);
+    widget.onClaimed?.call();
+    if (mounted) {
+      Navigator.of(context).pop(true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+    final giftAsset = item.giftAssetPath ?? 'assets/images/daily_gift.webp';
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Stack(
+            alignment: Alignment.topCenter,
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 50),
+                padding: const EdgeInsets.fromLTRB(22, 54, 22, 22),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 30,
+                      offset: Offset(0, 14),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF3B30), Color(0xFFFF9500)],
+                        ),
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x40FF3B30),
+                            blurRadius: 8,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.notifications_active_rounded, color: Colors.white, size: 16),
+                          SizedBox(width: 6),
+                          Text(
+                            'GIFT READY TO CLAIM!',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      item.title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xFF10234D),
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      item.description.replaceAll('\n', ' '),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xFF566681),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFFFFF8E7),
+                            const Color(0xFFFFEDB3).withAlpha(180),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: const Color(0xFFFFD54F), width: 1.5),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'REWARD UNLOCKED',
+                            style: TextStyle(
+                              color: Color(0xFFB78103),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/images/coin.webp',
+                                width: 28,
+                                height: 28,
+                                errorBuilder: (context, error, stackTrace) => const Icon(
+                                  Icons.monetization_on_rounded,
+                                  color: Color(0xFFFFB300),
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '+${item.coinReward} Coins',
+                                style: const TextStyle(
+                                  color: Color(0xFF996500),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (item.gemReward > 0) ...[
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  'assets/images/gem.webp',
+                                  width: 24,
+                                  height: 24,
+                                  errorBuilder: (context, error, stackTrace) => const Icon(
+                                    Icons.diamond_rounded,
+                                    color: Color(0xFF00B0FF),
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '+${item.gemReward} Gems',
+                                  style: const TextStyle(
+                                    color: Color(0xFF0077C2),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: _isClaiming ? null : _claimReward,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF15A964),
+                          foregroundColor: Colors.white,
+                          elevation: 6,
+                          shadowColor: const Color(0x5515A964),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: _isClaiming
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.redeem_rounded, size: 22),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'CLAIM GIFT',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 0,
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, _giftBounceAnimation.value),
+                      child: child,
+                    );
+                  },
+                  child: Container(
+                    width: 96,
+                    height: 96,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x33FF7A00),
+                          blurRadius: 20,
+                          offset: Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: OptionalAssetImage(
+                      assetPath: giftAsset,
+                      fit: BoxFit.contain,
+                      fallback: const Icon(
+                        Icons.card_giftcard_rounded,
+                        color: Color(0xFFFF7A00),
+                        size: 54,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -9998,9 +10916,9 @@ class _DailyPuzzleLandingScreenState extends State<DailyPuzzleLandingScreen> {
                         streak: streak,
                         onBack: () => Navigator.of(context).maybePop(),
                       ),
-                      const SizedBox(height: 50),
+                      const SizedBox(height: 20),
                       DailyLandingHeroCard(onStart: openPuzzle),
-                      const SizedBox(height: 50),
+                      const SizedBox(height: 20),
                       DailyLandingStreakCard(trackerDays: trackerDays),
                     ],
                   ),
@@ -10030,48 +10948,39 @@ class DailyLandingTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Material(
-          color: Colors.white.withAlpha(230),
-          shape: const CircleBorder(),
-          elevation: 2,
-          shadowColor: const Color(0x1F33406C),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: withButtonFeedback(canPop ? onBack : null),
-            child: SizedBox(
-              width: 38,
-              height: 38,
-              child: Icon(
-                Icons.arrow_back_rounded,
-                color: canPop
-                    ? const Color(0xFF1F2E55)
-                    : const Color(0x661F2E55),
-                size: 24,
-              ),
-            ),
-          ),
+        ProfessionalCircleButton(
+          size: 40,
+          icon: Icons.arrow_back_rounded,
+          onPressed: canPop ? withButtonFeedback(onBack) : null,
         ),
         const Spacer(),
         const Text(
           'Daily Puzzle',
           style: TextStyle(
-            color: Color(0xFF1F2E55),
-            fontSize: 16,
+            color: Color(0xFF0F172A),
+            fontSize: 18,
             fontWeight: FontWeight.w900,
+            letterSpacing: -0.3,
           ),
         ),
         const Spacer(),
         Container(
-          height: 38,
+          height: 40,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(230),
+            color: Colors.white.withAlpha(235),
             borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: const Color(0xFFFFEDD5), width: 1.5),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x1F33406C),
-                blurRadius: 10,
+                color: Color(0x20FF7A1A),
+                blurRadius: 12,
                 offset: Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Color(0x100F172A),
+                blurRadius: 6,
+                offset: Offset(0, 2),
               ),
             ],
           ),
@@ -10080,14 +10989,14 @@ class DailyLandingTopBar extends StatelessWidget {
             children: [
               const Icon(
                 Icons.local_fire_department_rounded,
-                color: Color(0xFFFF7A1A),
-                size: 20,
+                color: Color(0xFFFF6B00),
+                size: 21,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 5),
               Text(
                 '$streak',
                 style: const TextStyle(
-                  color: Color(0xFFE84A3A),
+                  color: Color(0xFFEA580C),
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
                 ),
@@ -10108,94 +11017,178 @@ class DailyLandingHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 42),
-      padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(153),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withAlpha(125)),
+        color: Colors.white.withAlpha(205),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFBAE6FD), width: 1.8),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x1FCA7DA4),
-            blurRadius: 20,
-            offset: Offset(0, 10),
+            color: Color(0x180284C7),
+            blurRadius: 24,
+            offset: Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Color(0x120F172A),
+            blurRadius: 12,
+            offset: Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          Container(
-            width: 112,
-            height: 112,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withAlpha(125),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x14CA7DA4),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(26),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+            child: Column(
+              children: [
+                // 3D Medallion
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white,
+                        const Color(0xFFF1F5F9),
+                      ],
+                    ),
+                    border: Border.all(color: const Color(0xFFBAE6FD), width: 1.6),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x186366F1),
+                        blurRadius: 18,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      'assets/images/daily_calendar.webp',
+                      width: 74,
+                      height: 74,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  "Today's MindTrap",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 21,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  'One puzzle a day keeps your mind sharp!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF475569),
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                // Daily reward teaser badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: const Color(0xFFBBF7D0), width: 1.2),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.stars_rounded, color: Color(0xFFEAB308), size: 16),
+                      SizedBox(width: 5),
+                      Text(
+                        '+20 Coins  •  +5 Diamonds Streak',
+                        style: TextStyle(
+                          color: Color(0xFF15803D),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TactileBounce(
+                  onTap: onStart,
+                  child: Container(
+                    height: 52,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF6366F1),
+                          Color(0xFF4F46E5),
+                        ],
+                      ),
+                      border: Border.all(color: const Color(0xFF818CF8), width: 1.2),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x454F46E5),
+                          blurRadius: 16,
+                          offset: Offset(0, 6),
+                        ),
+                        BoxShadow(
+                          color: Color(0x20000000),
+                          blurRadius: 3,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Positioned(
+                          top: 1.5,
+                          left: 18,
+                          right: 18,
+                          child: Container(
+                            height: 1.2,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(90),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
+                            SizedBox(width: 6),
+                            Text(
+                              'Start Daily Puzzle',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
-            child: const Center(
-              child: Image(
-                image: AssetImage('assets/images/daily_calendar.webp'),
-                width: 82,
-                height: 82,
-                fit: BoxFit.contain,
-              ),
-            ),
           ),
-          const SizedBox(height: 24),
-          const Text(
-            "Today's MindTrap",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF1F2E55),
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0,
-            ),
-          ),
-          const SizedBox(height: 5),
-          const Text(
-            'One puzzle a day keeps\nyour mind sharp!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF41506F),
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              height: 1.22,
-            ),
-          ),
-          const SizedBox(height: 28),
-          SizedBox(
-            height: 56,
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: withButtonFeedback(onStart),
-              icon: const Icon(Icons.play_arrow_rounded, size: 26),
-              label: const Text(
-                'Start Daily Puzzle',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: const Color(0xFF6F63FF),
-                elevation: 8,
-                shadowColor: const Color(0x665B6FFA),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(22),
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -10226,88 +11219,119 @@ class DailyLandingStreakCard extends StatelessWidget {
     final now = DateTime.now();
     final monthName = monthNames[now.month - 1];
 
-    debugPrint(
-      'Daily tracker UI: '
-      '${trackerDays.map((day) => '${day.dateKey}:${day.status.name}').join(', ')}',
-    );
-
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(204),
-        borderRadius: BorderRadius.circular(24),
+        color: Colors.white.withAlpha(210),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFBAE6FD), width: 1.8),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x17CA7DA4),
-            blurRadius: 18,
+            color: Color(0x180284C7),
+            blurRadius: 24,
             offset: Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Color(0x120F172A),
+            blurRadius: 12,
+            offset: Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Text(
-                monthName,
-                style: const TextStyle(
-                  color: Color(0xFF1F2E55),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${now.year}',
-                style: const TextStyle(
-                  color: Color(0xFF6F63FF),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              for (final label in weekdayLabels)
-                SizedBox(
-                  width: 32,
-                  child: Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF6674A5),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(26),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.calendar_month_rounded,
+                        color: Color(0xFF6366F1),
+                        size: 18,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 10),
+                    Text(
+                      monthName,
+                      style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
+                      ),
+                      child: Text(
+                        '${now.year}',
+                        style: const TextStyle(
+                          color: Color(0xFF475569),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          GridView.builder(
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: trackerDays.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-              mainAxisSpacing: 7,
-              crossAxisSpacing: 7,
-              childAspectRatio: 0.78,
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    for (final label in weekdayLabels)
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            label,
+                            style: const TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                GridView.builder(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: trackerDays.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 7,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 1.0,
+                  ),
+                  itemBuilder: (context, index) {
+                    final day = trackerDays[index];
+                    return DailyLandingDayDot(
+                      label: day.label,
+                      status: day.status,
+                      isPlaceholder: day.isPlaceholder,
+                    );
+                  },
+                ),
+              ],
             ),
-            itemBuilder: (context, index) {
-              final day = trackerDays[index];
-              return DailyLandingDayDot(
-                label: day.label,
-                status: day.status,
-                isPlaceholder: day.isPlaceholder,
-              );
-            },
           ),
-        ],
+        ),
       ),
     );
   }
@@ -10334,50 +11358,145 @@ class DailyLandingDayDot extends StatelessWidget {
     final isComplete = status == DailyTrackerDayStatus.complete;
     final isToday = status == DailyTrackerDayStatus.today;
     final isMissed = status == DailyTrackerDayStatus.missed;
-    final backgroundColor = isComplete
-        ? const Color(0xFF55D6A8)
-        : isToday
-        ? const Color(0xFF4E8CFF)
-        : isMissed
-        ? const Color(0xFFE84A5F).withAlpha(190)
-        : Colors.white.withAlpha(150);
-    final icon = isComplete
-        ? Icons.check_rounded
-        : isToday
-        ? Icons.diamond_rounded
-        : isMissed
-        ? Icons.close_rounded
-        : null;
+    final dayNum = int.tryParse(label) ?? 0;
+    final isMilestone = dayNum > 0 && dayNum % 5 == 0;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: status == DailyTrackerDayStatus.empty
-                ? const Color(0xFF9BA6C8)
-                : const Color(0xFF1F2E55),
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
+    if (isComplete) {
+      return Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF22C55E), Color(0xFF16A34A)],
+          ),
+          border: Border.all(color: const Color(0xFF86EFAC), width: 1.4),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x3516A34A),
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.check_rounded,
+            color: Colors.white,
+            size: 20,
           ),
         ),
-        const SizedBox(height: 4),
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: backgroundColor,
-            border: isComplete || isToday || isMissed
-                ? null
-                : Border.all(color: const Color(0xFFDDE2F0)),
+      );
+    }
+
+    if (isToday) {
+      return Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
           ),
-          child: icon == null
-              ? null
-              : Icon(icon, color: Colors.white, size: isToday ? 13 : 15),
+          border: Border.all(color: Colors.white, width: 2.2),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x652563EB),
+              blurRadius: 10,
+              spreadRadius: 1,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
-      ],
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            Positioned(
+              top: 2,
+              right: 3,
+              child: Container(
+                padding: const EdgeInsets.all(1.5),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFF0284C7),
+                ),
+                child: const Icon(
+                  Icons.diamond_rounded,
+                  size: 8,
+                  color: Color(0xFFBAE6FD),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (isMissed) {
+      return Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: const Color(0xFFFEE2E2),
+          border: Border.all(color: const Color(0xFFFCA5A5), width: 1.2),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFFDC2626),
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Default upcoming day: clean centered day number inside crisp frosted circle
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withAlpha(220),
+        border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A0F172A),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF475569),
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (isMilestone)
+            const Positioned(
+              top: 3,
+              right: 3,
+              child: Icon(
+                Icons.star_rounded,
+                size: 9,
+                color: Color(0xFFF59E0B),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -10426,7 +11545,7 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
   int get currentLevelNumber => currentGlobalLevelIndex + 1;
 
   String get backgroundAsset => LevelSelectScreen.currentBackgroundAsset;
-  LevelTheme get levelTheme => levelThemeForStage(currentStageIndex);
+  LevelTheme get levelTheme => levelThemeForBackground(backgroundAsset, fallbackStageIndex: currentStageIndex);
 
   Future<void> openCurrentLevel() async {
     await Navigator.push(
@@ -10811,6 +11930,142 @@ LevelTheme levelThemeForStage(int stageIndex) {
     ),
   ];
   return themes[stageIndex.clamp(0, themes.length - 1)];
+}
+
+LevelTheme levelThemeForBackground(String bgAsset, {int? fallbackStageIndex}) {
+  switch (bgAsset) {
+    case 'assets/images/Stage-1.webp':
+      return const LevelTheme(
+        title: 'Sunset Meadow',
+        titleColor: Color(0xFF0F172A),
+        titleShadow: Color(0x66FFF4CF),
+        accent: Color(0xFFF59E0B),
+        accentDark: Color(0xFFD97706),
+        shadow: Color(0x66F59E0B),
+      );
+    case 'assets/images/Stage-2.webp':
+      return const LevelTheme(
+        title: 'Sunlit Forest',
+        titleColor: Color(0xFF0F172A),
+        titleShadow: Color(0x66FFF4CF),
+        accent: Color(0xFFF59E0B),
+        accentDark: Color(0xFFEA580C),
+        shadow: Color(0x66F59E0B),
+      );
+    case 'assets/images/Stage-3.webp':
+      return const LevelTheme(
+        title: 'Tropical Lagoon',
+        titleColor: Colors.white,
+        titleShadow: Color(0xAA062E3B),
+        accent: Color(0xFF06B6D4),
+        accentDark: Color(0xFF0284C7),
+        shadow: Color(0x6606B6D4),
+      );
+    case 'assets/images/Stage-4.webp':
+      return const LevelTheme(
+        title: 'Sakura Sanctuary',
+        titleColor: Color(0xFF0F172A),
+        titleShadow: Color(0x66FDF2F8),
+        accent: Color(0xFFEC4899),
+        accentDark: Color(0xFFDB2777),
+        shadow: Color(0x66EC4899),
+      );
+    case 'assets/images/Stage-5.webp':
+      return const LevelTheme(
+        title: 'Lavender Twilight',
+        titleColor: Colors.white,
+        titleShadow: Color(0xAA3B0764),
+        accent: Color(0xFFA855F7),
+        accentDark: Color(0xFF7E22CE),
+        shadow: Color(0x66A855F7),
+      );
+    case 'assets/images/Stage-6.webp':
+      return const LevelTheme(
+        title: 'Autumn Haven',
+        titleColor: Color(0xFF0F172A),
+        titleShadow: Color(0x66FEF3C7),
+        accent: Color(0xFFF59E0B),
+        accentDark: Color(0xFFB45309),
+        shadow: Color(0x66F59E0B),
+      );
+    case 'assets/images/Stage-7.webp':
+      return const LevelTheme(
+        title: 'Alpine Glaciers',
+        titleColor: Color(0xFF0F172A),
+        titleShadow: Color(0x66E0F2FE),
+        accent: Color(0xFF0284C7),
+        accentDark: Color(0xFF0369A1),
+        shadow: Color(0x660284C7),
+      );
+    case 'assets/images/daily_puzzle_landing_background.webp':
+      return const LevelTheme(
+        title: 'Blossom Valley',
+        titleColor: Color(0xFF0F172A),
+        titleShadow: Color(0x55FFE4E6),
+        accent: Color(0xFFF43F5E),
+        accentDark: Color(0xFFE11D48),
+        shadow: Color(0x66F43F5E),
+      );
+    case 'assets/images/level_complete_background.webp':
+      return const LevelTheme(
+        title: 'Emerald Waters',
+        titleColor: Colors.white,
+        titleShadow: Color(0xAA064E3B),
+        accent: Color(0xFF10B981),
+        accentDark: Color(0xFF059669),
+        shadow: Color(0x6610B981),
+      );
+    case 'assets/images/puzzle_complete_background.webp':
+      return const LevelTheme(
+        title: 'Celestial Zenith',
+        titleColor: Colors.white,
+        titleShadow: Color(0xAA1E1B4B),
+        accent: Color(0xFF6366F1),
+        accentDark: Color(0xFF4338CA),
+        shadow: Color(0x666366F1),
+      );
+    case 'assets/images/quiz_background.webp':
+      return const LevelTheme(
+        title: 'Quantum Nebula',
+        titleColor: Colors.white,
+        titleShadow: Color(0xAA3B0764),
+        accent: Color(0xFF9333EA),
+        accentDark: Color(0xFF6B21A8),
+        shadow: Color(0x669333EA),
+      );
+    case 'assets/images/home_background.webp':
+      return const LevelTheme(
+        title: 'Sunlit Haven',
+        titleColor: Color(0xFF0F172A),
+        titleShadow: Color(0x66E0F2FE),
+        accent: Color(0xFF0284C7),
+        accentDark: Color(0xFF0369A1),
+        shadow: Color(0x660284C7),
+      );
+    case 'assets/images/quiz_correct_background.webp':
+      return const LevelTheme(
+        title: 'Verdant Realm',
+        titleColor: Colors.white,
+        titleShadow: Color(0xAA064E3B),
+        accent: Color(0xFF10B981),
+        accentDark: Color(0xFF047857),
+        shadow: Color(0x6610B981),
+      );
+    case 'assets/images/game over background image.webp':
+      return const LevelTheme(
+        title: 'Crimson Canyon',
+        titleColor: Colors.white,
+        titleShadow: Color(0xAA450A0A),
+        accent: Color(0xFFE11D48),
+        accentDark: Color(0xFF9F1239),
+        shadow: Color(0x66E11D48),
+      );
+    default:
+      if (fallbackStageIndex != null) {
+        return levelThemeForStage(fallbackStageIndex);
+      }
+      return levelThemeForStage(0);
+  }
 }
 
 class LevelHeaderPlayButton extends StatelessWidget {
@@ -11653,6 +12908,14 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
 
     await GameStorage.saveDailyCompletion(date: today, streak: nextStreak);
 
+    // Award 20 coins for completing the daily puzzle
+    await GameStorage.addCoins(20);
+
+    // Award 5 diamonds after completing every 5 daily streak milestone
+    if (nextStreak > 0 && nextStreak % 5 == 0) {
+      await GameStorage.awardLevelDiamonds(5);
+    }
+
     if (!mounted) {
       return;
     }
@@ -11717,6 +12980,11 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
       return const PremiumLoading();
     }
 
+    final dailyWorld = (DateTime.now().year + DateTime.now().month) % 7;
+    final dailyLevel = DateTime.now().day;
+    final dailyBgAsset = LevelBackgroundBuilder.getBackgroundAsset(dailyWorld, dailyLevel);
+    final dailyTheme = levelThemeForBackground(dailyBgAsset, fallbackStageIndex: dailyWorld);
+
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, langCode, _) {
@@ -11727,8 +12995,8 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
               children: [
                 Positioned.fill(
                   child: LevelBackgroundBuilder(
-                    worldIndex: (DateTime.now().year + DateTime.now().month) % 7,
-                    levelIndex: DateTime.now().day,
+                    worldIndex: dailyWorld,
+                    levelIndex: dailyLevel,
                   ),
                 ),
                 Positioned.fill(
@@ -11783,6 +13051,7 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                                 PuzzleQuestionCard(
                                   question: dailyPuzzle.question,
                                   showBrandPill: false,
+                                  theme: dailyTheme,
                                 ),
                                 const SizedBox(height: 20),
                                 for (
@@ -11796,6 +13065,7 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                                     backgroundColor: getAnswerColor(
                                       dailyPuzzle.options[index],
                                     ),
+                                    theme: dailyTheme,
                                     trailingIcon: getAnswerIcon(
                                       dailyPuzzle.options[index],
                                     ),
@@ -11817,6 +13087,7 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                                       ? DailyPuzzleCompleteCard(
                                           key: ValueKey(lastAnswerWasCorrect),
                                           isCorrect: lastAnswerWasCorrect,
+                                          streak: streak,
                                           onBackHome: () =>
                                               Navigator.pop(context),
                                         )
@@ -11866,10 +13137,58 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   bool hasWon = false;
   bool hasGameOver = false;
   bool hasRecordedGameResult = false;
+  bool _hasSavedThisLevelWin = false;
   String? selectedAnswer;
   bool? resultOverlayWasCorrect;
   int levelRetryCount = 0;
   final Set<String> eliminatedOptions = {};
+
+  void _recordAndSaveLevelWin() {
+    if (_hasSavedThisLevelWin) return;
+    _hasSavedThisLevelWin = true;
+    hasRecordedGameResult = true;
+
+    final currentLvlNum = widget.isStageMode
+        ? ((widget.levelIndex ?? 0) + 1)
+        : (currentLevelIndex + 1);
+    final isFiveLevelMilestone = (currentLvlNum % 5 == 0);
+
+    // 1. Award 20 coins for EVERY level finished
+    unawaited(GameStorage.addCoins(20));
+
+    // 2. Award 5 diamonds after finishing every 5 levels
+    if (isFiveLevelMilestone) {
+      unawaited(GameStorage.awardLevelDiamonds(5));
+    }
+
+    final isStageCompletion = widget.isStageMode &&
+        widget.levelIndex == (StageSelectScreen.levelsPerStage - 1);
+    if (isStageCompletion) {
+      unawaited(GameStorage.awardStageCoins(150));
+    } else if (!widget.isStageMode) {
+      unawaited(GameStorage.awardStageCoins(100));
+    }
+
+    unawaited(
+      GameStorage.recordGameFinished(
+        didWin: true,
+        finalScore: score,
+        levelsCompleted: totalAnswers,
+        wasPerfect: correctAnswers == totalAnswers,
+        remainingLives: lives,
+      ),
+    );
+
+    if (widget.isStageMode && widget.stageIndex != null && widget.levelIndex != null) {
+      unawaited(
+        GameStorage.saveStageLevelStars(
+          stageIndex: widget.stageIndex!,
+          levelIndex: widget.levelIndex!,
+          stars: max(1, correctAnswers),
+        ),
+      );
+    }
+  }
 
   Future<void> useHint() async {
     if (isShowingFeedback || hasWon || hasGameOver) return;
@@ -11900,32 +13219,57 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   void _showBuyHintsDialog() {
     showDialog<void>(
       context: context,
+      barrierColor: Colors.black.withAlpha(90),
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
-          side: const BorderSide(color: Color(0xFF0284C7), width: 1.5),
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: Color(0xFFBAE6FD), width: 1.8),
         ),
         title: Row(
           children: [
-            const Icon(Icons.lightbulb_outline_rounded, color: Color(0xFFFFB11F)),
-            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFFEF3C7),
+                border: Border.all(color: const Color(0xFFFCD34D)),
+              ),
+              child: const Icon(Icons.lightbulb_rounded, color: Color(0xFFD97706), size: 22),
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 tr('out_of_hints'),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
+                style: const TextStyle(
+                  color: Color(0xFF0F172A),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                ),
               ),
             ),
           ],
         ),
         content: Text(
           tr('buy_hints_prompt'),
-          style: const TextStyle(color: Color(0xFFC7D2FE)),
+          style: const TextStyle(
+            color: Color(0xFF475569),
+            fontSize: 14.5,
+            fontWeight: FontWeight.w600,
+            height: 1.4,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(tr('cancel'), style: const TextStyle(color: Colors.white70)),
+            child: Text(
+              tr('cancel'),
+              style: const TextStyle(
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
@@ -11996,9 +13340,16 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       explanation: localized.explanation,
     );
   }
-  LevelTheme get currentTheme => widget.isStageMode
-      ? levelThemeForStage(widget.stageIndex!)
-      : levelThemeForStage(2);
+  LevelTheme get currentTheme {
+    final wIndex = widget.isStageMode
+        ? widget.stageIndex!
+        : (currentLevelIndex ~/ 3);
+    final lIndex = widget.isStageMode
+        ? (widget.levelIndex ?? currentLevelIndex)
+        : currentLevelIndex;
+    final bgAsset = LevelBackgroundBuilder.getBackgroundAsset(wIndex, lIndex);
+    return levelThemeForBackground(bgAsset, fallbackStageIndex: wIndex);
+  }
 
   @override
   void initState() {
@@ -12058,7 +13409,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       ..shuffle(Random(randomSeed));
     sessionLevels = sessionLevels.take(widget.isStageMode ? 3 : 5).toList();
     currentLevelIndex = 0;
-    score = 0;
+    score = GameStorage.runningScore;
     lives = 3;
     correctAnswers = 0;
     totalAnswers = 0;
@@ -12074,6 +13425,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     hasWon = false;
     hasGameOver = false;
     hasRecordedGameResult = false;
+    _hasSavedThisLevelWin = false;
     selectedAnswer = null;
     resultOverlayWasCorrect = null;
   }
@@ -12106,6 +13458,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
 
       if (isCorrect) {
         score += 10;
+        GameStorage.runningScore = score;
         correctAnswers++;
       } else {
         lives = nextLives;
@@ -12123,8 +13476,10 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
 
     if (isCorrect) {
       if (widget.isStageMode && currentLevelIndex == sessionLevels.length - 1) {
+        _recordAndSaveLevelWin();
         showLevelCompletePage();
       } else if (currentLevelIndex == sessionLevels.length - 1) {
+        _recordAndSaveLevelWin();
         Future.delayed(const Duration(milliseconds: 1800), () {
           if (mounted) advanceAfterAnswer(lives);
         });
@@ -12133,6 +13488,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
           if (mounted) advanceAfterAnswer(lives);
         });
       } else {
+        _recordAndSaveLevelWin();
         showLevelCompletePage();
       }
     } else {
@@ -12246,6 +13602,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         finishedLevels = correctAnswers;
         playLoseSound();
         triggerHeavyFeedback();
+        GameStorage.runningScore = 0;
       } else if (currentLevelIndex == sessionLevels.length - 1) {
         hasWon = true;
         didFinish = true;
@@ -12271,45 +13628,32 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       selectedAnswer = shouldKeepCompleteOverlay ? selectedAnswer : null;
       resultOverlayWasCorrect = null;
     });
-    if (didFinish && !hasRecordedGameResult) {
-      hasRecordedGameResult = true;
+    if (didFinish) {
       if (didWin) {
-        unawaited(GameStorage.awardLevelDiamonds(5));
-        final isStageCompletion = widget.isStageMode &&
-            widget.levelIndex == (StageSelectScreen.levelsPerStage - 1);
-        if (isStageCompletion) {
-          unawaited(GameStorage.awardStageCoins(150));
-        } else if (!widget.isStageMode) {
-          unawaited(GameStorage.awardStageCoins(100));
-        }
+        _recordAndSaveLevelWin();
+      } else if (!hasRecordedGameResult) {
+        hasRecordedGameResult = true;
+        unawaited(
+          GameStorage.recordGameFinished(
+            didWin: false,
+            finalScore: score,
+            levelsCompleted: finishedLevels,
+            wasPerfect: false,
+            remainingLives: nextLives,
+          ),
+        );
       }
-      unawaited(
-        GameStorage.recordGameFinished(
-          didWin: didWin,
-          finalScore: score,
-          levelsCompleted: finishedLevels,
-          wasPerfect: didWin && correctAnswers == totalAnswers,
-          remainingLives: nextLives,
-        ),
-      );
     }
     if (didFinish && widget.isStageMode) {
-      unawaited(
-        GameStorage.saveStageLevelStars(
-          stageIndex: widget.stageIndex!,
-          levelIndex: widget.levelIndex!,
-          stars: correctAnswers,
-        ).then((_) {
-          if (mounted) {
-            Navigator.of(context).pop();
-          }
-        }),
-      );
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
       return;
     }
   }
 
   void playAgain() {
+    GameStorage.runningScore = 0;
     setState(() {
       startNewGame();
     });
@@ -12317,137 +13661,148 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<String>(
-      valueListenable: LanguageController.instance.activeLanguage,
-      builder: (context, currentLang, _) {
-        final canPop = Navigator.canPop(context);
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (isShowingLevelCompletePage || hasWon) {
+          _recordAndSaveLevelWin();
+        }
+      },
+      child: ValueListenableBuilder<String>(
+        valueListenable: LanguageController.instance.activeLanguage,
+        builder: (context, currentLang, _) {
+          final canPop = Navigator.canPop(context);
 
-        if (hasWon || hasGameOver) {
-          if (hasGameOver) {
-            return GameOverScreen(
+          if (hasWon || hasGameOver) {
+            if (hasGameOver) {
+              return GameOverScreen(
+                finalScore: score,
+                levelsCompleted: correctAnswers,
+                correctAnswers: correctAnswers,
+                totalAnswers: totalAnswers,
+                onTryAgain: playAgain,
+                onBackToHome: () {
+                  GameStorage.runningScore = 0;
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+              );
+            }
+            return GameSummaryScreen(
+              didWin: hasWon,
               finalScore: score,
-              levelsCompleted: correctAnswers,
+              levelsCompleted: totalAnswers,
               correctAnswers: correctAnswers,
               totalAnswers: totalAnswers,
-              onTryAgain: playAgain,
+              onPlayAgain: playAgain,
               onBackToHome: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
             );
           }
-          return GameSummaryScreen(
-            didWin: hasWon,
-            finalScore: score,
-            levelsCompleted: totalAnswers,
-            correctAnswers: correctAnswers,
-            totalAnswers: totalAnswers,
-            onPlayAgain: playAgain,
-            onBackToHome: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-          );
-        }
 
-        return Directionality(
-          textDirection: LanguageController.instance.directionality,
-          child: Stack(
-            children: [
-              Scaffold(
-                body: Stack(
-                  children: [
-                    if (widget.isStageMode)
+          return Directionality(
+            textDirection: LanguageController.instance.directionality,
+            child: Stack(
+              children: [
+                Scaffold(
+                  body: Stack(
+                    children: [
+                      if (widget.isStageMode)
+                        Positioned.fill(
+                          child: LevelBackgroundBuilder(
+                            worldIndex: widget.stageIndex!,
+                            levelIndex: widget.levelIndex ?? currentLevelIndex,
+                          ),
+                        )
+                      else
+                        Positioned.fill(
+                          child: LevelBackgroundBuilder(
+                            worldIndex: currentLevelIndex ~/ 3,
+                            levelIndex: currentLevelIndex,
+                          ),
+                        ),
                       Positioned.fill(
-                        child: LevelBackgroundBuilder(
-                          worldIndex: widget.stageIndex!,
-                          levelIndex: (widget.levelIndex! * 3) + currentLevelIndex,
+                        child: AnimatedOpacity(
+                          opacity: 0.0,
+                          duration: const Duration(milliseconds: 950),
+                          curve: Curves.easeInOutCubic,
+                          child: const Image(
+                            image: AssetImage(
+                              'assets/images/quiz_correct_background.webp',
+                            ),
+                            fit: BoxFit.cover,
+                            alignment: Alignment.topCenter,
+                          ),
                         ),
-                      )
-                    else
+                      ),
                       Positioned.fill(
-                        child: LevelBackgroundBuilder(
-                          worldIndex: currentLevelIndex ~/ 3,
-                          levelIndex: currentLevelIndex,
-                        ),
-                      ),
-                    Positioned.fill(
-                      child: AnimatedOpacity(
-                        opacity: 0.0,
-                        duration: const Duration(milliseconds: 950),
-                        curve: Curves.easeInOutCubic,
-                        child: const Image(
-                          image: AssetImage(
-                            'assets/images/quiz_correct_background.webp',
-                          ),
-                          fit: BoxFit.cover,
-                          alignment: Alignment.topCenter,
-                        ),
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: AnimatedOpacity(
-                        opacity: 0.0,
-                        duration: const Duration(milliseconds: 950),
-                        curve: Curves.easeInOutCubic,
-                        child: const Image(
-                          image: AssetImage(
-                            'assets/images/quiz_wrong_background.webp',
-                          ),
-                          fit: BoxFit.cover,
-                          alignment: Alignment.topCenter,
-                        ),
-                      ),
-                    ),
-                    SafeArea(
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 430),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(28, 18, 28, 22),
-                            child: buildGameplayContent(canPop: canPop),
+                        child: AnimatedOpacity(
+                          opacity: 0.0,
+                          duration: const Duration(milliseconds: 950),
+                          curve: Curves.easeInOutCubic,
+                          child: const Image(
+                            image: AssetImage(
+                              'assets/images/quiz_wrong_background.webp',
+                            ),
+                            fit: BoxFit.cover,
+                            alignment: Alignment.topCenter,
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isShowingLevelCompletePage)
-                LevelCompleteScreen(
-                  score: 10,
-                  accuracy: 100,
-                  isExiting: isDismissingLevelCompletePage,
-                  isStageComplete: widget.isStageMode &&
-                      widget.levelIndex == (StageSelectScreen.levelsPerStage - 1),
-                  onNextPuzzle: dismissLevelCompletePageThenAdvance,
-                ),
-              if (isShowingWrongAnswerPage)
-                if (selectedAnswer == '__timeout__')
-                  TimeOutScreen(
-                    selectedAnswer: 'Time ran out',
-                    correctAnswer: currentLevel.correctAnswer,
-                    isExiting: isDismissingWrongAnswerPage,
-                    continueLabel: widget.isStageMode ? 'Try Again' : 'Continue',
-                    onContinue: dismissWrongAnswerPageThenAdvance,
-                    onBackToHome: () {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                    },
-                  )
-                else
-                  WrongAnswerScreen(
-                    selectedAnswer: selectedAnswer ?? 'No answer',
-                    correctAnswer: currentLevel.correctAnswer,
-                    explanation: getCorrectAnswerExplanation(currentLevel),
-                    isExiting: isDismissingWrongAnswerPage,
-                    continueLabel: widget.isStageMode ? 'Try Again' : 'Continue',
-                    onContinue: dismissWrongAnswerPageThenAdvance,
-                    onBackToHome: () {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                    },
+                      SafeArea(
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 430),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+                              child: buildGameplayContent(canPop: canPop),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-            ],
-          ),
-        );
-      },
+                ),
+                if (isShowingLevelCompletePage)
+                  LevelCompleteScreen(
+                    score: 10,
+                    accuracy: 100,
+                    isExiting: isDismissingLevelCompletePage,
+                    isStageComplete: widget.isStageMode &&
+                        widget.levelIndex == (StageSelectScreen.levelsPerStage - 1),
+                    earnedCoins: 20,
+                    earnedDiamonds: (((widget.isStageMode ? ((widget.levelIndex ?? 0) + 1) : (currentLevelIndex + 1)) % 5 == 0) ? 5 : 0),
+                    onNextPuzzle: dismissLevelCompletePageThenAdvance,
+                  ),
+                if (isShowingWrongAnswerPage)
+                  if (selectedAnswer == '__timeout__')
+                    TimeOutScreen(
+                      selectedAnswer: 'Time ran out',
+                      correctAnswer: currentLevel.correctAnswer,
+                      isExiting: isDismissingWrongAnswerPage,
+                      continueLabel: widget.isStageMode ? 'Try Again' : 'Continue',
+                      onContinue: dismissWrongAnswerPageThenAdvance,
+                      onBackToHome: () {
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                      },
+                    )
+                  else
+                    WrongAnswerScreen(
+                      selectedAnswer: selectedAnswer ?? 'No answer',
+                      correctAnswer: currentLevel.correctAnswer,
+                      explanation: getCorrectAnswerExplanation(currentLevel),
+                      isExiting: isDismissingWrongAnswerPage,
+                      continueLabel: widget.isStageMode ? 'Try Again' : 'Continue',
+                      onContinue: dismissWrongAnswerPageThenAdvance,
+                      onBackToHome: () {
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                      },
+                    ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -12774,7 +14129,6 @@ class PuzzleTopHud extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final emptyLives = 3 - lives;
     final scoreFeedbackColor = scoreFeedbackWasCorrect == null
         ? null
         : scoreFeedbackWasCorrect!
@@ -12783,49 +14137,37 @@ class PuzzleTopHud extends StatelessWidget {
     final scoreLabelColor = scoreFeedbackColor ?? const Color(0xFF5D79AE);
     final scoreValueColor = scoreFeedbackColor ?? const Color(0xFF20345D);
 
-    return Row(
-      children: [
-        Material(
-          color: Colors.white,
-          shape: const CircleBorder(),
-          elevation: 2,
-          shadowColor: const Color(0x332178BA),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: withButtonFeedback(canPop ? onBack : null),
-            child: SizedBox(
-              width: 42,
-              height: 42,
-              child: Icon(
-                Icons.arrow_back_rounded,
-                color: canPop
-                    ? const Color(0xFF244169)
-                    : const Color(0x66244169),
-                size: 26,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 410;
+
+        Widget buildBackBtn() {
+          return Material(
+            color: Colors.white,
+            shape: const CircleBorder(),
+            elevation: 2,
+            shadowColor: const Color(0x332178BA),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: withButtonFeedback(canPop ? onBack : null),
+              child: SizedBox(
+                width: 38,
+                height: 38,
+                child: Icon(
+                  Icons.arrow_back_rounded,
+                  color: canPop
+                      ? const Color(0xFF244169)
+                      : const Color(0x66244169),
+                  size: 24,
+                ),
               ),
             ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        for (var index = 0; index < lives; index++) ...[
-          const Icon(
-            Icons.favorite_rounded,
-            size: 24,
-            color: Color(0xFFFF4B63),
-          ),
-          const SizedBox(width: 4),
-        ],
-        for (var index = 0; index < emptyLives; index++) ...[
-          const Icon(
-            Icons.favorite_rounded,
-            size: 24,
-            color: Color(0xFFD4E3F3),
-          ),
-          const SizedBox(width: 4),
-        ],
-        const Spacer(),
-        if (onLanguage != null) ...[
-          Material(
+          );
+        }
+
+        Widget? buildLangBtn() {
+          if (onLanguage == null) return null;
+          return Material(
             color: Colors.white,
             shape: const CircleBorder(),
             elevation: 2,
@@ -12834,96 +14176,139 @@ class PuzzleTopHud extends StatelessWidget {
               customBorder: const CircleBorder(),
               onTap: withButtonFeedback(onLanguage!),
               child: const SizedBox(
-                width: 38,
-                height: 38,
+                width: 36,
+                height: 36,
                 child: Icon(
                   Icons.translate_rounded,
                   color: Color(0xFF244169),
-                  size: 20,
+                  size: 19,
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-        ],
-        Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(999),
-          elevation: 2,
-          shadowColor: const Color(0x332178BA),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(999),
-            onTap: onHint != null ? withButtonFeedback(onHint!) : null,
-            child: Container(
-              height: 42,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          );
+        }
+
+        Widget buildCurrencies() {
+          return ValueListenableBuilder<int>(
+            valueListenable: GameStorage.currencyNotifier,
+            builder: (context, _, child) {
+              return UnifiedCurrencyBar(
+                coinBalance: GameStorage.coinBalance,
+                gemBalance: GameStorage.gemBalance,
+                hintBalance: GameStorage.hintBalance,
+                onCoinsTap: () {
+                  Navigator.push(
+                    context,
+                    smoothPageRoute(const StoreScreen(initialTabIndex: 1)),
+                  );
+                },
+                onGemsTap: () {
+                  Navigator.push(
+                    context,
+                    smoothPageRoute(const StoreScreen(initialTabIndex: 0)),
+                  );
+                },
+                onHintsTap: onHint != null ? withButtonFeedback(onHint!) : null,
+                onHintsAdd: () {
+                  Navigator.push(
+                    context,
+                    smoothPageRoute(const StoreScreen(initialTabIndex: 2)),
+                  );
+                },
+                showAddButton: false,
+              );
+            },
+          );
+        }
+
+        Widget buildScore() {
+          return Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1F2178BA),
+                  blurRadius: 8,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 240),
+                  curve: Curves.easeOutCubic,
+                  style: TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: scoreLabelColor,
+                  ),
+                  child: Text('${tr('score')}: '),
+                ),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 240),
+                  curve: Curves.easeOutCubic,
+                  style: TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: scoreValueColor,
+                  ),
+                  child: Text(formatNumber(score)),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final langBtn = buildLangBtn();
+
+        if (isCompact) {
+          // Responsive layout: break into 2 clean lines when screen width is constrained
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
                 children: [
-                  Image.asset(
-                    'assets/images/hint-icon.webp',
-                    width: 22,
-                    height: 22,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    formatNumber(GameStorage.hintBalance),
-                    style: const TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF20345D),
-                    ),
-                  ),
+                  buildBackBtn(),
+                  if (langBtn != null) ...[
+                    const SizedBox(width: 8),
+                    langBtn,
+                  ],
+                  const Spacer(),
+                  buildCurrencies(),
                 ],
               ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          height: 42,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(999),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1F2178BA),
-                blurRadius: 8,
-                offset: Offset(0, 3),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: buildScore(),
               ),
             ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 240),
-                curve: Curves.easeOutCubic,
-                style: TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: scoreLabelColor,
-                ),
-                child: Text('${tr('score')}: '),
-              ),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 240),
-                curve: Curves.easeOutCubic,
-                style: TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: scoreValueColor,
-                ),
-                child: Text(formatNumber(score)),
-              ),
+          );
+        }
+
+        // Wide display: single horizontal line
+        return Row(
+          children: [
+            buildBackBtn(),
+            if (langBtn != null) ...[
+              const SizedBox(width: 8),
+              langBtn,
             ],
-          ),
-        ),
-      ],
+            const Spacer(),
+            buildCurrencies(),
+            const SizedBox(width: 8),
+            buildScore(),
+          ],
+        );
+      },
     );
   }
 }
@@ -13180,26 +14565,33 @@ class DailyPuzzleScorePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: const [
-        Image(
-          image: AssetImage('assets/images/daily_gift.webp'),
-          width: 30,
-          height: 30,
-          fit: BoxFit.contain,
-        ),
-        SizedBox(width: 6),
-        Text(
-          '+10 Score',
-          maxLines: 1,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-            color: Color(0xFF6F63FF),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFDBA74)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            'assets/images/coin.webp',
+            width: 18,
+            height: 18,
+            fit: BoxFit.contain,
           ),
-        ),
-      ],
+          const SizedBox(width: 4),
+          const Text(
+            '+20 Coins',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFFC2410C),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -13209,13 +14601,17 @@ class DailyPuzzleCompleteCard extends StatelessWidget {
     super.key,
     required this.isCorrect,
     required this.onBackHome,
+    this.streak = 1,
   });
 
   final bool isCorrect;
   final VoidCallback onBackHome;
+  final int streak;
 
   @override
   Widget build(BuildContext context) {
+    final isMilestone = isCorrect && (streak > 0 && streak % 5 == 0);
+
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 8),
       child: Column(
@@ -13235,29 +14631,80 @@ class DailyPuzzleCompleteCard extends StatelessWidget {
                 ),
               ],
             ),
-            child: Row(
+            child: Column(
               children: [
-                Icon(
-                  isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                  color: isCorrect
-                      ? const Color(0xFF20C997)
-                      : const Color(0xFFD92D20),
-                  size: 28,
+                Row(
+                  children: [
+                    Icon(
+                      isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                      color: isCorrect
+                          ? const Color(0xFF20C997)
+                          : const Color(0xFFD92D20),
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        isCorrect
+                            ? 'Come back tomorrow to continue streak.'
+                            : "Today's puzzle completed.",
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          height: 1.25,
+                          color: Color(0xFF233B67),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    isCorrect
-                        ? 'Come back tomorrow to continue streak.'
-                        : "Today's puzzle completed.",
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      height: 1.25,
-                      color: Color(0xFF233B67),
+                if (isCorrect) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0FDF4),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF86EFAC)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/images/coin.webp',
+                          width: 20,
+                          height: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          '+20 Coins',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF15803D),
+                          ),
+                        ),
+                        if (isMilestone) ...[
+                          const SizedBox(width: 16),
+                          Image.asset(
+                            'assets/images/gem.webp',
+                            width: 20,
+                            height: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            '+5 Diamonds',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0369A1),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -14777,6 +16224,8 @@ class LevelCompleteScreen extends StatelessWidget {
     required this.isExiting,
     required this.onNextPuzzle,
     this.isStageComplete = false,
+    this.earnedCoins = 20,
+    this.earnedDiamonds = 0,
   });
 
   final int score;
@@ -14784,6 +16233,8 @@ class LevelCompleteScreen extends StatelessWidget {
   final bool isExiting;
   final VoidCallback onNextPuzzle;
   final bool isStageComplete;
+  final int earnedCoins;
+  final int earnedDiamonds;
 
   @override
   Widget build(BuildContext context) {
@@ -14923,21 +16374,26 @@ class LevelCompleteScreen extends StatelessWidget {
                                 SizedBox(height: isShort ? 12 : 18),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
+                                    horizontal: 18,
+                                    vertical: 10,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withAlpha(210),
-                                    borderRadius: BorderRadius.circular(16),
+                                    color: Colors.white.withAlpha(225),
+                                    borderRadius: BorderRadius.circular(18),
                                     border: Border.all(
-                                      color: const Color(0xFF38BDF8),
+                                      color: earnedDiamonds > 0
+                                          ? const Color(0xFF38BDF8)
+                                          : const Color(0xFFF59E0B),
                                       width: 1.5,
                                     ),
-                                    boxShadow: const [
+                                    boxShadow: [
                                       BoxShadow(
-                                        color: Color(0x220284C7),
+                                        color: (earnedDiamonds > 0
+                                                ? const Color(0xFF0284C7)
+                                                : const Color(0xFFD97706))
+                                            .withAlpha(50),
                                         blurRadius: 10,
-                                        offset: Offset(0, 3),
+                                        offset: const Offset(0, 3),
                                       ),
                                     ],
                                   ),
@@ -14947,21 +16403,43 @@ class LevelCompleteScreen extends StatelessWidget {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Image.asset(
-                                            'assets/images/gem.webp',
+                                            'assets/images/coin.webp',
                                             width: 26,
                                             height: 26,
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
-                                            tr('diamond_bonus'),
+                                            '+$earnedCoins ${tr('coins')}',
                                             style: const TextStyle(
-                                              color: Color(0xFF0369A1),
+                                              color: Color(0xFFD97706),
                                               fontSize: 18,
                                               fontWeight: FontWeight.w900,
                                             ),
                                           ),
                                         ],
                                       ),
+                                      if (earnedDiamonds > 0) ...[
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Image.asset(
+                                              'assets/images/gem.webp',
+                                              width: 26,
+                                              height: 26,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              '+$earnedDiamonds ${tr('gems')}',
+                                              style: const TextStyle(
+                                                color: Color(0xFF0369A1),
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w900,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                       if (isStageComplete) ...[
                                         const SizedBox(height: 6),
                                         Row(
@@ -14976,7 +16454,7 @@ class LevelCompleteScreen extends StatelessWidget {
                                             Text(
                                               tr('stage_coin_bonus'),
                                               style: const TextStyle(
-                                                color: Color(0xFFD97706),
+                                                color: Color(0xFF16A34A),
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.w900,
                                               ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../localization/app_language.dart';
 import '../localization/language_controller.dart';
+import '../main.dart';
 import '../services/auth_service.dart';
 import 'language_selection_screen.dart';
 
@@ -268,52 +269,12 @@ class _AuthScreenState extends State<AuthScreen>
     required bool isSuccess,
     required IconData icon,
   }) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: (isSuccess ? const Color(0xFF10B981) : const Color(0xFFEF4444))
-                    .withAlpha(40),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: isSuccess ? const Color(0xFF34D399) : const Color(0xFFF87171),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13.5,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF0F172A).withAlpha(245),
-        behavior: SnackBarBehavior.floating,
-        elevation: 8,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(
-            color: isSuccess
-                ? const Color(0xFF10B981).withAlpha(90)
-                : const Color(0xFFEF4444).withAlpha(90),
-            width: 1.2,
-          ),
-        ),
-      ),
+    showGameNotification(
+      context: context,
+      message: message,
+      icon: icon,
+      accentColor: isSuccess ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+      iconColor: isSuccess ? const Color(0xFF34D399) : const Color(0xFFF87171),
     );
   }
 
@@ -330,7 +291,7 @@ class _AuthScreenState extends State<AuthScreen>
           return ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
               child: Container(
                 padding: EdgeInsets.fromLTRB(
                   24,
@@ -338,21 +299,21 @@ class _AuthScreenState extends State<AuthScreen>
                   24,
                   MediaQuery.of(ctx).viewInsets.bottom + 28,
                 ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0B132B).withAlpha(245),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
                   borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(32)),
+                      BorderRadius.vertical(top: Radius.circular(32)),
                   border: Border(
                     top: BorderSide(
-                      color: const Color(0xFF38BDF8).withAlpha(120),
-                      width: 1.5,
+                      color: Color(0xFFBAE6FD),
+                      width: 2.0,
                     ),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(220),
+                      color: Color(0x250F172A),
                       blurRadius: 40,
-                      offset: const Offset(0, -10),
+                      offset: Offset(0, -10),
                     ),
                   ],
                 ),
@@ -365,7 +326,7 @@ class _AuthScreenState extends State<AuthScreen>
                         width: 44,
                         height: 5,
                         decoration: BoxDecoration(
-                          color: Colors.white24,
+                          color: const Color(0xFFCBD5E1),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
@@ -377,15 +338,16 @@ class _AuthScreenState extends State<AuthScreen>
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF0284C7), Color(0xFF38BDF8)],
+                              colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF0284C7).withAlpha(140),
+                                color: const Color(0xFF0284C7).withAlpha(100),
                                 blurRadius: 16,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
@@ -403,7 +365,7 @@ class _AuthScreenState extends State<AuthScreen>
                               Text(
                                 tr('forgot_password_title'),
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: Color(0xFF0F172A),
                                   fontSize: 20,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 0.3,
@@ -412,10 +374,11 @@ class _AuthScreenState extends State<AuthScreen>
                               const SizedBox(height: 3),
                               Text(
                                 tr('forgot_password_desc'),
-                                style: TextStyle(
-                                  color: Colors.white.withAlpha(170),
+                                style: const TextStyle(
+                                  color: Color(0xFF64748B),
                                   fontSize: 12,
                                   height: 1.35,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -428,37 +391,37 @@ class _AuthScreenState extends State<AuthScreen>
                       controller: _forgotEmailController,
                       keyboardType: TextInputType.emailAddress,
                       style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0F172A),
+                        fontWeight: FontWeight.w700,
                         fontSize: 14.5,
                       ),
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: const Color(0xFF1E293B).withAlpha(180),
+                        fillColor: const Color(0xFFF8FAFC),
                         hintText: tr('enter_your_email'),
-                        hintStyle: TextStyle(
-                          color: Colors.white.withAlpha(100),
+                        hintStyle: const TextStyle(
+                          color: Color(0xFF94A3B8),
                           fontSize: 13.5,
                         ),
                         prefixIcon: const Icon(
                           Icons.alternate_email_rounded,
-                          color: Color(0xFF38BDF8),
+                          color: Color(0xFF0284C7),
                           size: 20,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide:
-                              BorderSide(color: Colors.white.withAlpha(25)),
+                              const BorderSide(color: Color(0xFFE2E8F0)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide:
-                              BorderSide(color: Colors.white.withAlpha(25)),
+                              const BorderSide(color: Color(0xFFE2E8F0)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: const BorderSide(
-                            color: Color(0xFF38BDF8),
+                            color: Color(0xFF0284C7),
                             width: 1.8,
                           ),
                         ),
@@ -565,16 +528,23 @@ class _AuthScreenState extends State<AuthScreen>
               maxHeight: MediaQuery.of(ctx).size.height * 0.75,
             ),
             padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0B132B).withAlpha(250),
+            decoration: const BoxDecoration(
+              color: Colors.white,
               borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(32)),
+                  BorderRadius.vertical(top: Radius.circular(32)),
               border: Border(
                 top: BorderSide(
-                  color: const Color(0xFF38BDF8).withAlpha(120),
-                  width: 1.5,
+                  color: Color(0xFFBAE6FD),
+                  width: 2.0,
                 ),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x250F172A),
+                  blurRadius: 40,
+                  offset: Offset(0, -10),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -584,7 +554,7 @@ class _AuthScreenState extends State<AuthScreen>
                     width: 44,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: const Color(0xFFCBD5E1),
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
@@ -595,15 +565,15 @@ class _AuthScreenState extends State<AuthScreen>
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0284C7).withAlpha(40),
+                        color: const Color(0xFFE0F2FE),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF38BDF8).withAlpha(100),
+                          color: const Color(0xFFBAE6FD),
                         ),
                       ),
                       child: const Icon(
                         Icons.verified_user_rounded,
-                        color: Color(0xFF38BDF8),
+                        color: Color(0xFF0284C7),
                         size: 22,
                       ),
                     ),
@@ -615,7 +585,7 @@ class _AuthScreenState extends State<AuthScreen>
                           Text(
                             'Terms & Privacy Policy',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Color(0xFF0F172A),
                               fontSize: 19,
                               fontWeight: FontWeight.w900,
                             ),
@@ -623,7 +593,7 @@ class _AuthScreenState extends State<AuthScreen>
                           SizedBox(height: 2),
                           Text(
                             'MindTrap AI • Fair Play & Data Integrity',
-                            style: TextStyle(color: Colors.white60, fontSize: 12),
+                            style: TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -631,7 +601,7 @@ class _AuthScreenState extends State<AuthScreen>
                   ],
                 ),
                 const SizedBox(height: 16),
-                const Divider(color: Colors.white12),
+                const Divider(color: Color(0xFFE2E8F0)),
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -639,7 +609,7 @@ class _AuthScreenState extends State<AuthScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildTermsParagraph(
-                          title: '1. Player Privacy & Account Security',
+                           title: '1. Player Privacy & Account Security',
                           body:
                               'MindTrap AI respects your privacy. Your email is exclusively used to securely preserve and synchronize your brain scores, hints, diamonds, stars, and level achievements across your devices via encrypted cloud sync.',
                         ),
@@ -663,15 +633,29 @@ class _AuthScreenState extends State<AuthScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
+                Container(
                   height: 48,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF0284C7).withAlpha(90),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(ctx).pop();
                       setState(() => _agreeToTerms = true);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0284C7),
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -703,7 +687,7 @@ class _AuthScreenState extends State<AuthScreen>
           Text(
             title,
             style: const TextStyle(
-              color: Color(0xFF38BDF8),
+              color: Color(0xFF0284C7),
               fontSize: 13.5,
               fontWeight: FontWeight.w800,
             ),
@@ -711,10 +695,11 @@ class _AuthScreenState extends State<AuthScreen>
           const SizedBox(height: 4),
           Text(
             body,
-            style: TextStyle(
-              color: Colors.white.withAlpha(200),
+            style: const TextStyle(
+              color: Color(0xFF475569),
               fontSize: 12.5,
               height: 1.45,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -735,32 +720,31 @@ class _AuthScreenState extends State<AuthScreen>
             behavior: HitTestBehavior.translucent,
             onTap: () => FocusScope.of(context).unfocus(),
             child: Scaffold(
-              backgroundColor: const Color(0xFF070B14),
+              backgroundColor: const Color(0xFFF0F9FF),
               body: Stack(
                 children: [
-                  // 1. Crystal-Clear Mountain Backdrop
+                  // 1. Crystal-Clear Mountain Scenic Backdrop
                   const Positioned.fill(
                     child: Image(
-                      image: AssetImage('assets/images/Stage-7.webp'),
+                      image: AssetImage('assets/images/home_background.webp'),
                       fit: BoxFit.cover,
                       alignment: Alignment.center,
                     ),
                   ),
 
-                  // 2. Multi-layer High-tech Atmospheric Gradient & Vignette
+                  // 2. Soft Bright Vignette
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        gradient: RadialGradient(
-                          center: const Alignment(0, -0.45),
-                          radius: 1.1,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                           colors: [
-                            const Color(0xFF0284C7).withAlpha(45),
+                            Colors.white.withAlpha(40),
                             Colors.transparent,
-                            Colors.black.withAlpha(170),
-                            Colors.black.withAlpha(235),
+                            Colors.white.withAlpha(80),
                           ],
-                          stops: const [0.0, 0.45, 0.85, 1.0],
+                          stops: const [0.0, 0.45, 1.0],
                         ),
                       ),
                     ),
@@ -779,7 +763,7 @@ class _AuthScreenState extends State<AuthScreen>
                             physics: const BouncingScrollPhysics(),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
-                              vertical: 10,
+                              vertical: 6,
                             ),
                             child: Center(
                               child: ConstrainedBox(
@@ -788,17 +772,17 @@ class _AuthScreenState extends State<AuthScreen>
                                   crossAxisAlignment:
                                       CrossAxisAlignment.center,
                                   children: [
-                                    const SizedBox(height: 6),
+                                    const SizedBox(height: 4),
 
                                     // Brand Hero Section
                                     _buildBrandHero(),
 
-                                    const SizedBox(height: 20),
+                                    const SizedBox(height: 18),
 
                                     // Core Glassmorphic Authentication Card
                                     _buildMainAuthCard(),
 
-                                    const SizedBox(height: 18),
+                                    const SizedBox(height: 16),
 
                                     // Security Trust Badge
                                     _buildSecurityBadge(),
@@ -844,17 +828,17 @@ class _AuthScreenState extends State<AuthScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A).withAlpha(190),
+              color: Colors.white.withAlpha(230),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: const Color(0xFF38BDF8).withAlpha(60),
+                color: const Color(0xFFBAE6FD),
                 width: 1.2,
               ),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
-                  color: Colors.black.withAlpha(100),
+                  color: Color(0x120284C7),
                   blurRadius: 10,
-                  offset: const Offset(0, 3),
+                  offset: Offset(0, 3),
                 ),
               ],
             ),
@@ -865,12 +849,12 @@ class _AuthScreenState extends State<AuthScreen>
                   width: 8,
                   height: 8,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF38BDF8),
+                    color: Color(0xFF0284C7),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: Color(0xFF38BDF8),
-                        blurRadius: 8,
+                        blurRadius: 6,
                         spreadRadius: 1.5,
                       ),
                     ],
@@ -880,7 +864,7 @@ class _AuthScreenState extends State<AuthScreen>
                 const Text(
                   'MINDTRAP AI',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF0F172A),
                     fontSize: 12,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.6,
@@ -906,16 +890,17 @@ class _AuthScreenState extends State<AuthScreen>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withAlpha(190),
+                color: Colors.white.withAlpha(230),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: const Color(0xFF38BDF8).withAlpha(70),
+                  color: const Color(0xFFBAE6FD),
                   width: 1.2,
                 ),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
-                    color: Colors.black.withAlpha(100),
+                    color: Color(0x100284C7),
                     blurRadius: 10,
+                    offset: Offset(0, 2),
                   ),
                 ],
               ),
@@ -930,7 +915,7 @@ class _AuthScreenState extends State<AuthScreen>
                   Text(
                     currentLang.code.toUpperCase(),
                     style: const TextStyle(
-                      color: Color(0xFF38BDF8),
+                      color: Color(0xFF0284C7),
                       fontSize: 12,
                       fontWeight: FontWeight.w900,
                     ),
@@ -938,8 +923,8 @@ class _AuthScreenState extends State<AuthScreen>
                   const SizedBox(width: 3),
                   const Icon(
                     Icons.keyboard_arrow_down_rounded,
-                    color: Colors.white60,
-                    size: 15,
+                    color: Color(0xFF0284C7),
+                    size: 16,
                   ),
                 ],
               ),
@@ -956,30 +941,26 @@ class _AuthScreenState extends State<AuthScreen>
     String? tooltip,
   }) {
     return Material(
-      color: const Color(0xFF0F172A).withAlpha(190),
+      color: Colors.white.withAlpha(235),
       shape: const CircleBorder(),
+      elevation: 3,
+      shadowColor: const Color(0x1A0F172A),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onPressed,
         child: Tooltip(
           message: tooltip ?? '',
           child: Container(
-            width: 42,
-            height: 42,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFF38BDF8).withAlpha(60),
-                width: 1.2,
+                color: Colors.white,
+                width: 1.5,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(100),
-                  blurRadius: 10,
-                ),
-              ],
             ),
-            child: Icon(icon, color: Colors.white, size: 18),
+            child: Icon(icon, color: const Color(0xFF0F172A), size: 18),
           ),
         ),
       ),
@@ -989,36 +970,41 @@ class _AuthScreenState extends State<AuthScreen>
   Widget _buildBrandHero() {
     return Column(
       children: [
-        // Dual-ring glowing brain logo badge
+        // Original Dual-Tone Gradient Brain Logo (Matching media_1790837940365)
         Container(
-          width: 80,
-          height: 80,
+          width: 84,
+          height: 84,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+            color: Colors.white.withAlpha(235),
+            border: Border.all(
+              color: const Color(0xFFBAE6FD),
+              width: 1.8,
             ),
-            border: Border.all(color: const Color(0xFF38BDF8), width: 2.2),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0284C7).withAlpha(160),
-                blurRadius: 28,
-                spreadRadius: 3,
+                color: const Color(0xFF0284C7).withAlpha(45),
+                blurRadius: 20,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withAlpha(35),
+                blurRadius: 24,
+                spreadRadius: 1,
               ),
             ],
           ),
           child: Center(
             child: Image.asset(
               'assets/images/home_logo.webp',
-              width: 46,
-              height: 46,
-              color: Colors.white,
+              width: 58,
+              height: 58,
+              fit: BoxFit.contain,
               errorBuilder: (_, e, s) => const Icon(
                 Icons.psychology_rounded,
-                color: Colors.white,
-                size: 46,
+                color: Color(0xFF0284C7),
+                size: 52,
               ),
             ),
           ),
@@ -1030,20 +1016,15 @@ class _AuthScreenState extends State<AuthScreen>
         Text(
           tr('app_title'),
           style: const TextStyle(
-            color: Colors.white,
+            color: Color(0xFF0F172A),
             fontSize: 29,
             fontWeight: FontWeight.w900,
-            letterSpacing: 1.3,
+            letterSpacing: 1.1,
             shadows: [
               Shadow(
-                color: Color(0xFF0284C7),
-                blurRadius: 20,
-                offset: Offset(0, 3),
-              ),
-              Shadow(
-                color: Colors.black,
+                color: Color(0x220284C7),
                 blurRadius: 12,
-                offset: Offset(0, 4),
+                offset: Offset(0, 3),
               ),
             ],
           ),
@@ -1057,23 +1038,16 @@ class _AuthScreenState extends State<AuthScreen>
           child: Text(
             tr('slogan'),
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withAlpha(225),
+            style: const TextStyle(
+              color: Color(0xFF475569),
               fontSize: 13.5,
               fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
-              shadows: const [
-                Shadow(
-                  color: Colors.black,
-                  blurRadius: 10,
-                  offset: Offset(0, 2),
-                ),
-              ],
+              letterSpacing: 0.2,
             ),
           ),
         ),
 
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
 
         // Feature Highlight Pills Row
         Wrap(
@@ -1093,25 +1067,32 @@ class _AuthScreenState extends State<AuthScreen>
 
   Widget _buildFeaturePill(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withAlpha(160),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white.withAlpha(220),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF38BDF8).withAlpha(60),
-          width: 0.8,
+          color: const Color(0xFFBAE6FD),
+          width: 1.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0284C7).withAlpha(15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: const Color(0xFF38BDF8), size: 12),
+          Icon(icon, color: const Color(0xFF0284C7), size: 13),
           const SizedBox(width: 5),
           Text(
             label,
             style: const TextStyle(
-              color: Color(0xFF7DD3FC),
-              fontSize: 10.5,
+              color: Color(0xFF0F172A),
+              fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.3,
             ),
@@ -1128,17 +1109,17 @@ class _AuthScreenState extends State<AuthScreen>
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A).withAlpha(205),
+            color: Colors.white.withAlpha(235),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-              color: const Color(0xFF38BDF8).withAlpha(50),
-              width: 1.3,
+              color: Colors.white,
+              width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(200),
-                blurRadius: 36,
-                offset: const Offset(0, 12),
+                color: const Color(0xFF0F172A).withAlpha(20),
+                blurRadius: 32,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -1193,9 +1174,9 @@ class _AuthScreenState extends State<AuthScreen>
       height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withAlpha(180),
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: TabBar(
         controller: _tabController,
@@ -1208,8 +1189,8 @@ class _AuthScreenState extends State<AuthScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0284C7).withAlpha(120),
-              blurRadius: 10,
+              color: const Color(0xFF0284C7).withAlpha(90),
+              blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
@@ -1217,7 +1198,7 @@ class _AuthScreenState extends State<AuthScreen>
         dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.white,
-        unselectedLabelColor: Colors.white60,
+        unselectedLabelColor: const Color(0xFF64748B),
         labelStyle: const TextStyle(
           fontWeight: FontWeight.w900,
           fontSize: 13.5,
@@ -1253,15 +1234,15 @@ class _AuthScreenState extends State<AuthScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
-        color: const Color(0xFFEF4444).withAlpha(30),
+        color: const Color(0xFFFEF2F2),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEF4444).withAlpha(120)),
+        border: Border.all(color: const Color(0xFFFECACA)),
       ),
       child: Row(
         children: [
           const Icon(
             Icons.error_outline_rounded,
-            color: Color(0xFFF87171),
+            color: Color(0xFFDC2626),
             size: 20,
           ),
           const SizedBox(width: 10),
@@ -1269,7 +1250,7 @@ class _AuthScreenState extends State<AuthScreen>
             child: Text(
               _errorMessage!,
               style: const TextStyle(
-                color: Color(0xFFFCA5A5),
+                color: Color(0xFFB91C1C),
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
                 height: 1.3,
@@ -1280,7 +1261,7 @@ class _AuthScreenState extends State<AuthScreen>
             onTap: () => setState(() => _errorMessage = null),
             child: const Icon(
               Icons.close_rounded,
-              color: Color(0xFFF87171),
+              color: Color(0xFFDC2626),
               size: 18,
             ),
           ),
@@ -1311,7 +1292,7 @@ class _AuthScreenState extends State<AuthScreen>
             suffixIcon: _emailController.text.isNotEmpty
                 ? IconButton(
                     icon: const Icon(Icons.clear_rounded,
-                        color: Colors.white38, size: 18),
+                        color: Color(0xFF94A3B8), size: 18),
                     onPressed: () {
                       _emailController.clear();
                       setState(() {});
@@ -1348,8 +1329,8 @@ class _AuthScreenState extends State<AuthScreen>
                       : Icons.visibility_rounded,
                   key: ValueKey<bool>(_obscurePassword),
                   color: _obscurePassword
-                      ? Colors.white54
-                      : const Color(0xFF38BDF8),
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF0284C7),
                   size: 20,
                 ),
               ),
@@ -1385,12 +1366,12 @@ class _AuthScreenState extends State<AuthScreen>
                         decoration: BoxDecoration(
                           color: _rememberMe
                               ? const Color(0xFF0284C7)
-                              : const Color(0xFF1E293B),
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
                             color: _rememberMe
-                                ? const Color(0xFF38BDF8)
-                                : Colors.white24,
+                                ? const Color(0xFF0284C7)
+                                : const Color(0xFFCBD5E1),
                             width: 1.5,
                           ),
                         ),
@@ -1405,8 +1386,8 @@ class _AuthScreenState extends State<AuthScreen>
                       const SizedBox(width: 8),
                       Text(
                         tr('remember_me'),
-                        style: TextStyle(
-                          color: Colors.white.withAlpha(200),
+                        style: const TextStyle(
+                          color: Color(0xFF475569),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1428,7 +1409,7 @@ class _AuthScreenState extends State<AuthScreen>
                 child: Text(
                   tr('forgot_password'),
                   style: const TextStyle(
-                    color: Color(0xFF38BDF8),
+                    color: Color(0xFF0284C7),
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1472,7 +1453,7 @@ class _AuthScreenState extends State<AuthScreen>
             suffixIcon: _nameController.text.isNotEmpty
                 ? IconButton(
                     icon: const Icon(Icons.clear_rounded,
-                        color: Colors.white38, size: 18),
+                        color: Color(0xFF94A3B8), size: 18),
                     onPressed: () {
                       _nameController.clear();
                       setState(() {});
@@ -1502,7 +1483,7 @@ class _AuthScreenState extends State<AuthScreen>
             suffixIcon: _emailController.text.isNotEmpty
                 ? IconButton(
                     icon: const Icon(Icons.clear_rounded,
-                        color: Colors.white38, size: 18),
+                        color: Color(0xFF94A3B8), size: 18),
                     onPressed: () {
                       _emailController.clear();
                       setState(() {});
@@ -1538,8 +1519,8 @@ class _AuthScreenState extends State<AuthScreen>
                       : Icons.visibility_rounded,
                   key: ValueKey<bool>(_obscureSignUpPassword),
                   color: _obscureSignUpPassword
-                      ? Colors.white54
-                      : const Color(0xFF38BDF8),
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF0284C7),
                   size: 20,
                 ),
               ),
@@ -1592,8 +1573,8 @@ class _AuthScreenState extends State<AuthScreen>
                         ? Icons.visibility_off_rounded
                         : Icons.visibility_rounded,
                     color: _obscureConfirmPassword
-                        ? Colors.white54
-                        : const Color(0xFF38BDF8),
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF0284C7),
                     size: 20,
                   ),
                   onPressed: () => setState(
@@ -1628,12 +1609,12 @@ class _AuthScreenState extends State<AuthScreen>
                   decoration: BoxDecoration(
                     color: _agreeToTerms
                         ? const Color(0xFF0284C7)
-                        : const Color(0xFF1E293B),
+                        : Colors.white,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
                       color: _agreeToTerms
-                          ? const Color(0xFF38BDF8)
-                          : Colors.white30,
+                          ? const Color(0xFF0284C7)
+                          : const Color(0xFFCBD5E1),
                       width: 1.5,
                     ),
                   ),
@@ -1650,18 +1631,18 @@ class _AuthScreenState extends State<AuthScreen>
                   child: GestureDetector(
                     onTap: _showTermsSheet,
                     child: RichText(
-                      text: TextSpan(
+                      text: const TextSpan(
                         text: 'I agree to the ',
                         style: TextStyle(
-                          color: Colors.white.withAlpha(200),
+                          color: Color(0xFF475569),
                           fontSize: 12,
                           height: 1.35,
                         ),
-                        children: const [
+                        children: [
                           TextSpan(
                             text: 'Terms of Service',
                             style: TextStyle(
-                              color: Color(0xFF38BDF8),
+                              color: Color(0xFF0284C7),
                               fontWeight: FontWeight.w700,
                               decoration: TextDecoration.underline,
                             ),
@@ -1670,7 +1651,7 @@ class _AuthScreenState extends State<AuthScreen>
                           TextSpan(
                             text: 'Privacy Policy',
                             style: TextStyle(
-                              color: Color(0xFF38BDF8),
+                              color: Color(0xFF0284C7),
                               fontWeight: FontWeight.w700,
                               decoration: TextDecoration.underline,
                             ),
@@ -1715,7 +1696,7 @@ class _AuthScreenState extends State<AuthScreen>
         strengthLabel = 'Fair';
         break;
       case 3:
-        activeColor = const Color(0xFF38BDF8);
+        activeColor = const Color(0xFF0284C7);
         strengthLabel = 'Good';
         break;
       case 4:
@@ -1723,7 +1704,7 @@ class _AuthScreenState extends State<AuthScreen>
         strengthLabel = 'Strong';
         break;
       default:
-        activeColor = Colors.white24;
+        activeColor = const Color(0xFFE2E8F0);
         strengthLabel = '';
     }
 
@@ -1735,8 +1716,8 @@ class _AuthScreenState extends State<AuthScreen>
           children: [
             Text(
               tr('password_strength'),
-              style: TextStyle(
-                color: Colors.white.withAlpha(160),
+              style: const TextStyle(
+                color: Color(0xFF64748B),
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -1762,12 +1743,12 @@ class _AuthScreenState extends State<AuthScreen>
                 height: 4,
                 margin: EdgeInsets.only(right: index == 3 ? 0 : 5),
                 decoration: BoxDecoration(
-                  color: isFilled ? activeColor : Colors.white12,
+                  color: isFilled ? activeColor : const Color(0xFFE2E8F0),
                   borderRadius: BorderRadius.circular(2),
                   boxShadow: isFilled
                       ? [
                           BoxShadow(
-                            color: activeColor.withAlpha(120),
+                            color: activeColor.withAlpha(90),
                             blurRadius: 4,
                           ),
                         ]
@@ -1798,7 +1779,7 @@ class _AuthScreenState extends State<AuthScreen>
           isSatisfied
               ? Icons.check_circle_rounded
               : Icons.radio_button_unchecked_rounded,
-          color: isSatisfied ? const Color(0xFF10B981) : Colors.white30,
+          color: isSatisfied ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
           size: 13,
         ),
         const SizedBox(width: 4),
@@ -1806,8 +1787,8 @@ class _AuthScreenState extends State<AuthScreen>
           label,
           style: TextStyle(
             color: isSatisfied
-                ? const Color(0xFF34D399)
-                : Colors.white.withAlpha(110),
+                ? const Color(0xFF059669)
+                : const Color(0xFF64748B),
             fontSize: 10,
             fontWeight: FontWeight.w600,
           ),
@@ -1915,9 +1896,9 @@ class _AuthScreenState extends State<AuthScreen>
         Expanded(
           child: Container(
             height: 1,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.transparent, Colors.white.withAlpha(40)],
+                colors: [Colors.transparent, Color(0xFFE2E8F0)],
               ),
             ),
           ),
@@ -1926,8 +1907,8 @@ class _AuthScreenState extends State<AuthScreen>
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Text(
             tr('or_continue_with'),
-            style: TextStyle(
-              color: Colors.white.withAlpha(130),
+            style: const TextStyle(
+              color: Color(0xFF94A3B8),
               fontSize: 10.5,
               fontWeight: FontWeight.w800,
               letterSpacing: 1.2,
@@ -1937,9 +1918,9 @@ class _AuthScreenState extends State<AuthScreen>
         Expanded(
           child: Container(
             height: 1,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.white.withAlpha(40), Colors.transparent],
+                colors: [Color(0xFFE2E8F0), Colors.transparent],
               ),
             ),
           ),
@@ -1964,12 +1945,19 @@ class _AuthScreenState extends State<AuthScreen>
               child: Container(
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B).withAlpha(160),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white.withAlpha(30),
-                    width: 1.1,
+                    color: const Color(0xFFE2E8F0),
+                    width: 1.2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withAlpha(10),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1982,7 +1970,7 @@ class _AuthScreenState extends State<AuthScreen>
                     const Text(
                       'Google',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFF0F172A),
                         fontWeight: FontWeight.w800,
                         fontSize: 13.5,
                         letterSpacing: 0.3,
@@ -2007,26 +1995,33 @@ class _AuthScreenState extends State<AuthScreen>
               child: Container(
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B).withAlpha(160),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white.withAlpha(30),
-                    width: 1.1,
+                    color: const Color(0xFFE2E8F0),
+                    width: 1.2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withAlpha(10),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.apple,
-                      color: Colors.white,
+                      color: Colors.black,
                       size: 22,
                     ),
                     SizedBox(width: 6),
                     Text(
                       'Apple',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFF0F172A),
                         fontWeight: FontWeight.w800,
                         fontSize: 13.5,
                         letterSpacing: 0.3,
@@ -2054,30 +2049,37 @@ class _AuthScreenState extends State<AuthScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(12),
+            color: const Color(0xFFFFFBEB),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: const Color(0xFFFFB703).withAlpha(60),
-              width: 1.1,
+              color: const Color(0xFFFDE68A),
+              width: 1.2,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFD97706).withAlpha(15),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFB703).withAlpha(35),
+                  color: const Color(0xFFFEF3C7),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFB703).withAlpha(80),
-                      blurRadius: 8,
+                      color: const Color(0xFFD97706).withAlpha(30),
+                      blurRadius: 6,
                     ),
                   ],
                 ),
                 child: const Icon(
                   Icons.bolt_rounded,
-                  color: Color(0xFFFFB703),
+                  color: Color(0xFFD97706),
                   size: 20,
                 ),
               ),
@@ -2090,7 +2092,7 @@ class _AuthScreenState extends State<AuthScreen>
                     Text(
                       tr('play_as_guest'),
                       style: const TextStyle(
-                        color: Color(0xFFF1F5F9),
+                        color: Color(0xFF0F172A),
                         fontWeight: FontWeight.w800,
                         fontSize: 13.5,
                         letterSpacing: 0.3,
@@ -2099,18 +2101,18 @@ class _AuthScreenState extends State<AuthScreen>
                     const SizedBox(height: 2),
                     Text(
                       tr('guest_benefits'),
-                      style: TextStyle(
-                        color: Colors.white.withAlpha(140),
+                      style: const TextStyle(
+                        color: Color(0xFF78716C),
                         fontSize: 10.5,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.arrow_forward_ios_rounded,
-                color: Colors.white.withAlpha(140),
+                color: Color(0xFF94A3B8),
                 size: 13,
               ),
             ],
@@ -2127,28 +2129,35 @@ class _AuthScreenState extends State<AuthScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withAlpha(160),
+        color: Colors.white.withAlpha(220),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFF38BDF8).withAlpha(50),
-          width: 0.9,
+          color: const Color(0xFFBAE6FD),
+          width: 1.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0284C7).withAlpha(15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Row(
+      child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.shield_outlined,
-            color: Color(0xFF38BDF8),
+            color: Color(0xFF0284C7),
             size: 14,
           ),
-          const SizedBox(width: 7),
+          SizedBox(width: 7),
           Text(
             '256-Bit SSL Encrypted • Supabase Cloud Security',
             style: TextStyle(
-              color: Colors.white.withAlpha(180),
+              color: Color(0xFF0284C7),
               fontSize: 11,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               letterSpacing: 0.3,
             ),
           ),
@@ -2163,8 +2172,8 @@ class _AuthScreenState extends State<AuthScreen>
       child: Text(
         tr('terms_privacy'),
         textAlign: TextAlign.center,
-        style: TextStyle(
-          color: Colors.white.withAlpha(120),
+        style: const TextStyle(
+          color: Color(0xFF64748B),
           fontSize: 10.5,
           fontWeight: FontWeight.w500,
           height: 1.4,
@@ -2200,45 +2209,45 @@ class _AuthScreenState extends State<AuthScreen>
       obscureText: obscureText,
       validator: validator,
       style: const TextStyle(
-        color: Colors.white,
+        color: Color(0xFF0F172A),
         fontWeight: FontWeight.w600,
         fontSize: 14.5,
       ),
       decoration: InputDecoration(
         filled: true,
-        fillColor: const Color(0xFF1E293B).withAlpha(160),
+        fillColor: const Color(0xFFF8FAFC),
         labelText: labelText,
-        labelStyle: TextStyle(
-          color: Colors.white.withAlpha(160),
+        labelStyle: const TextStyle(
+          color: Color(0xFF64748B),
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
         floatingLabelStyle: const TextStyle(
-          color: Color(0xFF38BDF8),
+          color: Color(0xFF0284C7),
           fontSize: 13,
           fontWeight: FontWeight.w800,
         ),
         hintText: hintText,
-        hintStyle: TextStyle(
-          color: Colors.white.withAlpha(90),
+        hintStyle: const TextStyle(
+          color: Color(0xFF94A3B8),
           fontSize: 13.5,
           fontWeight: FontWeight.w500,
         ),
-        prefixIcon: Icon(icon, color: const Color(0xFF38BDF8), size: 20),
+        prefixIcon: Icon(icon, color: const Color(0xFF0284C7), size: 20),
         suffixIcon: suffixIcon,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withAlpha(20)),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withAlpha(25)),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF38BDF8), width: 1.8),
+          borderSide: const BorderSide(color: Color(0xFF0284C7), width: 1.8),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -2249,7 +2258,7 @@ class _AuthScreenState extends State<AuthScreen>
           borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.8),
         ),
         errorStyle: const TextStyle(
-          color: Color(0xFFFCA5A5),
+          color: Color(0xFFDC2626),
           fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
@@ -2316,7 +2325,7 @@ class GoogleLogoPainter extends CustomPainter {
 
     // Inner cutout
     final cutoutPaint = Paint()
-      ..color = const Color(0xFF1E293B)
+      ..color = Colors.white
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, innerRadius, cutoutPaint);
 

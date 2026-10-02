@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../localization/app_language.dart';
@@ -84,7 +85,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
   @override
   Widget build(BuildContext context) {
     final allLanguages = AppStrings.supportedLanguages;
-    final drawerWidth = min(MediaQuery.of(context).size.width * 0.88, 380.0);
+    final drawerWidth = min(MediaQuery.of(context).size.width * 0.84, 345.0);
 
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
@@ -107,58 +108,60 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             width: drawerWidth,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0F172A),
-                    Color(0xFF0B1120),
-                    Color(0xFF070B14),
-                  ],
-                ),
-                borderRadius: const BorderRadius.horizontal(right: Radius.circular(28)),
-                border: Border(
-                  right: BorderSide(
-                    color: const Color(0xFF38BDF8).withAlpha(60),
-                    width: 1.5,
-                  ),
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black87,
-                    blurRadius: 30,
-                    spreadRadius: 6,
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    // 1. Header Profile & Stats Card
-                    _buildProfileSection(context),
-
-                    // 2. Segmented Mode Switcher (Menu vs Languages)
-                    _buildSegmentedTabSwitcher(allLanguages.length),
-
-                    // 3. Tab Content
-                    Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        child: _selectedTab == 0
-                            ? _buildGameMenuTab(context, currentLanguage)
-                            : _buildLanguagesTab(
-                                context,
-                                filteredLanguages,
-                                currentCode,
-                              ),
-                      ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.horizontal(right: Radius.circular(30)),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(115),
+                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(30)),
+                    border: Border.all(
+                      color: const Color(0xFFBAE6FD),
+                      width: 1.8,
                     ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x180284C7),
+                        blurRadius: 28,
+                        spreadRadius: 2,
+                        offset: Offset(4, 0),
+                      ),
+                      BoxShadow(
+                        color: Color(0x100F172A),
+                        blurRadius: 16,
+                        offset: Offset(2, 0),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    child: Column(
+                      children: [
+                        // 1. Header Profile & Stats Card
+                        _buildProfileSection(context),
 
-                    // 4. Footer info
-                    _buildDrawerFooter(),
-                  ],
+                        // 2. Segmented Mode Switcher (Menu vs Languages)
+                        _buildSegmentedTabSwitcher(allLanguages.length),
+
+                        // 3. Tab Content
+                        Expanded(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            child: _selectedTab == 0
+                                ? _buildGameMenuTab(context, currentLanguage)
+                                : _buildLanguagesTab(
+                                    context,
+                                    filteredLanguages,
+                                    currentCode,
+                                  ),
+                          ),
+                        ),
+
+                        // 4. Footer info
+                        _buildDrawerFooter(),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -179,19 +182,19 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
           margin: const EdgeInsets.fromLTRB(14, 8, 14, 10),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B).withAlpha(140),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: loggedIn
-                  ? const Color(0xFF10B981).withAlpha(90)
-                  : const Color(0xFF38BDF8).withAlpha(70),
-              width: 1.2,
+                  ? const Color(0xFF86EFAC)
+                  : const Color(0xFFBAE6FD),
+              width: 1.5,
             ),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: (loggedIn ? const Color(0xFF10B981) : const Color(0xFF0284C7)).withAlpha(40),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
+                color: Color(0x150284C7),
+                blurRadius: 18,
+                offset: Offset(0, 4),
               ),
             ],
           ),
@@ -205,21 +208,22 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                     clipBehavior: Clip.none,
                     children: [
                       Container(
-                        width: 50,
-                        height: 50,
+                        width: 52,
+                        height: 52,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
                             colors: loggedIn
                                 ? [const Color(0xFF10B981), const Color(0xFF059669)]
-                                : [const Color(0xFF0284C7), const Color(0xFF6366F1)],
+                                : [const Color(0xFF38BDF8), const Color(0xFF0284C7)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: (loggedIn ? const Color(0xFF10B981) : const Color(0xFF0284C7)).withAlpha(90),
-                              blurRadius: 10,
+                              blurRadius: 12,
+                              offset: const Offset(0, 3),
                             ),
                           ],
                         ),
@@ -227,7 +231,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                           child: Icon(
                             loggedIn ? Icons.verified_user_rounded : Icons.person_rounded,
                             color: Colors.white,
-                            size: 26,
+                            size: 28,
                           ),
                         ),
                       ),
@@ -237,9 +241,9 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                           decoration: BoxDecoration(
-                            color: loggedIn ? const Color(0xFF10B981) : const Color(0xFF38BDF8),
+                            color: loggedIn ? const Color(0xFF10B981) : const Color(0xFF0284C7),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: const Color(0xFF0F172A), width: 1.5),
+                            border: Border.all(color: Colors.white, width: 1.5),
                           ),
                           child: Text(
                             loggedIn ? 'PRO' : 'GUEST',
@@ -270,8 +274,8 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
+                            color: Color(0xFF0F172A),
+                            fontSize: 16,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 0.2,
                           ),
@@ -283,9 +287,9 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                               : 'Tap to sync cloud progress',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: loggedIn ? const Color(0xFF7DD3FC) : Colors.white54,
-                            fontSize: 11,
+                          style: const TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -297,17 +301,16 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                   if (loggedIn)
                     IconButton(
                       tooltip: tr('logout'),
-                      icon: const Icon(Icons.logout_rounded, color: Colors.white70, size: 20),
+                      icon: const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 22),
                       onPressed: () async {
                         await AuthService.instance.signOut();
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Text('Signed out successfully'),
-                              backgroundColor: const Color(0xFF0F172A),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
+                          showGameNotification(
+                            context: context,
+                            message: 'Signed out successfully',
+                            icon: Icons.logout_rounded,
+                            accentColor: const Color(0xFFEF4444),
+                            iconColor: const Color(0xFFF87171),
                           );
                         }
                       },
@@ -321,13 +324,14 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0284C7),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 4,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 3,
+                        shadowColor: const Color(0xFF0284C7).withAlpha(90),
                       ),
                       child: Text(
                         tr('sign_in'),
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
                       ),
                     ),
                 ],
@@ -339,37 +343,42 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(120),
+                  color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withAlpha(15)),
+                  border: Border.all(color: const Color(0xFFBAE6FD).withAlpha(160), width: 1.2),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatPill(
-                      icon: Image.asset('assets/images/Golden_Star_Icon.png', width: 15, height: 15),
-                      value: '$totalStars',
-                      color: const Color(0xFFFFD700),
-                    ),
-                    _buildDivider(),
-                    _buildStatPill(
-                      icon: Image.asset('assets/images/coin.webp', width: 14, height: 14),
-                      value: '${GameStorage.coinBalance}',
-                      color: const Color(0xFFFFB703),
-                    ),
-                    _buildDivider(),
-                    _buildStatPill(
-                      icon: Image.asset('assets/images/gem.webp', width: 14, height: 14),
-                      value: '${GameStorage.gemBalance}',
-                      color: const Color(0xFF38BDF8),
-                    ),
-                    _buildDivider(),
-                    _buildStatPill(
-                      icon: const Icon(Icons.track_changes_rounded, size: 14, color: Color(0xFF34D399)),
-                      value: '$completedLevels/1K',
-                      color: const Color(0xFF34D399),
-                    ),
-                  ],
+                child: ValueListenableBuilder<int>(
+                  valueListenable: GameStorage.currencyNotifier,
+                  builder: (context, _, child) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStatPill(
+                          icon: Image.asset('assets/images/Golden_Star_Icon.png', width: 16, height: 16),
+                          value: '$totalStars',
+                          color: const Color(0xFF0F172A),
+                        ),
+                        _buildDivider(),
+                        _buildStatPill(
+                          icon: Image.asset('assets/images/coin.webp', width: 15, height: 15),
+                          value: '${GameStorage.coinBalance}',
+                          color: const Color(0xFF0F172A),
+                        ),
+                        _buildDivider(),
+                        _buildStatPill(
+                          icon: Image.asset('assets/images/gem.webp', width: 15, height: 15),
+                          value: '${GameStorage.gemBalance}',
+                          color: const Color(0xFF0284C7),
+                        ),
+                        _buildDivider(),
+                        _buildStatPill(
+                          icon: const Icon(Icons.track_changes_rounded, size: 15, color: Color(0xFF059669)),
+                          value: '$completedLevels/1K',
+                          color: const Color(0xFF059669),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],
@@ -380,7 +389,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
   }
 
   Widget _buildDivider() {
-    return Container(width: 1, height: 16, color: Colors.white12);
+    return Container(width: 1, height: 16, color: const Color(0xFFCBD5E1));
   }
 
   Widget _buildStatPill({required Widget icon, required String value, required Color color}) {
@@ -393,7 +402,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
           value,
           style: TextStyle(
             color: color,
-            fontSize: 11.5,
+            fontSize: 12,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -406,9 +415,9 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
       margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withAlpha(120),
+        color: const Color(0xFFF0F9FF),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: const Color(0xFFBAE6FD), width: 1.3),
       ),
       child: Row(
         children: [
@@ -451,7 +460,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
-                  colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+                  colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
                 )
               : null,
           color: isSelected ? null : Colors.transparent,
@@ -472,13 +481,13 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             Icon(
               icon,
               size: 15,
-              color: isSelected ? Colors.white : Colors.white60,
+              color: isSelected ? Colors.white : const Color(0xFF475569),
             ),
             const SizedBox(width: 6),
             Text(
               title,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white60,
+                color: isSelected ? Colors.white : const Color(0xFF475569),
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
                 letterSpacing: 0.5,
@@ -503,13 +512,18 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
         children: [
           // Global 1,000 Levels Progress Bar
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF38BDF8).withAlpha(50)),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFBAE6FD), width: 1.5),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x100284C7),
+                  blurRadius: 14,
+                  offset: Offset(0, 3),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,13 +533,13 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.military_tech_rounded, color: Color(0xFFFFD700), size: 16),
+                        Icon(Icons.military_tech_rounded, color: Color(0xFFF59E0B), size: 18),
                         SizedBox(width: 6),
                         Text(
                           '1,000 LEVELS ODYSSEY',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
+                            color: Color(0xFF0F172A),
+                            fontSize: 12,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 0.6,
                           ),
@@ -535,28 +549,28 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                     Text(
                       '$completedLevels / 1000',
                       style: const TextStyle(
-                        color: Color(0xFF38BDF8),
-                        fontSize: 11,
+                        color: Color(0xFF0284C7),
+                        fontSize: 12,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 7,
-                    backgroundColor: Colors.white12,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF38BDF8)),
+                    backgroundColor: const Color(0xFFE2E8F0),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0284C7)),
                   ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // 1. Worlds Odyssey (1,000 Levels)
           _buildNavTile(
@@ -564,7 +578,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             subtitle: '25 Worlds • 1,000 Levels Map',
             badgeText: '25 WORLDS',
             icon: Icons.public_rounded,
-            iconColors: const [Color(0xFF0284C7), Color(0xFF0EA5E9)],
+            iconColors: const [Color(0xFF38BDF8), Color(0xFF0284C7)],
             onTap: () {
               Navigator.of(context).pop();
               if (widget.onWorldsPressed != null) {
@@ -587,9 +601,9 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             title: tr('store'),
             subtitle: 'Gems, Coins & Hint Boosters',
             badgeText: 'HOT DEALS',
-            badgeColor: const Color(0xFFEAB308),
+            badgeColor: const Color(0xFFD97706),
             icon: Icons.diamond_rounded,
-            iconColors: const [Color(0xFF7C3AED), Color(0xFFA855F7)],
+            iconColors: const [Color(0xFFA855F7), Color(0xFF7C3AED)],
             onTap: () {
               Navigator.of(context).pop();
               Navigator.push(context, smoothPageRoute(const StoreScreen()));
@@ -603,9 +617,9 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             title: 'Daily Rewards',
             subtitle: 'Claim free coins & gems every 24h',
             badgeText: 'FREE',
-            badgeColor: const Color(0xFF10B981),
+            badgeColor: const Color(0xFF059669),
             icon: Icons.card_giftcard_rounded,
-            iconColors: const [Color(0xFFEA580C), Color(0xFFF59E0B)],
+            iconColors: const [Color(0xFFF59E0B), Color(0xFFEA580C)],
             onTap: () {
               Navigator.of(context).pop();
               Navigator.push(context, smoothPageRoute(const DailyRewardScreen()));
@@ -619,9 +633,9 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             title: 'Language: ${currentLanguage.englishName}',
             subtitle: '${currentLanguage.flagEmoji} ${currentLanguage.nativeName} (Tap to change)',
             badgeText: '56 >',
-            badgeColor: const Color(0xFF0D9488),
+            badgeColor: const Color(0xFF0284C7),
             icon: Icons.translate_rounded,
-            iconColors: const [Color(0xFF0D9488), Color(0xFF14B8A6)],
+            iconColors: const [Color(0xFF14B8A6), Color(0xFF0D9488)],
             onTap: () {
               setState(() => _selectedTab = 1);
             },
@@ -635,7 +649,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             subtitle: 'Audio, vibration & game data',
             badgeText: 'CONFIG',
             icon: Icons.settings_rounded,
-            iconColors: const [Color(0xFF475569), Color(0xFF64748B)],
+            iconColors: const [Color(0xFF64748B), Color(0xFF475569)],
             onTap: () {
               Navigator.of(context).pop();
               Navigator.push(context, smoothPageRoute(const SettingsScreen()));
@@ -648,9 +662,21 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B).withAlpha(120),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withAlpha(18)),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFBAE6FD), width: 1.4),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x100284C7),
+                  blurRadius: 14,
+                  offset: Offset(0, 3),
+                ),
+                BoxShadow(
+                  color: Color(0x080F172A),
+                  blurRadius: 8,
+                  offset: Offset(0, 1),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -658,7 +684,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                 const Text(
                   'QUICK AUDIO & HAPTICS',
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: Color(0xFF64748B),
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.8,
@@ -717,21 +743,33 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
         HapticFeedback.lightImpact();
         onTap();
       },
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E293B).withAlpha(120),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withAlpha(20)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFBAE6FD), width: 1.4),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x100284C7),
+              blurRadius: 12,
+              offset: Offset(0, 3),
+            ),
+            BoxShadow(
+              color: Color(0x060F172A),
+              blurRadius: 6,
+              offset: Offset(0, 1),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 gradient: LinearGradient(
                   colors: iconColors,
                   begin: Alignment.topLeft,
@@ -739,13 +777,13 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: iconColors.first.withAlpha(80),
+                    color: iconColors.first.withAlpha(70),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: Icon(icon, color: Colors.white, size: 21),
+              child: Icon(icon, color: Colors.white, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -757,9 +795,9 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -768,9 +806,9 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF64748B),
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -778,17 +816,17 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
               decoration: BoxDecoration(
-                color: badgeColor.withAlpha(35),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: badgeColor.withAlpha(120)),
+                color: badgeColor.withAlpha(22),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: badgeColor.withAlpha(140), width: 1.2),
               ),
               child: Text(
                 badgeText,
                 style: TextStyle(
                   color: badgeColor,
-                  fontSize: 9.5,
+                  fontSize: 10,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.5,
                 ),
@@ -808,33 +846,34 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 9),
         decoration: BoxDecoration(
           color: isEnabled
-              ? const Color(0xFF0284C7).withAlpha(45)
-              : Colors.black.withAlpha(60),
-          borderRadius: BorderRadius.circular(12),
+              ? const Color(0xFFE0F2FE)
+              : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isEnabled
-                ? const Color(0xFF38BDF8).withAlpha(120)
-                : Colors.white12,
+                ? const Color(0xFF0284C7)
+                : const Color(0xFFBAE6FD).withAlpha(140),
+            width: 1.2,
           ),
         ),
         child: Column(
           children: [
             Icon(
               icon,
-              size: 18,
-              color: isEnabled ? const Color(0xFF38BDF8) : Colors.white38,
+              size: 20,
+              color: isEnabled ? const Color(0xFF0284C7) : const Color(0xFF94A3B8),
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isEnabled ? Colors.white : Colors.white38,
-                fontSize: 10,
+                color: isEnabled ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                fontSize: 10.5,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -856,27 +895,34 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
           child: Container(
-            height: 42,
+            height: 44,
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF0284C7).withAlpha(80)),
+              border: Border.all(color: const Color(0xFFBAE6FD), width: 1.5),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0C0284C7),
+                  blurRadius: 10,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
             child: TextField(
               controller: _searchController,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13.5, fontWeight: FontWeight.w600),
               decoration: InputDecoration(
                 hintText: tr('search_language'),
-                hintStyle: const TextStyle(color: Colors.white38, fontSize: 12.5),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF38BDF8), size: 18),
+                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF0284C7), size: 19),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.close_rounded, color: Colors.white38, size: 16),
+                        icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 18),
                         onPressed: () => _searchController.clear(),
                       )
                     : null,
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 11),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
@@ -889,11 +935,11 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.search_off_rounded, color: Color(0xFF38BDF8), size: 38),
+                      const Icon(Icons.search_off_rounded, color: Color(0xFF0284C7), size: 38),
                       const SizedBox(height: 8),
                       Text(
                         tr('no_languages_found'),
-                        style: const TextStyle(color: Colors.white38, fontSize: 13),
+                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -919,27 +965,31 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
                         margin: const EdgeInsets.only(bottom: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFF0369A1).withAlpha(190)
-                              : const Color(0xFF1E293B).withAlpha(100),
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFF38BDF8)
-                                : Colors.white.withAlpha(15),
-                            width: isSelected ? 1.6 : 1.0,
+                                ? const Color(0xFF0284C7)
+                                : const Color(0xFFBAE6FD).withAlpha(160),
+                            width: isSelected ? 1.8 : 1.2,
                           ),
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFF0284C7).withAlpha(60),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
+                                    color: const Color(0xFF0284C7).withAlpha(50),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
                                   ),
                                 ]
-                              : null,
+                              : const [
+                                  BoxShadow(
+                                    color: Color(0x080F172A),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
                         ),
                         child: Row(
                           children: [
@@ -947,8 +997,9 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: Colors.white.withAlpha(15),
+                                color: const Color(0xFFF8FAFC),
                                 borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: const Color(0xFFBAE6FD).withAlpha(140)),
                               ),
                               child: Center(
                                 child: Text(lang.flagEmoji, style: const TextStyle(fontSize: 20)),
@@ -962,17 +1013,17 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                                   Text(
                                     lang.englishName,
                                     style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                                      color: isSelected ? const Color(0xFF0284C7) : const Color(0xFF0F172A),
+                                      fontWeight: isSelected ? FontWeight.w900 : FontWeight.w800,
                                       fontSize: 13.5,
                                     ),
                                   ),
                                   Text(
                                     lang.nativeName,
-                                    style: TextStyle(
-                                      color: isSelected ? const Color(0xFF7DD3FC) : Colors.white54,
+                                    style: const TextStyle(
+                                      color: Color(0xFF64748B),
                                       fontSize: 11.5,
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
@@ -984,7 +1035,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                                 height: 22,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFF10B981),
+                                  color: Color(0xFF0284C7),
                                 ),
                                 child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
                               )
@@ -994,7 +1045,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                                 height: 22,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white24, width: 1.5),
+                                  border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
                                 ),
                               ),
                           ],
@@ -1011,22 +1062,33 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
   Widget _buildDrawerFooter() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.white12, width: 1)),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: const Color(0xFFBAE6FD).withAlpha(160), width: 1.2)),
       ),
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Icon(Icons.psychology_rounded, color: Color(0xFF38BDF8), size: 16),
-              SizedBox(width: 6),
-              Text(
+              Image.asset(
+                'assets/images/home_logo.webp',
+                width: 20,
+                height: 20,
+                fit: BoxFit.contain,
+                errorBuilder: (_, e, s) => const Icon(
+                  Icons.psychology_rounded,
+                  color: Color(0xFF0284C7),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
                 'MindTrap AI',
                 style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.3,
                 ),
               ),
             ],
@@ -1034,7 +1096,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
           Text(
             'v1.2.0 • 1,000 Levels',
             style: TextStyle(
-              color: Colors.white38,
+              color: Color(0xFF64748B),
               fontSize: 10,
               fontWeight: FontWeight.w600,
             ),

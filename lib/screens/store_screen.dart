@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../localization/app_language.dart';
@@ -159,6 +158,9 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
       vsync: this,
       initialIndex: widget.initialTabIndex.clamp(0, 2),
     );
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -193,21 +195,38 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
   void _showSuccessDialog(int amount, bool isDiamonds) {
     showDialog(
       context: context,
+      barrierColor: Colors.black.withAlpha(90),
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(26),
+          constraints: const BoxConstraints(maxWidth: 360),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFFFFFFF),
+                Color(0xFFF8FAFC),
+                Color(0xFFF1F5F9),
+              ],
+            ),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: isDiamonds ? const Color(0xFF38BDF8) : const Color(0xFFFFD700),
-              width: 2,
+              color: Colors.white,
+              width: 2.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: (isDiamonds ? const Color(0xFF38BDF8) : const Color(0xFFFFD700)).withAlpha(80),
-                blurRadius: 30,
+                color: (isDiamonds ? const Color(0xFF0284C7) : const Color(0xFFD97706)).withAlpha(45),
+                blurRadius: 36,
+                spreadRadius: 2,
+                offset: const Offset(0, 10),
+              ),
+              BoxShadow(
+                color: const Color(0xFF0F172A).withAlpha(20),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -221,9 +240,17 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: isDiamonds
-                        ? [const Color(0xFF38BDF8), const Color(0xFF1D4ED8)]
-                        : [const Color(0xFFFFE066), const Color(0xFFD97706)],
+                        ? [const Color(0xFF38BDF8), const Color(0xFF0284C7)]
+                        : [const Color(0xFFFFE066), const Color(0xFFF59E0B)],
                   ),
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isDiamonds ? const Color(0xFF0284C7) : const Color(0xFFF59E0B)).withAlpha(90),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
                 child: Center(
                   child: Image.asset(
@@ -238,7 +265,7 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                 tr('purchase_successful'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFF0F172A),
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
                 ),
@@ -247,7 +274,7 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
               Text(
                 '+$amount ${isDiamonds ? tr('gems') : tr('coins')}',
                 style: TextStyle(
-                  color: isDiamonds ? const Color(0xFF38BDF8) : const Color(0xFFFFD700),
+                  color: isDiamonds ? const Color(0xFF0284C7) : const Color(0xFFD97706),
                   fontSize: 26,
                   fontWeight: FontWeight.w900,
                 ),
@@ -257,24 +284,44 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                 isDiamonds ? tr('diamonds_added') : tr('coins_added'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: Color(0xFF475569),
                   fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isDiamonds ? const Color(0xFF2563EB) : const Color(0xFFD97706),
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              Container(
+                width: double.infinity,
+                height: 48,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    colors: isDiamonds
+                        ? [const Color(0xFF38BDF8), const Color(0xFF0284C7)]
+                        : [const Color(0xFFFFB703), const Color(0xFFFB8500)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isDiamonds ? const Color(0xFF0284C7) : const Color(0xFFFB8500)).withAlpha(80),
+                      blurRadius: 16,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
-                child: const Text(
-                  'AWESOME',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text(
+                    'AWESOME',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                 ),
               ),
@@ -299,24 +346,22 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
     if (success) {
       playWinSound();
       triggerSuccessFeedback();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$count ${tr('purchase_success')}'),
-          backgroundColor: const Color(0xFF16A947),
-          duration: const Duration(seconds: 2),
-        ),
+      showGameNotification(
+        context: context,
+        message: '$count ${tr('purchase_success')}',
+        icon: Icons.check_circle_rounded,
+        accentColor: const Color(0xFF16A947),
+        iconColor: const Color(0xFF4ADE80),
       );
       setState(() {});
     } else {
       triggerHeavyFeedback();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            useGems ? tr('not_enough_gems') : tr('not_enough_coins'),
-          ),
-          backgroundColor: const Color(0xFFE53935),
-          duration: const Duration(seconds: 2),
-        ),
+      showGameNotification(
+        context: context,
+        message: useGems ? tr('not_enough_gems') : tr('not_enough_coins'),
+        icon: Icons.error_rounded,
+        accentColor: const Color(0xFFE53935),
+        iconColor: const Color(0xFFFCA5A5),
       );
     }
   }
@@ -443,15 +488,27 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                       ),
                       child: TabBar(
                         controller: _tabController,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        dividerColor: Colors.transparent,
                         indicator: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF38BDF8), Color(0xFF2563EB)],
+                          gradient: LinearGradient(
+                            colors: _tabController.index == 0
+                                ? const [Color(0xFF38BDF8), Color(0xFF2563EB)] // Diamonds
+                                : (_tabController.index == 1
+                                    ? const [Color(0xFFFBBF24), Color(0xFFD97706)] // Coins
+                                    : const [Color(0xFFFDE047), Color(0xFFCA8A04)]), // Hints
                           ),
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF38BDF8).withAlpha(100),
-                              blurRadius: 10,
+                              color: (_tabController.index == 0
+                                      ? const Color(0xFF38BDF8)
+                                      : (_tabController.index == 1
+                                          ? const Color(0xFFF59E0B)
+                                          : const Color(0xFFEAB308)))
+                                  .withAlpha(140),
+                              blurRadius: 12,
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
@@ -501,10 +558,10 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                         controller: _tabController,
                         children: [
                           // 1. Diamonds Tab
-                          _buildPacksList(diamondPacks, isDiamonds: true),
+                          _buildPacksList(diamondPacks, isDiamonds: true, safePadding: safePadding),
 
                           // 2. Coins Tab
-                          _buildPacksList(coinPacks, isDiamonds: false),
+                          _buildPacksList(coinPacks, isDiamonds: false, safePadding: safePadding),
 
                           // 3. Hints Tab
                           _buildHintsTab(safePadding),
@@ -522,30 +579,25 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
   }
 
   Widget _buildCurrencyDisplay() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ProfessionalCurrencyPill(
-          iconAsset: 'assets/images/gem.webp',
-          value: GameStorage.gemBalance,
-        ),
-        const SizedBox(width: 5),
-        ProfessionalCurrencyPill(
-          iconAsset: 'assets/images/coin.webp',
-          value: GameStorage.coinBalance,
-        ),
-        const SizedBox(width: 5),
-        ProfessionalCurrencyPill(
-          iconAsset: 'assets/images/hint-icon.webp',
-          value: GameStorage.hintBalance,
-        ),
-      ],
+    return ValueListenableBuilder<int>(
+      valueListenable: GameStorage.currencyNotifier,
+      builder: (context, _, child) {
+        return UnifiedCurrencyBar(
+          coinBalance: GameStorage.coinBalance,
+          gemBalance: GameStorage.gemBalance,
+          hintBalance: GameStorage.hintBalance,
+          onCoinsTap: () => _tabController.animateTo(1),
+          onGemsTap: () => _tabController.animateTo(0),
+          onHintsTap: () => _tabController.animateTo(2),
+          showAddButton: false,
+        );
+      },
     );
   }
 
-  Widget _buildPacksList(List<StorePack> packs, {required bool isDiamonds}) {
+  Widget _buildPacksList(List<StorePack> packs, {required bool isDiamonds, required EdgeInsets safePadding}) {
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(18, 6, 18, 24),
+      padding: EdgeInsets.fromLTRB(18, 8, 18, 48 + safePadding.bottom),
       itemCount: packs.length,
       itemBuilder: (context, index) {
         final pack = packs[index];
@@ -559,194 +611,199 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withAlpha(22),
-            Colors.white.withAlpha(8),
-          ],
-        ),
+        color: const Color(0xFF131D33).withAlpha(235),
         border: Border.all(
-          color: pack.gradientColors.first.withAlpha(120),
+          color: pack.gradientColors.first.withAlpha(140),
           width: 1.5,
         ),
         boxShadow: [
+          const BoxShadow(
+            color: Color(0x35000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
           BoxShadow(
-            color: pack.gradientColors.first.withAlpha(40),
+            color: pack.gradientColors.first.withAlpha(45),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(21),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            // Icon & Bonus Stack
+            Stack(
+              clipBehavior: Clip.none,
               children: [
-                // Icon & Bonus Stack
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 68,
-                      height: 68,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: pack.gradientColors,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: pack.gradientColors.first.withAlpha(120),
-                            blurRadius: 12,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Image.asset(
-                          pack.imageAsset,
-                          width: 40,
-                          height: 40,
-                        ),
-                      ),
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: pack.gradientColors,
                     ),
-                    if (pack.bonus > 0)
-                      Positioned(
-                        top: -4,
-                        right: -4,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEF4444),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.white, width: 1),
-                          ),
-                          child: Text(
-                            '+${pack.bonus}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-
-                const SizedBox(width: 14),
-
-                // Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              pack.title,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (pack.tag != null) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: pack.gradientColors),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                pack.tag!,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Text(
-                            '${pack.totalAmount}',
-                            style: TextStyle(
-                              color: pack.isDiamonds ? const Color(0xFF38BDF8) : const Color(0xFFFFD700),
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            pack.isDiamonds ? tr('gems') : tr('coins'),
-                            style: TextStyle(
-                              color: Colors.white.withAlpha(200),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        'PKR ${pack.pkrPrice}',
-                        style: const TextStyle(
-                          color: Color(0xFF34D399),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: pack.gradientColors.first.withAlpha(120),
+                        blurRadius: 12,
                       ),
                     ],
                   ),
-                ),
-
-                // Purchase Button
-                ElevatedButton(
-                  onPressed: () => _openCheckoutSheet(pack),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: pack.gradientColors.first,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    elevation: 4,
+                  child: Center(
+                    child: Image.asset(
+                      pack.imageAsset,
+                      width: 40,
+                      height: 40,
+                    ),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '\$${pack.usdPrice.toStringAsFixed(2)}',
+                ),
+                if (pack.bonus > 0)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white, width: 1),
+                      ),
+                      child: Text(
+                        '+${pack.bonus}',
                         style: const TextStyle(
-                          fontSize: 14,
+                          color: Colors.white,
+                          fontSize: 10,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(width: 14),
+
+            // Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          pack.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (pack.tag != null) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(colors: pack.gradientColors),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            pack.tag!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
                       Text(
-                        tr('buy'),
-                        style: const TextStyle(
-                          fontSize: 10,
+                        '${pack.totalAmount}',
+                        style: TextStyle(
+                          color: pack.isDiamonds ? const Color(0xFF38BDF8) : const Color(0xFFFFD700),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        pack.isDiamonds ? tr('gems') : tr('coins'),
+                        style: TextStyle(
+                          color: Colors.white.withAlpha(200),
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                  Text(
+                    'PKR ${pack.pkrPrice}',
+                    style: const TextStyle(
+                      color: Color(0xFF34D399),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+
+            // Purchase Button
+            ElevatedButton(
+              onPressed: () => _openCheckoutSheet(pack),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: pack.gradientColors.first,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: const BorderSide(color: Colors.white38, width: 1.2),
+                ),
+                elevation: 5,
+                shadowColor: pack.gradientColors.first.withAlpha(160),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '\$${pack.usdPrice.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      shadows: [
+                        Shadow(color: Colors.black87, offset: Offset(0, 1), blurRadius: 3),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    tr('buy'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.6,
+                      shadows: [
+                        Shadow(color: Colors.black87, offset: Offset(0, 1), blurRadius: 2),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -754,7 +811,7 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
 
   Widget _buildHintsTab(EdgeInsets safePadding) {
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(18, 6, 18, 24 + safePadding.bottom),
+      padding: EdgeInsets.fromLTRB(18, 6, 18, 48 + safePadding.bottom),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -942,25 +999,12 @@ class _CheckoutModalState extends State<_CheckoutModal> {
 
   void _showError(String message) {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFFEF4444),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 3),
-      ),
+    showGameNotification(
+      context: context,
+      message: message,
+      icon: Icons.error_outline_rounded,
+      accentColor: const Color(0xFFEF4444),
+      iconColor: const Color(0xFFFCA5A5),
     );
   }
 
@@ -977,16 +1021,16 @@ class _CheckoutModalState extends State<_CheckoutModal> {
         ),
         margin: EdgeInsets.only(bottom: bottomInset),
         decoration: const BoxDecoration(
-          color: Color(0xFF0F172A),
+          color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           border: Border(
-            top: BorderSide(color: Color(0xFF38BDF8), width: 2),
+            top: BorderSide(color: Color(0xFFBAE6FD), width: 2),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black54,
+              color: Color(0x220F172A),
               blurRadius: 40,
-              spreadRadius: 10,
+              spreadRadius: 2,
             ),
           ],
         ),
@@ -1000,7 +1044,7 @@ class _CheckoutModalState extends State<_CheckoutModal> {
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white30,
+                  color: const Color(0xFFCBD5E1),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1014,13 +1058,13 @@ class _CheckoutModalState extends State<_CheckoutModal> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0284C7).withAlpha(40),
+                      color: const Color(0xFFE0F2FE),
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFF38BDF8).withAlpha(80)),
+                      border: Border.all(color: const Color(0xFFBAE6FD)),
                     ),
                     child: const Icon(
                       Icons.lock_rounded,
-                      color: Color(0xFF38BDF8),
+                      color: Color(0xFF0284C7),
                       size: 18,
                     ),
                   ),
@@ -1032,7 +1076,7 @@ class _CheckoutModalState extends State<_CheckoutModal> {
                         Text(
                           tr('pay_securely'),
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF0F172A),
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 0.3,
@@ -1040,12 +1084,12 @@ class _CheckoutModalState extends State<_CheckoutModal> {
                         ),
                         Row(
                           children: [
-                            const Icon(Icons.verified_user_rounded, color: Color(0xFF34D399), size: 12),
+                            const Icon(Icons.verified_user_rounded, color: Color(0xFF059669), size: 12),
                             const SizedBox(width: 4),
-                            Text(
+                            const Text(
                               '256-BIT SSL ENCRYPTED • LIVE PAYMENT',
                               style: TextStyle(
-                                color: Colors.white.withAlpha(150),
+                                color: Color(0xFF64748B),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.6,
@@ -1057,14 +1101,14 @@ class _CheckoutModalState extends State<_CheckoutModal> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                    icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
             ),
 
-            const Divider(color: Colors.white12, height: 1),
+            const Divider(color: Color(0xFFE2E8F0), height: 1),
 
             // Scrollable Body
             Flexible(
@@ -1109,9 +1153,9 @@ class _CheckoutModalState extends State<_CheckoutModal> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withAlpha(140),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
@@ -1144,7 +1188,7 @@ class _CheckoutModalState extends State<_CheckoutModal> {
                 Text(
                   pack.title,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF0F172A),
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                   ),
@@ -1155,7 +1199,7 @@ class _CheckoutModalState extends State<_CheckoutModal> {
                     Text(
                       '+${pack.amount} ${pack.isDiamonds ? tr('gems') : tr('coins')}',
                       style: TextStyle(
-                        color: pack.isDiamonds ? const Color(0xFF38BDF8) : const Color(0xFFFFD700),
+                        color: pack.isDiamonds ? const Color(0xFF0284C7) : const Color(0xFFD97706),
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
                       ),
@@ -1189,15 +1233,15 @@ class _CheckoutModalState extends State<_CheckoutModal> {
               Text(
                 '\$${pack.usdPrice.toStringAsFixed(2)}',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFF0F172A),
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              Text(
+              const Text(
                 'USD',
                 style: TextStyle(
-                  color: Colors.white.withAlpha(120),
+                  color: Color(0xFF64748B),
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
                 ),
@@ -1587,7 +1631,7 @@ class _CheckoutModalState extends State<_CheckoutModal> {
                 suffix: IconButton(
                   icon: Icon(
                     _obscureCvv ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                    color: Colors.white54,
+                    color: const Color(0xFF64748B),
                     size: 18,
                   ),
                   onPressed: () => setState(() => _obscureCvv = !_obscureCvv),
@@ -1616,8 +1660,8 @@ class _CheckoutModalState extends State<_CheckoutModal> {
       children: [
         Text(
           label,
-          style: TextStyle(
-            color: Colors.white.withAlpha(190),
+          style: const TextStyle(
+            color: Color(0xFF475569),
             fontSize: 11,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.8,
@@ -1626,9 +1670,9 @@ class _CheckoutModalState extends State<_CheckoutModal> {
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(12),
+            color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withAlpha(30)),
+            border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
           ),
           child: TextField(
             controller: controller,
@@ -1637,19 +1681,19 @@ class _CheckoutModalState extends State<_CheckoutModal> {
             obscureText: obscureText,
             inputFormatters: inputFormatters,
             style: const TextStyle(
-              color: Colors.white,
+              color: Color(0xFF0F172A),
               fontSize: 14,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
             decoration: InputDecoration(
               isDense: true,
               hintText: hint,
-              hintStyle: TextStyle(
-                color: Colors.white.withAlpha(70),
+              hintStyle: const TextStyle(
+                color: Color(0xFF94A3B8),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
-              prefixIcon: Icon(prefixIcon, color: const Color(0xFF38BDF8), size: 19),
+              prefixIcon: Icon(prefixIcon, color: const Color(0xFF0284C7), size: 19),
               suffixIcon: suffix,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -1677,15 +1721,15 @@ class _CheckoutModalState extends State<_CheckoutModal> {
                 activeColor: const Color(0xFF0284C7),
                 checkColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-                side: const BorderSide(color: Colors.white38),
+                side: const BorderSide(color: Color(0xFF94A3B8)),
               ),
             ),
             const SizedBox(width: 10),
-            Expanded(
+            const Expanded(
               child: Text(
                 'Save card details securely for future 1-tap game purchases',
                 style: TextStyle(
-                  color: Colors.white.withAlpha(180),
+                  color: Color(0xFF334155),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1701,9 +1745,9 @@ class _CheckoutModalState extends State<_CheckoutModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0284C7).withAlpha(18),
+        color: const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF38BDF8).withAlpha(40)),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
       ),
       child: Column(
         children: [
@@ -1711,22 +1755,22 @@ class _CheckoutModalState extends State<_CheckoutModal> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildTrustBadge(Icons.shield_rounded, 'PCI-DSS LEVEL 1'),
-              Container(width: 1, height: 16, color: Colors.white12),
+              Container(width: 1, height: 16, color: const Color(0xFFDCFCE7)),
               _buildTrustBadge(Icons.lock_rounded, '256-BIT SSL'),
-              Container(width: 1, height: 16, color: Colors.white12),
+              Container(width: 1, height: 16, color: const Color(0xFFDCFCE7)),
               _buildTrustBadge(Icons.bolt_rounded, 'INSTANT CREDIT'),
             ],
           ),
           const SizedBox(height: 8),
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.account_balance_rounded, color: Color(0xFF10B981), size: 13),
-              const SizedBox(width: 6),
+              Icon(Icons.account_balance_rounded, color: Color(0xFF10B981), size: 13),
+              SizedBox(width: 6),
               Text(
                 'Settlement Destination: Meezan Bank Merchant Account',
                 style: TextStyle(
-                  color: Colors.white.withAlpha(160),
+                  color: Color(0xFF15803D),
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.3,
@@ -1743,12 +1787,12 @@ class _CheckoutModalState extends State<_CheckoutModal> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: const Color(0xFF34D399), size: 13),
+        Icon(icon, color: const Color(0xFF16A34A), size: 13),
         const SizedBox(width: 5),
         Text(
           text,
           style: const TextStyle(
-            color: Colors.white70,
+            color: Color(0xFF166534),
             fontSize: 9.5,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.4,
@@ -1759,17 +1803,35 @@ class _CheckoutModalState extends State<_CheckoutModal> {
   }
 
   Widget _buildPayButton(StorePack pack) {
-    return ElevatedButton(
-      onPressed: _isProcessing ? null : _processPayment,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF2563EB),
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: const Color(0xFF1D4ED8).withAlpha(150),
-        minimumSize: const Size(double.infinity, 54),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        elevation: 6,
-        shadowColor: const Color(0xFF2563EB).withAlpha(160),
+    return Container(
+      width: double.infinity,
+      height: 54,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF38BDF8),
+            Color(0xFF0284C7),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0284C7).withAlpha(100),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
+      child: ElevatedButton(
+        onPressed: _isProcessing ? null : _processPayment,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: Colors.transparent,
+          minimumSize: const Size(double.infinity, 54),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        ),
       child: _isProcessing
           ? const Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1805,6 +1867,7 @@ class _CheckoutModalState extends State<_CheckoutModal> {
                 ),
               ],
             ),
+      ),
     );
   }
 }

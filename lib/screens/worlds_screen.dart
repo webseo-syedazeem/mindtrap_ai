@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../localization/app_language.dart';
 import '../localization/language_controller.dart';
 import '../models/world_model.dart';
+import '../widgets/professional_lock_dialog.dart';
 import 'language_selection_screen.dart';
 import 'world_levels_screen.dart';
 
@@ -27,10 +28,8 @@ int getWorldCompletedLevels(int worldIndex, Map<String, int> stageLevelStars) {
 
 bool isWorldUnlocked(int worldIndex, int totalStarsAcrossGame, Map<String, int> stageLevelStars) {
   if (worldIndex == 0) return true;
-  final world = WorldThemes.getWorld(worldIndex);
-  if (totalStarsAcrossGame >= world.requiredStarsToUnlock) return true;
-  // Progress unlock: at least 15 levels cleared in previous world
-  return getWorldCompletedLevels(worldIndex - 1, stageLevelStars) >= 15;
+  // A world unlocks ONLY when ALL 40 levels of the previous world are completed!
+  return getWorldCompletedLevels(worldIndex - 1, stageLevelStars) >= WorldThemes.levelsPerWorld;
 }
 
 class WorldsScreen extends StatefulWidget {
@@ -218,12 +217,14 @@ class _WorldsScreenState extends State<WorldsScreen> {
                           final unlocked = isWorldUnlocked(index, totalStars, _starsMap);
                           final worldStars = getWorldStars(index, _starsMap);
                           final completed = getWorldCompletedLevels(index, _starsMap);
+                          final prevCompleted = index > 0 ? getWorldCompletedLevels(index - 1, _starsMap) : 40;
 
                           return _WorldCard(
                             world: world,
                             isUnlocked: unlocked,
                             worldStars: worldStars,
                             completedLevels: completed,
+                            prevWorldCompleted: prevCompleted,
                             onTap: unlocked
                                 ? () async {
                                     await Navigator.push(
@@ -239,27 +240,13 @@ class _WorldsScreenState extends State<WorldsScreen> {
                                     _refreshStars();
                                   }
                                 : () {
-                                    final lockMsg = tr('locked_world_msg')
-                                        .replaceAll('{stars}', '${world.requiredStarsToUnlock}')
-                                        .replaceAll('{world}', '$index');
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Row(
-                                          children: [
-                                            const Icon(Icons.lock_rounded, color: Color(0xFFFFB703), size: 20),
-                                            const SizedBox(width: 10),
-                                            Expanded(
-                                              child: Text(
-                                                lockMsg,
-                                                style: const TextStyle(fontWeight: FontWeight.w700),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        backgroundColor: const Color(0xFF0F172A),
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                      ),
+                                    showProfessionalLockDialog(
+                                      context,
+                                      title: 'World Locked',
+                                      subtitle: world.localizedTitle,
+                                      message: 'Complete all 40 levels of World ${world.worldNumber - 1} to unlock this world!',
+                                      currentProgress: prevCompleted,
+                                      targetProgress: WorldThemes.levelsPerWorld,
                                     );
                                   },
                           );
@@ -298,6 +285,7 @@ class _WorldCard extends StatelessWidget {
   final bool isUnlocked;
   final int worldStars;
   final int completedLevels;
+  final int prevWorldCompleted;
   final VoidCallback onTap;
 
   const _WorldCard({
@@ -305,6 +293,7 @@ class _WorldCard extends StatelessWidget {
     required this.isUnlocked,
     required this.worldStars,
     required this.completedLevels,
+    this.prevWorldCompleted = 0,
     required this.onTap,
   });
 
@@ -478,11 +467,11 @@ class _WorldCard extends StatelessWidget {
                               const Icon(Icons.lock_rounded, color: Color(0xFFFFB703), size: 14),
                               const SizedBox(width: 4),
                               Text(
-                                '${world.requiredStarsToUnlock} ★',
+                                'World ${world.worldNumber - 1} ($prevWorldCompleted/40)',
                                 style: const TextStyle(
                                   color: Color(0xFFFFB703),
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 12,
+                                  fontSize: 11,
                                 ),
                               ),
                             ],
@@ -641,7 +630,7 @@ class _WorldCard extends StatelessWidget {
                         border: Border.all(color: Colors.white.withAlpha(20)),
                       ),
                       child: Text(
-                        'Unlock World ${world.worldNumber} with ${world.requiredStarsToUnlock} Stars',
+                        'Complete all 40 levels of World ${world.worldNumber - 1} to unlock',
                         style: const TextStyle(
                           color: Color(0xFFFDE68A),
                           fontSize: 11,

@@ -5,6 +5,7 @@ import 'package:mindtrap_ai/localization/language_controller.dart';
 import 'package:mindtrap_ai/localization/puzzle_localizer.dart';
 import 'package:mindtrap_ai/models/world_model.dart';
 import 'package:mindtrap_ai/widgets/level_background_builder.dart';
+import 'package:mindtrap_ai/main.dart';
 
 void main() {
   test('WorldThemes defines 10 distinct worlds with unique properties', () {
@@ -261,5 +262,20 @@ void main() {
       expect(f.existsSync(), isTrue, reason: '$a must exist');
       expect(f.lengthSync(), greaterThan(100), reason: '$a must not be empty');
     }
+  });
+
+  test('World task achievements award configured coins and gems gifts', () {
+    final w1 = baseAchievementItems.firstWhere((a) => a.id == 'world_1_complete');
+    expect(w1.coinReward, 1500);
+    expect(w1.target, 40);
+
+    final w5 = baseAchievementItems.firstWhere((a) => a.id == 'world_5_complete');
+    expect(w5.coinReward, 5000);
+    expect(w5.target, 5);
+
+    final w10 = baseAchievementItems.firstWhere((a) => a.id == 'world_10_complete');
+    expect(w10.coinReward, 10000);
+    expect(w10.gemReward, 500);
+    expect(w10.target, 10);
   });
 }

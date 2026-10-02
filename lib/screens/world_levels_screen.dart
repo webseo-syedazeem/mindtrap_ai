@@ -4,6 +4,8 @@ import '../localization/language_controller.dart';
 import '../models/world_model.dart';
 import '../screens/language_selection_screen.dart';
 import '../widgets/level_background_builder.dart';
+import '../widgets/professional_lock_dialog.dart';
+import 'worlds_screen.dart';
 
 class WorldLevelsScreen extends StatefulWidget {
   final WorldData world;
@@ -44,6 +46,9 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
   }
 
   bool _isLevelUnlocked(int levelIndex) {
+    if (widget.world.id > 0 && !isWorldUnlocked(widget.world.id, 0, _starsMap)) {
+      return false;
+    }
     if (levelIndex == 0) return true;
     return _starsForLevel(levelIndex - 1) > 0;
   }
@@ -276,16 +281,29 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
                                   _refreshStars();
                                 }
                               } else {
-                                final msg = tr('unlock_level_msg')
-                                    .replaceAll('{prev}', '$levelIndex')
-                                    .replaceAll('{next}', '${levelIndex + 1}');
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(msg),
-                                    backgroundColor: const Color(0xFF0F172A),
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
+                                final isWorldLocked = world.id > 0 && !isWorldUnlocked(world.id, 0, _starsMap);
+                                if (isWorldLocked) {
+                                  showProfessionalLockDialog(
+                                    context,
+                                    title: 'World Locked',
+                                    subtitle: world.localizedTitle,
+                                    message: 'Complete all 40 levels of World ${world.worldNumber - 1} to unlock this world!',
+                                    currentProgress: getWorldCompletedLevels(world.id - 1, _starsMap),
+                                    targetProgress: WorldThemes.levelsPerWorld,
+                                  );
+                                } else {
+                                  final msg = tr('unlock_level_msg')
+                                      .replaceAll('{prev}', '$levelIndex')
+                                      .replaceAll('{next}', '${levelIndex + 1}');
+                                  showProfessionalLockDialog(
+                                    context,
+                                    title: 'Level Locked',
+                                    subtitle: '${tr('level')} ${levelIndex + 1}',
+                                    message: msg,
+                                    currentProgress: levelIndex,
+                                    targetProgress: levelIndex + 1,
+                                  );
+                                }
                               }
                             },
                           );

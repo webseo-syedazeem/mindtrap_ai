@@ -265,6 +265,11 @@ class LevelBackgroundBuilder extends StatelessWidget {
     'assets/images/game over background image.webp',
   ];
 
+  static String getBackgroundAsset(int worldIndex, int levelIndex) {
+    final bgIndex = ((worldIndex * 5) + levelIndex) % scenicAssets.length;
+    return scenicAssets[bgIndex];
+  }
+
   const LevelBackgroundBuilder({
     super.key,
     required this.worldIndex,
@@ -277,8 +282,7 @@ class LevelBackgroundBuilder extends StatelessWidget {
     final world = WorldThemes.getWorld(worldIndex);
     final atmosphere = LevelAtmosphereManager.getAtmosphere(levelIndex, world);
     // Unique distinct background image for every level and stage
-    final bgIndex = ((worldIndex * 5) + levelIndex) % scenicAssets.length;
-    final bgAsset = scenicAssets[bgIndex];
+    final bgAsset = getBackgroundAsset(worldIndex, levelIndex);
 
     return Stack(
       fit: StackFit.expand,

@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.mindtrap_ai"
     compileSdk = 36
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -34,11 +34,6 @@ android {
         noCompress += listOf("wav", "mp3", "ogg")
     }
 
-    packaging {
-        jniLibs {
-            keepDebugSymbols += listOf("**/*.so")
-        }
-    }
 
     lint {
         checkReleaseBuilds = false

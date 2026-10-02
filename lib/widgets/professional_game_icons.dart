@@ -564,24 +564,14 @@ class _ProfessionalGiftButtonState extends State<ProfessionalGiftButton>
         clipBehavior: Clip.none,
         children: [
           Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
+            width: 42,
+            height: 42,
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFFFFBEB),
-                  Color(0xFFFEF3C7),
-                  Color(0xFFFDE68A),
-                ],
-              ),
-              border: Border.all(color: const Color(0xFFF59E0B), width: 2.0),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x60F59E0B),
-                  blurRadius: 12,
+                  color: Color(0x280F172A),
+                  blurRadius: 10,
                   offset: Offset(0, 4),
                 ),
                 BoxShadow(
@@ -589,55 +579,88 @@ class _ProfessionalGiftButtonState extends State<ProfessionalGiftButton>
                   blurRadius: 2,
                   offset: Offset(0, 3),
                 ),
+                BoxShadow(
+                  color: Color(0x3338BDF8),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                ),
               ],
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white,
+                  Color(0xFFBAE6FD),
+                  Color(0xFFE2E8F0),
+                ],
+              ),
             ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Top glare shine
-                Positioned(
-                  top: 2,
-                  child: Container(
-                    width: 26,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.all(Radius.elliptical(26, 12)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withAlpha(220),
-                          Colors.white.withAlpha(0),
-                        ],
+            padding: const EdgeInsets.all(2.2),
+            child: Container(
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white,
+                    Color(0xFFF8FAFC),
+                    Color(0xFFF1F5F9),
+                  ],
+                  stops: [0.0, 0.65, 1.0],
+                ),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Top specular shine arc (glass highlight)
+                  Positioned(
+                    top: 1.5,
+                    child: Container(
+                      width: 42 * 0.65,
+                      height: 42 * 0.32,
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.all(
+                          Radius.elliptical(28, 14),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.white.withAlpha(240),
+                            Colors.white.withAlpha(0),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const Icon(
-                  Icons.card_giftcard_rounded,
-                  color: Color(0xFFDC2626),
-                  size: 25,
-                ),
-              ],
+                  Image.asset(
+                    'assets/images/daily_gift.webp',
+                    width: 25,
+                    height: 25,
+                    fit: BoxFit.contain,
+                  ),
+                ],
+              ),
             ),
           ),
           // Pulsing FREE badge
           Positioned(
-            top: -3,
+            top: -4,
             right: -4,
             child: ScaleTransition(
               scale: _pulseAnimation,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 5.5, vertical: 2),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFEF4444), Color(0xFFB91C1C)],
+                    colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
                   ),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFFFD54F), width: 1.4),
+                  border: Border.all(color: Colors.white, width: 1.4),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x70EF4444),
+                      color: Color(0x60EF4444),
                       blurRadius: 6,
                       offset: Offset(0, 2),
                     ),
@@ -647,7 +670,7 @@ class _ProfessionalGiftButtonState extends State<ProfessionalGiftButton>
                   'FREE',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 8.5,
+                    fontSize: 8,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.6,
                   ),
@@ -681,13 +704,13 @@ class ProfessionalCurrencyPill extends StatelessWidget {
     final isCoin = iconAsset.contains('coin');
     final isGem = iconAsset.contains('gem');
 
-    // Luxurious palette per currency type
+    // Luxurious palette per currency type - rich, saturated & vibrant in color
     final Color rimColorTop = isCoin
         ? const Color(0xFFFFE082)
         : (isGem ? const Color(0xFFBAE6FD) : const Color(0xFFFEF08A));
 
     final Color rimColorBottom = isCoin
-        ? const Color(0xFFD97706)
+        ? const Color(0xFFB45309)
         : (isGem ? const Color(0xFF0284C7) : const Color(0xFFCA8A04));
 
     final Color badgeGlow = isCoin
@@ -695,12 +718,12 @@ class ProfessionalCurrencyPill extends StatelessWidget {
         : (isGem ? const Color(0xFF38BDF8) : const Color(0xFFFACC15));
 
     final Color textColor = isCoin
-        ? const Color(0xFF92400E)
-        : (isGem ? const Color(0xFF0369A1) : const Color(0xFF1E293B));
+        ? const Color(0xFF78350F)
+        : (isGem ? const Color(0xFF0C4A6E) : const Color(0xFF713F12));
 
     final Color shadowColor = isCoin
-        ? const Color(0x35D97706)
-        : (isGem ? const Color(0x350284C7) : const Color(0x3010B981));
+        ? const Color(0x60D97706)
+        : (isGem ? const Color(0x600284C7) : const Color(0x60CA8A04));
 
     Widget content = Container(
       height: 36,
@@ -713,20 +736,21 @@ class ProfessionalCurrencyPill extends StatelessWidget {
         // 3D drop shadow
         boxShadow: [
           const BoxShadow(
-            color: Color(0x220F172A),
+            color: Color(0x33000000),
             blurRadius: 8,
             offset: Offset(0, 3),
           ),
           BoxShadow(
             color: shadowColor,
-            blurRadius: 6,
+            blurRadius: 8,
+            spreadRadius: 1,
             offset: const Offset(0, 2),
           ),
           // 3D bottom bevel
           BoxShadow(
-            color: rimColorBottom.withAlpha(90),
-            blurRadius: 1,
-            offset: const Offset(0, 2.2),
+            color: rimColorBottom.withAlpha(120),
+            blurRadius: 1.5,
+            offset: const Offset(0, 2.5),
           ),
         ],
         // Multi-stop border gradient for physical rim
@@ -747,16 +771,24 @@ class ProfessionalCurrencyPill extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,
-              isCoin
-                  ? const Color(0xFFFFFBEB)
-                  : (isGem ? const Color(0xFFF0F9FF) : const Color(0xFFFEFCE8)),
-              isCoin
-                  ? const Color(0xFFFEF3C7)
-                  : (isGem ? const Color(0xFFE0F2FE) : const Color(0xFFFEF9C3)),
-            ],
-            stops: const [0.0, 0.6, 1.0],
+            colors: isCoin
+                ? const [
+                    Color(0xFFFFFBEB),
+                    Color(0xFFFDE68A),
+                    Color(0xFFF59E0B),
+                  ]
+                : (isGem
+                    ? const [
+                        Color(0xFFF0F9FF),
+                        Color(0xFFBAE6FD),
+                        Color(0xFF38BDF8),
+                      ]
+                    : const [
+                        Color(0xFFFEFCE8),
+                        Color(0xFFFDE047),
+                        Color(0xFFEAB308),
+                      ]),
+            stops: const [0.0, 0.45, 1.0],
           ),
         ),
         child: Row(
@@ -881,5 +913,206 @@ class ProfessionalCurrencyPill extends StatelessWidget {
       text = '$val';
     }
     return formatNumber(text);
+  }
+}
+
+/// A sleek, unified single-capsule bar containing Coins (Yellow), Gems (Blue), and Hints (Yellow).
+/// Zero overlapping, perfectly balanced typography and layout.
+class UnifiedCurrencyBar extends StatelessWidget {
+  final int coinBalance;
+  final int gemBalance;
+  final int hintBalance;
+  final VoidCallback? onCoinsTap;
+  final VoidCallback? onGemsTap;
+  final VoidCallback? onHintsTap;
+  final VoidCallback? onHintsAdd;
+  final bool showAddButton;
+
+  const UnifiedCurrencyBar({
+    super.key,
+    required this.coinBalance,
+    required this.gemBalance,
+    required this.hintBalance,
+    this.onCoinsTap,
+    this.onGemsTap,
+    this.onHintsTap,
+    this.onHintsAdd,
+    this.showAddButton = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // 1. Coins (Beautiful 3D Golden-Yellow)
+        _buildPod(
+          iconAsset: 'assets/images/coin.webp',
+          value: coinBalance,
+          isBlue: false,
+          onTap: onCoinsTap,
+        ),
+        const SizedBox(width: 6),
+
+        // 2. Gems / Diamond (Beautiful 3D Sky-Blue)
+        _buildPod(
+          iconAsset: 'assets/images/gem.webp',
+          value: gemBalance,
+          isBlue: true,
+          onTap: onGemsTap,
+        ),
+        const SizedBox(width: 6),
+
+        // 3. Hints (Beautiful 3D Golden-Yellow)
+        _buildPod(
+          iconAsset: 'assets/images/hint-icon.webp',
+          value: hintBalance,
+          isBlue: false,
+          onTap: onHintsTap,
+          onAdd: onHintsAdd,
+          showAdd: showAddButton,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPod({
+    required String iconAsset,
+    required int value,
+    required bool isBlue,
+    VoidCallback? onTap,
+    VoidCallback? onAdd,
+    bool showAdd = false,
+  }) {
+    // Beautiful glossy 3D gradients: Blue for Diamond, Golden-Yellow for others
+    final List<Color> gradientColors = isBlue
+        ? const [
+            Color(0xFFE0F2FE), // Top glossy highlight
+            Color(0xFFBAE6FD), // Sky blue
+            Color(0xFF38BDF8), // Rich cyan
+            Color(0xFF0284C7), // Deep blue base
+          ]
+        : const [
+            Color(0xFFFFFBEB), // Top glossy highlight
+            Color(0xFFFEF08A), // Warm light yellow
+            Color(0xFFFBBF24), // Vibrant gold
+            Color(0xFFD97706), // Deep amber base
+          ];
+
+    final Color rimTop = isBlue ? const Color(0xFFBAE6FD) : const Color(0xFFFFE082);
+    final Color rimBottom = isBlue ? const Color(0xFF0369A1) : const Color(0xFFB45309);
+    final Color textColor = isBlue ? const Color(0xFF034A75) : const Color(0xFF78350F);
+    final Color shadowColor = isBlue ? const Color(0x350284C7) : const Color(0x35D97706);
+
+    return TactileBounce(
+      onTap: onTap,
+      pressedScale: 0.94,
+      child: Container(
+        height: 36,
+        padding: const EdgeInsets.all(1.4), // 3D physical rim
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [rimTop, rimBottom],
+          ),
+          boxShadow: [
+            const BoxShadow(
+              color: Color(0x20000000),
+              blurRadius: 6,
+              offset: Offset(0, 3),
+            ),
+            BoxShadow(
+              color: shadowColor,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Container(
+          padding: EdgeInsets.only(
+            left: 5,
+            right: showAdd ? 4 : 8,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.5),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: gradientColors,
+              stops: const [0.0, 0.35, 0.75, 1.0],
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Image.asset(
+                iconAsset,
+                width: 20,
+                height: 20,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                formatNumber('$value'),
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.2,
+                  shadows: const [
+                    Shadow(
+                      color: Color(0x40FFFFFF),
+                      blurRadius: 1,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+              if (showAdd) ...[
+                const SizedBox(width: 4),
+                TactileBounce(
+                  onTap: onAdd ?? onTap,
+                  pressedScale: 0.88,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF4ADE80),
+                          Color(0xFF16A34A),
+                        ],
+                      ),
+                      border: Border.all(color: Colors.white, width: 1.2),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x4016A34A),
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.add,
+                        size: 13,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
