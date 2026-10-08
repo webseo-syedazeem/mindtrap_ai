@@ -243,11 +243,14 @@ class AudioService {
     await _playSfx(player, 'tap', _tapVolume);
   }
 
+<<<<<<< HEAD
   /// Play UI click sound convenience method
   Future<void> playClick({bool? isSoundEnabled}) async {
     await playTap(isSoundEnabled: isSoundEnabled ?? true);
   }
 
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   /// Play correct answer chime
   Future<void> playCorrect({required bool isSoundEnabled}) async {
     if (!isSoundEnabled) return;

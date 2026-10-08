@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/language_question_service.dart';
+=======
+import 'package:flutter/material.dart';
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 import 'app_language.dart';
 
 class LanguageController {
@@ -34,7 +38,10 @@ class LanguageController {
 
   Future<void> setLanguage(String code, {Future<void> Function(String)? onSave}) async {
     AppStrings.currentCode = code;
+<<<<<<< HEAD
     await LanguageQuestionService.instance.loadLanguageBank(code);
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     activeLanguage.value = code;
     if (onSave != null) {
       await onSave(code);

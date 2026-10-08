@@ -1,6 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import '../localization/app_language.dart';
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 import '../localization/language_controller.dart';
 import '../models/world_model.dart';
 
@@ -26,6 +29,7 @@ class LevelAtmosphere {
   });
 
   String get localizedStyleName {
+<<<<<<< HEAD
     final styleKey = 'style_${styleName.toLowerCase().replaceAll(' ', '_')}';
     final translated = tr(styleKey);
     final code = LanguageController.instance.currentCode;
@@ -35,6 +39,9 @@ class LevelAtmosphere {
       }
     }
 
+=======
+    final code = LanguageController.instance.currentCode;
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     if (code == 'ur' || code == 'fa' || code == 'ps' || code == 'sd') {
       const urMap = {
         'Dawn Awaking': 'طلوعِ سحر',
@@ -42,6 +49,7 @@ class LevelAtmosphere {
         'Aurora Stream': 'شفقِ قطبی',
         'Crystal Shimmer': 'کرسٹل چمک',
         'Solar Flare': 'شمسی شعلہ',
+<<<<<<< HEAD
         'Star Cluster': 'ستاروں کا جھرمٹ',
         'Cyber Vector': 'سائبر ویکٹر',
         'Void Vortex': 'خلائی گرداب',
@@ -77,6 +85,15 @@ class LevelAtmosphere {
         'Zenith Pinnacle': 'ਸਿਖਰਲੀ ਚੋਟੀ',
       };
       return paMap[styleName] ?? styleName;
+=======
+        'Emerald Glade': 'زمردی وادی',
+        'Twilight Glow': 'شام کا نور',
+        'Celestial Rays': 'آسمانی شعاعیں',
+        'Golden Dust': 'سنہری غبار',
+        'Midnight Echo': 'نصف شب کی بازگشت',
+      };
+      return urMap[styleName] ?? styleName;
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     } else if (code == 'ar') {
       const arMap = {
         'Dawn Awaking': 'صحوة الفجر',
@@ -84,6 +101,7 @@ class LevelAtmosphere {
         'Aurora Stream': 'شفق قطبي',
         'Crystal Shimmer': 'بريق الكريستال',
         'Solar Flare': 'توهج شمسي',
+<<<<<<< HEAD
         'Star Cluster': 'عنقود النجوم',
         'Cyber Vector': 'متجه سايبر',
         'Void Vortex': 'دوامة الفراغ',
@@ -91,6 +109,29 @@ class LevelAtmosphere {
         'Zenith Pinnacle': 'قمة الأوج',
       };
       return arMap[styleName] ?? styleName;
+=======
+        'Emerald Glade': 'مرج الزمرد',
+        'Twilight Glow': 'توهج الشفق',
+        'Celestial Rays': 'أشعة سماوية',
+        'Golden Dust': 'غبار ذهبي',
+        'Midnight Echo': 'صدى منتصف الليل',
+      };
+      return arMap[styleName] ?? styleName;
+    } else if (code == 'hi' || code == 'bn') {
+      const hiMap = {
+        'Dawn Awaking': 'भोर का जागरण',
+        'Nebula Mist': 'नीहारिका कोहरा',
+        'Aurora Stream': 'ध्रुवीय ज्योति',
+        'Crystal Shimmer': 'स्फटिक चमक',
+        'Solar Flare': 'सौर ज्वाला',
+        'Emerald Glade': 'पन्ना घाटी',
+        'Twilight Glow': 'गोधूलि प्रकाश',
+        'Celestial Rays': 'दिव्य किरणें',
+        'Golden Dust': 'स्वर्ण धूल',
+        'Midnight Echo': 'मध्यरात्रि गूंज',
+      };
+      return hiMap[styleName] ?? styleName;
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     } else if (code == 'es' || code == 'pt') {
       const esMap = {
         'Dawn Awaking': 'Despertar del Alba',
@@ -98,11 +139,19 @@ class LevelAtmosphere {
         'Aurora Stream': 'Torrente de Aurora',
         'Crystal Shimmer': 'Brillo de Cristal',
         'Solar Flare': 'Llamarada Solar',
+<<<<<<< HEAD
         'Star Cluster': 'Cúmulo Estelar',
         'Cyber Vector': 'Vector Cibernético',
         'Void Vortex': 'Vórtice del Vacío',
         'Dimensional Rift': 'Fisura Dimensional',
         'Zenith Pinnacle': 'Cénit Celestial',
+=======
+        'Emerald Glade': 'Claro Esmeralda',
+        'Twilight Glow': 'Brillo Crepuscular',
+        'Celestial Rays': 'Rayos Celestiales',
+        'Golden Dust': 'Polvo Dorado',
+        'Midnight Echo': 'Eco de Medianoche',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       };
       return esMap[styleName] ?? styleName;
     }

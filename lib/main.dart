@@ -14,6 +14,7 @@ import 'localization/language_controller.dart';
 import 'localization/puzzle_localizer.dart';
 import 'screens/auth_screen.dart';
 import 'screens/language_selection_screen.dart';
+<<<<<<< HEAD
 import 'screens/map_your_mind_screen.dart';
 import 'screens/store_screen.dart';
 import 'screens/worlds_screen.dart';
@@ -25,6 +26,15 @@ import 'widgets/app_drawer.dart';
 import 'widgets/level_background_builder.dart';
 import 'widgets/professional_game_icons.dart';
 import 'widgets/rate_us_dialog.dart';
+=======
+import 'screens/store_screen.dart';
+import 'screens/worlds_screen.dart';
+import 'services/audio_service.dart';
+import 'services/auth_service.dart';
+import 'widgets/app_drawer.dart';
+import 'widgets/level_background_builder.dart';
+import 'widgets/professional_game_icons.dart';
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 
 const supabaseUrl = 'https://zahklkpxzcbfrxathphy.supabase.co';
 const supabaseAnonKey = 'sb_publishable_GnKSc1T827R5ZkYDLnHpbA_KZ-9DR2F';
@@ -35,7 +45,10 @@ Future<void> main() async {
   await AudioService.instance.init();
   await initializeSupabaseSafely();
   await AuthService.instance.init();
+<<<<<<< HEAD
   await LanguageQuestionService.instance.init();
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -118,12 +131,29 @@ class GuestUserService {
     final guestId = _uuid.v4();
     final payload = {
       'id': guestId,
+<<<<<<< HEAD
       'score': GameStorage.bestScore,
       'current_streak': GameStorage.currentStreak,
       'total_wins': GameStorage.totalWins,
       'daily_streak': GameStorage.dailyStreak,
       'achievements': GameStorage.achievementSnapshot(),
       'settings': GameStorage.settingsSnapshot(),
+=======
+      'score': 0,
+      'current_streak': 0,
+      'total_wins': 0,
+      'daily_streak': 0,
+      'achievements': <String, dynamic>{},
+      'settings': {
+        'sound': true,
+        'music': true,
+        'vibration': true,
+        'daily_first_install_date': GameStorage.dailyFirstInstallDate.isEmpty
+            ? GameStorage.formatStorageDate(DateTime.now())
+            : GameStorage.dailyFirstInstallDate,
+        'daily_completion_dates': <String, bool>{},
+      },
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       'created_at': DateTime.now().toUtc().toIso8601String(),
     };
 
@@ -353,6 +383,7 @@ class GameStorage {
   static const gemBalanceKey = 'store_gem_balance';
   static const hintBalanceKey = 'store_hint_balance';
   static const selectedLanguageKey = 'app_selected_language_code';
+<<<<<<< HEAD
   static const rateUsHasRatedKey = 'rate_us_has_rated';
   static const rateUsLastPromptLevelKey = 'rate_us_last_prompt_level';
   static const rateUsUserStarsKey = 'rate_us_user_stars';
@@ -361,6 +392,8 @@ class GameStorage {
   static const mindMapGenderKey = 'mind_map_gender';
   static const mindMapIqKey = 'mind_map_iq';
   static const mindMapGoalKey = 'mind_map_goal';
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 
   static const Map<String, int> _intDefaults = {
     bestScoreKey: 0,
@@ -379,8 +412,11 @@ class GameStorage {
     coinBalanceKey: 0,
     gemBalanceKey: 0,
     hintBalanceKey: 0,
+<<<<<<< HEAD
     rateUsLastPromptLevelKey: 0,
     rateUsUserStarsKey: 0,
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   };
   static const Map<String, String> _stringDefaults = {
     dailyLastCompletedDateKey: '',
@@ -393,18 +429,24 @@ class GameStorage {
     stageLevelStarsKey: '',
     dailyRewardClaimedDateKey: '',
     selectedLanguageKey: '',
+<<<<<<< HEAD
     mindMapAgeKey: '25 – 34',
     mindMapGenderKey: 'Female',
     mindMapIqKey: '90 – 110',
     mindMapGoalKey: 'Improve Focus',
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   };
   static const Map<String, bool> _boolDefaults = {
     dailyAttemptedCorrectKey: false,
     soundKey: true,
     musicKey: true,
     vibrationKey: true,
+<<<<<<< HEAD
     rateUsHasRatedKey: false,
     hasMappedMindKey: false,
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   };
 
   static SharedPreferences? _prefs;
@@ -451,6 +493,7 @@ class GameStorage {
   static bool soundEnabled = true;
   static bool musicEnabled = true;
   static bool vibrationEnabled = true;
+<<<<<<< HEAD
   static bool hasRatedApp = false;
   static int lastRatingPromptLevel = 0;
   static int userRatingStars = 0;
@@ -459,16 +502,21 @@ class GameStorage {
   static String mindMapGender = 'Female';
   static String mindMapIq = '90 – 110';
   static String mindMapGoal = 'Improve Focus';
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   static final Map<String, int> _achievementProgress = {};
   static final Map<String, bool> _achievementUnlocked = {};
   static final Set<String> _claimedAchievements = {};
   static final ValueNotifier<int> unclaimedAchievementsNotifier = ValueNotifier<int>(0);
+<<<<<<< HEAD
   static final ValueNotifier<bool> dailyCompletedNotifier = ValueNotifier<bool>(false);
 
   static bool get isDailyCompletedToday {
     final todayStr = formatStorageDate(DateTime.now());
     return dailyLastCompletedDate == todayStr;
   }
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 
   static Future<SharedPreferences> get prefs async {
     return _prefs ??= await SharedPreferences.getInstance();
@@ -566,11 +614,14 @@ class GameStorage {
     return {};
   }
 
+<<<<<<< HEAD
   static String stageLevelStarsKeyFor(String langCode) {
     final clean = langCode.trim().toLowerCase();
     return 'stage_level_stars_${clean.isEmpty ? "en" : clean}';
   }
 
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   static String stageLevelKey(int stageIndex, int levelIndex) {
     return '${stageIndex + 1}-${levelIndex + 1}';
   }
@@ -793,7 +844,10 @@ class GameStorage {
     migrateLegacyDailyWeekCompletion();
     ensureCurrentDailyWeek();
     dailyAttemptedCorrect = savedBool(storage, dailyAttemptedCorrectKey);
+<<<<<<< HEAD
     dailyCompletedNotifier.value = isDailyCompletedToday;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     challengeHighestLevelReached = savedInt(storage, challengeHighestLevelKey);
     challengeLastScore = savedInt(storage, challengeLastScoreKey);
     perfectGames = savedInt(storage, perfectGamesKey);
@@ -807,6 +861,7 @@ class GameStorage {
     gemBalance = savedInt(storage, gemBalanceKey);
     hintBalance = savedInt(storage, hintBalanceKey);
     notifyCurrencyChanged();
+<<<<<<< HEAD
     final activeLang = selectedLanguageCode.isEmpty ? 'en' : selectedLanguageCode.toLowerCase();
     final perLangKey = stageLevelStarsKeyFor(activeLang);
     var savedStarsJson = storage.getString(perLangKey);
@@ -829,6 +884,14 @@ class GameStorage {
     mindMapGender = savedString(storage, mindMapGenderKey);
     mindMapIq = savedString(storage, mindMapIqKey);
     mindMapGoal = savedString(storage, mindMapGoalKey);
+=======
+    stageLevelStars = decodeStageLevelStars(
+      savedString(storage, stageLevelStarsKey),
+    );
+    soundEnabled = savedBool(storage, soundKey);
+    musicEnabled = savedBool(storage, musicKey);
+    vibrationEnabled = savedBool(storage, vibrationKey);
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     _loadAchievementState(storage);
     await GuestUserService.ensureGuestUser();
     await _saveAll(notifyAchievementUnlocks: false);
@@ -869,11 +932,15 @@ class GameStorage {
       storage.setInt(coinBalanceKey, coinBalance),
       storage.setInt(gemBalanceKey, gemBalance),
       storage.setInt(hintBalanceKey, hintBalance),
+<<<<<<< HEAD
       storage.setString(stageLevelStarsKeyFor(selectedLanguageCode.isEmpty ? 'en' : selectedLanguageCode), jsonEncode(stageLevelStars)),
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       storage.setString(stageLevelStarsKey, jsonEncode(stageLevelStars)),
       storage.setBool(soundKey, soundEnabled),
       storage.setBool(musicKey, musicEnabled),
       storage.setBool(vibrationKey, vibrationEnabled),
+<<<<<<< HEAD
       storage.setBool(rateUsHasRatedKey, hasRatedApp),
       storage.setInt(rateUsLastPromptLevelKey, lastRatingPromptLevel),
       storage.setInt(rateUsUserStarsKey, userRatingStars),
@@ -882,6 +949,8 @@ class GameStorage {
       storage.setString(mindMapGenderKey, mindMapGender),
       storage.setString(mindMapIqKey, mindMapIq),
       storage.setString(mindMapGoalKey, mindMapGoal),
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     ]);
     await _saveAchievementState(notifyAchievementUnlocks);
     unawaited(syncGuestProgress());
@@ -934,6 +1003,7 @@ class GameStorage {
   }
 
   static Future<void> setSelectedLanguageCode(String code) async {
+<<<<<<< HEAD
     final targetCode = code.trim().toLowerCase();
     final currentCode = selectedLanguageCode.trim().toLowerCase();
     final storage = await prefs;
@@ -968,6 +1038,11 @@ class GameStorage {
     await storage.setString(selectedLanguageKey, targetCode);
 
     // 5. Save all state
+=======
+    selectedLanguageCode = code;
+    final storage = await prefs;
+    await storage.setString(selectedLanguageKey, code);
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     await _saveAll(notifyAchievementUnlocks: false);
   }
 
@@ -1061,11 +1136,14 @@ class GameStorage {
       'daily_week_start': dailyWeekStart,
       'daily_week_completion': Map<String, bool>.from(dailyWeekCompletion),
       'stage_level_stars': Map<String, int>.from(stageLevelStars),
+<<<<<<< HEAD
       'coin_balance': coinBalance,
       'gem_balance': gemBalance,
       'hint_balance': hintBalance,
       'selected_language': selectedLanguageCode,
       'claimed_achievements': _claimedAchievements.toList(),
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     };
   }
 
@@ -1137,6 +1215,7 @@ class GameStorage {
             day: remoteWeekCompletion[day] == true,
         };
       }
+<<<<<<< HEAD
       final remoteCoins = remoteSettings['coin_balance'];
       if (remoteCoins is num) {
         coinBalance = max(coinBalance, remoteCoins.toInt());
@@ -1161,6 +1240,8 @@ class GameStorage {
         }
       }
       notifyCurrencyChanged();
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       ensureDailyFirstInstallDate();
       migrateLegacyDailyWeekCompletion();
       ensureCurrentDailyWeek();
@@ -1282,7 +1363,10 @@ class GameStorage {
   }) async {
     dailyStreak = streak;
     dailyLastCompletedDate = date;
+<<<<<<< HEAD
     dailyCompletedNotifier.value = isDailyCompletedToday;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     markDailyWeekDayComplete(date);
     await _saveAll();
   }
@@ -1297,7 +1381,10 @@ class GameStorage {
     totalWrongAnswers = 0;
     dailyStreak = 0;
     dailyLastCompletedDate = '';
+<<<<<<< HEAD
     dailyCompletedNotifier.value = false;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     dailyAttemptedDate = '';
     dailyAttemptedAnswer = '';
     dailyFirstInstallDate = formatStorageDate(DateTime.now());
@@ -1315,9 +1402,12 @@ class GameStorage {
     gemBalance = 0;
     hintBalance = 0;
     runningScore = 0;
+<<<<<<< HEAD
     hasRatedApp = false;
     lastRatingPromptLevel = 0;
     userRatingStars = 0;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     notifyCurrencyChanged();
     _achievementProgress.clear();
     _achievementUnlocked.clear();
@@ -1336,6 +1426,7 @@ class GameStorage {
     await _saveAll(notifyAchievementUnlocks: false);
   }
 
+<<<<<<< HEAD
   static int completedLevelsInWorld(int worldIndex) {
     int count = 0;
     for (int l = 0; l < 40; l++) {
@@ -1364,6 +1455,12 @@ class GameStorage {
       for (int l = 0; l < 40; l++) {
         if (starsForStageLevel(w, l) == 3) count++;
       }
+=======
+  static int get completedLevelsInWorld1 {
+    int count = 0;
+    for (int l = 0; l < 40; l++) {
+      if (starsForStageLevel(0, l) > 0) count++;
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     }
     return count;
   }
@@ -1380,6 +1477,7 @@ class GameStorage {
     return count;
   }
 
+<<<<<<< HEAD
   static int get totalStarsCollected {
     return stageLevelStars.values.fold(0, (sum, stars) => sum + stars);
   }
@@ -1439,6 +1537,8 @@ class GameStorage {
     await _saveAll(notifyAchievementUnlocks: false);
   }
 
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   static bool isAchievementClaimed(String id) {
     return _claimedAchievements.contains(id);
   }
@@ -1484,12 +1584,16 @@ class GameStorage {
   static int achievementProgressFor(AchievementItem item) {
     return switch (item.id) {
       'world_1_complete' => completedLevelsInWorld1,
+<<<<<<< HEAD
       'world_2_complete' => completedLevelsInWorld2,
       'world_3_complete' => completedLevelsInWorld3,
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       'world_5_complete' => completedWorldsCount,
       'world_10_complete' => completedWorldsCount,
       'first_win' => totalWins,
       'perfect_mind' => perfectGames > 0 ? 1 : 0,
+<<<<<<< HEAD
       'quick_learner' => totalCorrectAnswers,
       'rising_star' => completedLevelsInWorld1,
       'star_hunter' => totalStarsCollected,
@@ -1499,6 +1603,9 @@ class GameStorage {
       'grandmaster_50' => totalCompletedLevels,
       'perfectionist_20' => perfectLevelsCount,
       'challenge_veteran' => totalGamesPlayed,
+=======
+      'comeback' => comebackWins > 0 ? 1 : 0,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       'sharp_thinker' => totalCorrectAnswers,
       'trap_survivor' => totalGamesPlayed,
       'perfect_score' => perfectGames,
@@ -1598,7 +1705,11 @@ class GameStorage {
     if (savedClaimed != null) {
       _claimedAchievements.addAll(savedClaimed);
     }
+<<<<<<< HEAD
     for (final achievement in allAchievements) {
+=======
+    for (final achievement in baseAchievementItems) {
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       _achievementProgress[achievement.id] =
           storage.getInt(achievementKey(achievement.id, 'progress')) ?? 0;
       _achievementUnlocked[achievement.id] =
@@ -2896,9 +3007,12 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, langCode, _) {
         return Scaffold(
           key: _scaffoldKey,
+<<<<<<< HEAD
           resizeToAvoidBottomInset: false,
           extendBody: true,
           extendBodyBehindAppBar: true,
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           drawerScrimColor: const Color(0x350F172A),
           drawer: AppLanguageDrawer(
             onLanguageChanged: (code) async {
@@ -2921,12 +3035,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       );
+<<<<<<< HEAD
                       if (GameStorage.shouldPromptRating() && context.mounted) {
                         await GameStorage.markRatingPrompted();
                         if (context.mounted) {
                           await showRateUsDialog(context);
                         }
                       }
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       if (mounted) setState(() {});
                     },
                   ),
@@ -2936,6 +3053,7 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
           ),
+<<<<<<< HEAD
           body: SizedBox.expand(
             child: Stack(
               fit: StackFit.expand,
@@ -2969,6 +3087,39 @@ class _HomeScreenState extends State<HomeScreen> {
                                 max(24.0, safePadding.bottom + 16),
                               ),
                               child: Column(
+=======
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final safePadding = MediaQuery.paddingOf(context);
+              final isCompact = constraints.maxHeight < 700;
+              final contentHeight = max(620.0, constraints.maxHeight);
+
+              return Stack(
+                children: [
+                  const Positioned.fill(
+                    child: Image(
+                      image: AssetImage('assets/images/home_background.webp'),
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                    ),
+                  ),
+                  SafeArea(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        22,
+                        isCompact ? 14 : 22,
+                        22,
+                        22 + safePadding.bottom,
+                      ),
+                      child: SizedBox(
+                        height: contentHeight - safePadding.vertical - 22,
+                        child: Stack(
+                          children: [
+                            Align(
+                              alignment: Alignment.topCenter,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                 children: [
                                   HomeTopBar(
                                     onMenuPressed: () =>
@@ -2976,27 +3127,44 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   SizedBox(height: isCompact ? 2 : 8),
                                   const NeonBrainLogo(),
+<<<<<<< HEAD
                                   const SizedBox(height: 6),
+=======
+                                  const SizedBox(height: 10),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                   Text(
                                     tr('app_title'),
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
+<<<<<<< HEAD
                                       fontSize: 28,
+=======
+                                      fontSize: 30,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: 0,
                                       color: Color(0xFF10184C),
                                     ),
                                   ),
+<<<<<<< HEAD
                                   const SizedBox(height: 2),
                                   Text(
                                     tr('slogan'),
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
+=======
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Train your mind. Escape the trap.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                       color: Color(0xFF35406E),
                                     ),
                                   ),
+<<<<<<< HEAD
                                   const Spacer(),
                                   HomeVerticalActionButtons(
                                     onPlayPressed: () {
@@ -3730,12 +3898,91 @@ class _HomePillActionButtonState extends State<_HomePillActionButton>
                                       ),
                                     ],
                                   ),
+=======
+                                ],
+                              ),
+                            ),
+                            Center(
+                              child: HomePlayButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    smoothPageRoute(
+                                      WorldsScreen(
+                                        getStarsMap: () => GameStorage.stageLevelStars,
+                                        onLevelSelected: (worldIndex, levelIndex) async {
+                                          await Navigator.push(
+                                            context,
+                                            smoothPageRoute(
+                                              PuzzleScreen(
+                                                stageIndex: worldIndex,
+                                                levelIndex: levelIndex,
+                                              ),
+                                            ),
+                                          );
+                                          if (mounted) setState(() {});
+                                        },
+                                      ),
+                                    ),
+                                  ).then((_) {
+                                    if (mounted) setState(() {});
+                                  });
+                                },
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: isCompact ? 20 : 28,
+                                ),
+                                child: HomeFeatureGrid(
+                                  onDailyPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      smoothPageRoute(
+                                        const DailyPuzzleLandingScreen(),
+                                      ),
+                                    ).then((_) {
+                                      if (mounted) setState(() {});
+                                    });
+                                  },
+                                  onStatsPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      smoothPageRoute(const StatsScreen()),
+                                    ).then((_) {
+                                      if (mounted) setState(() {});
+                                    });
+                                  },
+                                  onAchievementsPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      smoothPageRoute(const AchievementsScreen()),
+                                    ).then((_) {
+                                      if (mounted) setState(() {});
+                                    });
+                                  },
+                                  onStorePressed: () {
+                                    Navigator.push(
+                                      context,
+                                      smoothPageRoute(
+                                        const StoreScreen(),
+                                      ),
+                                    ).then((_) {
+                                      if (mounted) setState(() {});
+                                    });
+                                  },
+                                ),
+                              ),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             ),
                           ],
                         ),
                       ),
                     ),
                   ),
+<<<<<<< HEAD
 
                   // 4. Attention-Grabbing Status / Notification Badge with Pulsing Glow
                   if (widget.badgeText != null || widget.badgeIcon != null)
@@ -3792,6 +4039,11 @@ class _HomePillActionButtonState extends State<_HomePillActionButton>
                 ],
               ),
             ),
+=======
+                ],
+              );
+            },
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           ),
         );
       },
@@ -3939,6 +4191,7 @@ class HomeTopBar extends StatelessWidget {
                   smoothPageRoute(
                     WorldsScreen(
                       getStarsMap: () => GameStorage.stageLevelStars,
+<<<<<<< HEAD
                       onLevelSelected: (worldIndex, levelIndex) async {
                         await Navigator.push(
                           context,
@@ -3950,6 +4203,8 @@ class HomeTopBar extends StatelessWidget {
                           ),
                         );
                       },
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                     ),
                   ),
                 );
@@ -4142,7 +4397,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     showGameNotification(
       context: context,
+<<<<<<< HEAD
       message: tr('reset_progress_title'),
+=======
+      message: 'Progress reset',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       icon: Icons.refresh_rounded,
       accentColor: const Color(0xFF6E35E8),
       iconColor: const Color(0xFFA78BFA),
@@ -4201,15 +4460,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Align(
+<<<<<<< HEAD
                         alignment: Directionality.of(context) == TextDirection.rtl
                             ? Alignment.centerRight
                             : Alignment.centerLeft,
+=======
+                        alignment: Alignment.centerLeft,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         child: SettingsBackButton(
                           onPressed: () => Navigator.of(context).maybePop(),
                         ),
                       ),
                       const SizedBox(height: 0),
+<<<<<<< HEAD
                       SettingsRibbon(title: tr('settings')),
+=======
+                      const SettingsRibbon(),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       const SizedBox(height: 0),
                       SettingsPanel(
                         isLoading: isLoading,
@@ -4232,6 +4499,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         },
                         onResetPressed: resetProgress,
                         onAboutPressed: openAboutGame,
+<<<<<<< HEAD
                         onEditMindProfilePressed: () {
                           Navigator.push(
                             context,
@@ -4256,6 +4524,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             if (mounted) setState(() {});
                           });
                         },
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         onLanguagePressed: () {
                           Navigator.push(
                             context,
@@ -4277,7 +4547,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         },
                       ),
                       const SizedBox(height: 22),
+<<<<<<< HEAD
                       SettingsThanksCard(key: ValueKey(langCode)),
+=======
+                      const SettingsThanksCard(),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                     ],
                   ),
                 ),
@@ -4333,10 +4607,17 @@ class ResetProgressDialog extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+<<<<<<< HEAD
                   Text(
                     tr('reset_progress_title'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
+=======
+                  const Text(
+                    'Reset Progress?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       color: Color(0xFF241873),
                       fontSize: 27,
                       fontWeight: FontWeight.w900,
@@ -4344,10 +4625,17 @@ class ResetProgressDialog extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
+<<<<<<< HEAD
                   Text(
                     tr('are_you_sure'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
+=======
+                  const Text(
+                    'Are you sure?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       color: Color(0xFF241873),
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
@@ -4355,10 +4643,17 @@ class ResetProgressDialog extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
+<<<<<<< HEAD
                   Text(
                     tr('reset_progress_desc'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
+=======
+                  const Text(
+                    'This action cannot be undone.\nAll your progress will be lost.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       color: Color(0xFF7562C4),
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
@@ -4370,7 +4665,11 @@ class ResetProgressDialog extends StatelessWidget {
                     children: [
                       Expanded(
                         child: ResetDialogButton(
+<<<<<<< HEAD
                           label: tr('cancel'),
+=======
+                          label: 'Cancel',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           isPrimary: false,
                           onPressed: () => Navigator.of(context).pop(false),
                         ),
@@ -4378,7 +4677,11 @@ class ResetProgressDialog extends StatelessWidget {
                       const SizedBox(width: 18),
                       Expanded(
                         child: ResetDialogButton(
+<<<<<<< HEAD
                           label: tr('reset'),
+=======
+                          label: 'Reset',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           isPrimary: true,
                           onPressed: () => Navigator.of(context).pop(true),
                         ),
@@ -4539,7 +4842,11 @@ class AboutGameScreen extends StatelessWidget {
                     18,
                     24 + safePadding.bottom,
                   ),
+<<<<<<< HEAD
                   child: Column(
+=======
+                  child: const Column(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Align(
@@ -4548,7 +4855,11 @@ class AboutGameScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 0),
                       SettingsRibbon(
+<<<<<<< HEAD
                         title: tr('about_game'),
+=======
+                        title: 'ABOUT GAME',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         assetPath: 'assets/images/about-banner.png',
                       ),
                       SizedBox(height: 0),
@@ -4562,6 +4873,7 @@ class AboutGameScreen extends StatelessWidget {
             ),
           ),
           SafeArea(
+<<<<<<< HEAD
             child: Align(
               alignment: Directionality.of(context) == TextDirection.rtl
                   ? Alignment.topRight
@@ -4571,6 +4883,12 @@ class AboutGameScreen extends StatelessWidget {
                 child: SettingsBackButton(
                   onPressed: () => Navigator.of(context).maybePop(),
                 ),
+=======
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+              child: SettingsBackButton(
+                onPressed: () => Navigator.of(context).maybePop(),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               ),
             ),
           ),
@@ -5155,18 +5473,31 @@ class AboutThanksCard extends StatelessWidget {
           ],
         ),
         child: Row(
+<<<<<<< HEAD
           children: [
             const Image(
+=======
+          children: const [
+            Image(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               image: AssetImage('assets/images/Bottom_Heart_Icon.png'),
               width: 50,
               height: 50,
               fit: BoxFit.contain,
             ),
+<<<<<<< HEAD
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 tr('thank_you_for_playing'),
                 style: const TextStyle(
+=======
+            SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                'Thank you for playing!\nWe hope you enjoy the game as much as we enjoyed creating it for you.',
+                style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                   color: Color(0xFF241873),
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
@@ -5174,8 +5505,13 @@ class AboutThanksCard extends StatelessWidget {
                 ),
               ),
             ),
+<<<<<<< HEAD
             const SizedBox(width: 8),
             const Image(
+=======
+            SizedBox(width: 8),
+            Image(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               image: AssetImage('assets/images/thank-you.png'),
               width: 32,
               height: 32,
@@ -5200,11 +5536,14 @@ class SettingsBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final displayIcon = (icon == Icons.arrow_back_rounded && isRtl)
         ? Icons.arrow_forward_rounded
         : icon;
 
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     return Material(
       color: Colors.transparent,
       shape: const CircleBorder(),
@@ -5236,9 +5575,15 @@ class SettingsBackButton extends StatelessWidget {
             ],
           ),
           child: Icon(
+<<<<<<< HEAD
             displayIcon,
             color: Colors.white,
             size: 24,
+=======
+            icon,
+            color: Colors.white,
+            size: 23,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             shadows: const [
               Shadow(
                 color: Color(0x77321698),
@@ -5253,6 +5598,7 @@ class SettingsBackButton extends StatelessWidget {
   }
 }
 
+<<<<<<< HEAD
 class CurvedRibbonText extends StatelessWidget {
   const CurvedRibbonText({
     super.key,
@@ -5416,6 +5762,8 @@ class CurvedRibbonText extends StatelessWidget {
   }
 }
 
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 class SettingsRibbon extends StatelessWidget {
   const SettingsRibbon({
     super.key,
@@ -5428,6 +5776,7 @@ class SettingsRibbon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final activeLang = LanguageController.instance.activeLanguage.value;
     final isEn = activeLang == 'en' || title.trim().toUpperCase() == 'SETTINGS';
 
@@ -5465,6 +5814,11 @@ class SettingsRibbon extends StatelessWidget {
           ),
         ],
       ),
+=======
+    return SizedBox(
+      height: 94,
+      child: Image.asset(assetPath, fit: BoxFit.contain, semanticLabel: title),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     );
   }
 }
@@ -5476,16 +5830,79 @@ class SettingsRibbonTail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     return const SizedBox.shrink();
   }
 }
 
+=======
+    return Transform.scale(
+      scaleX: isRight ? -1 : 1,
+      child: ClipPath(
+        clipper: SettingsTailClipper(),
+        child: Container(
+          width: 100,
+          height: 58,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF8D47F2), Color(0xFF5C2BD5)],
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x664018A5),
+                blurRadius: 8,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SettingsTailClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    return Path()
+      ..moveTo(0, size.height * 0.2)
+      ..lineTo(size.width * 0.78, 0)
+      ..lineTo(size.width, size.height * 0.5)
+      ..lineTo(size.width * 0.78, size.height)
+      ..lineTo(0, size.height * 0.82)
+      ..quadraticBezierTo(
+        size.width * 0.12,
+        size.height * 0.5,
+        0,
+        size.height * 0.2,
+      )
+      ..close();
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 class SettingsStar extends StatelessWidget {
   const SettingsStar({super.key});
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     return const SizedBox.shrink();
+=======
+    return const Icon(
+      Icons.star_rounded,
+      size: 35,
+      color: Color(0xFFFFC930),
+      shadows: [
+        Shadow(color: Color(0x998F4A00), blurRadius: 4, offset: Offset(0, 3)),
+      ],
+    );
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   }
 }
 
@@ -5502,7 +5919,10 @@ class SettingsPanel extends StatelessWidget {
     required this.onResetPressed,
     required this.onAboutPressed,
     this.onLanguagePressed,
+<<<<<<< HEAD
     this.onEditMindProfilePressed,
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   });
 
   final bool isLoading;
@@ -5515,6 +5935,7 @@ class SettingsPanel extends StatelessWidget {
   final VoidCallback onResetPressed;
   final VoidCallback onAboutPressed;
   final VoidCallback? onLanguagePressed;
+<<<<<<< HEAD
   final VoidCallback? onEditMindProfilePressed;
 
   Widget _buildCard({required List<Widget> children}) {
@@ -5534,10 +5955,32 @@ class SettingsPanel extends StatelessWidget {
             color: Color(0x0A0F172A),
             blurRadius: 8,
             offset: Offset(0, 2),
+=======
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(170),
+        borderRadius: BorderRadius.circular(34),
+        border: Border.all(color: Colors.white.withAlpha(210), width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x18000000),
+            blurRadius: 22,
+            offset: Offset(0, 12),
+          ),
+          BoxShadow(
+            color: Color(0x66FFFFFF),
+            blurRadius: 14,
+            offset: Offset(0, -3),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           ),
         ],
       ),
       child: Column(
+<<<<<<< HEAD
         children: children,
       ),
     );
@@ -5696,6 +6139,121 @@ class SettingsPanel extends StatelessWidget {
       ],
     );
   }
+=======
+        children: [
+          ValueListenableBuilder<bool>(
+            valueListenable: AuthService.instance.isLoggedIn,
+            builder: (context, loggedIn, _) {
+              return SettingsRow(
+                icon: Icons.person_rounded,
+                iconColor: loggedIn ? const Color(0xFF10B981) : const Color(0xFF0284C7),
+                label: tr('profile'),
+                subtitle: loggedIn ? AuthService.instance.userName.value : tr('guest_player'),
+                onPressed: () {
+                  Navigator.push(context, smoothPageRoute(const AuthScreen()));
+                },
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF0284C7),
+                  size: 38,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          SettingsRow(
+            icon: Icons.language_rounded,
+            iconColor: const Color(0xFF0284C7),
+            label: tr('language'),
+            subtitle: '${LanguageController.instance.currentLanguage.flagEmoji} ${LanguageController.instance.currentLanguage.nativeName}',
+            onPressed: onLanguagePressed,
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF0284C7),
+              size: 38,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SettingsRow(
+            icon: Icons.volume_up_rounded,
+            iconColor: const Color(0xFF0284C7),
+            label: tr('sound'),
+            trailing: SettingsSwitch(
+              value: soundEnabled,
+              onChanged: isLoading ? null : onSoundChanged,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SettingsRow(
+            icon: Icons.music_note_rounded,
+            iconColor: const Color(0xFFE84A70),
+            label: tr('music'),
+            trailing: SettingsSwitch(
+              value: musicEnabled,
+              onChanged: isLoading ? null : onMusicChanged,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SettingsRow(
+            icon: Icons.vibration_rounded,
+            iconColor: const Color(0xFF2F87F2),
+            label: tr('vibration'),
+            subtitle: 'Device support may vary',
+            trailing: SettingsSwitch(
+              value: vibrationEnabled,
+              onChanged: isLoading ? null : onVibrationChanged,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SettingsRow(
+            icon: Icons.restart_alt_rounded,
+            iconColor: const Color(0xFFE84A70),
+            label: tr('reset_progress'),
+            onPressed: onResetPressed,
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF0284C7),
+              size: 38,
+              shadows: [
+                Shadow(
+                  color: Color(0x330284C7),
+                  blurRadius: 5,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SettingsRow(
+            icon: Icons.info_rounded,
+            iconColor: const Color(0xFF0284C7),
+            label: tr('about_game'),
+            onPressed: onAboutPressed,
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF0284C7),
+              size: 38,
+              shadows: [
+                Shadow(
+                  color: Color(0x330284C7),
+                  blurRadius: 5,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          const SettingsRow(
+            icon: Icons.verified_user_rounded,
+            iconColor: Color(0xFF2F87F2),
+            label: 'Version',
+            trailing: SettingsVersionPill(),
+          ),
+        ],
+      ),
+    );
+  }
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 }
 
 class SettingsRow extends StatelessWidget {
@@ -5852,17 +6410,26 @@ class SettingsSwitch extends StatelessWidget {
                 onChanged!(!value);
               },
         child: AnimatedContainer(
+<<<<<<< HEAD
           width: 58,
           height: 32,
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.all(3.5),
+=======
+          width: 68,
+          height: 34,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.all(4),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: value
+<<<<<<< HEAD
                   ? const [Color(0xFF38BDF8), Color(0xFF0284C7)]
                   : const [Color(0xFFCBD5E1), Color(0xFF94A3B8)],
             ),
@@ -5900,6 +6467,72 @@ class SettingsSwitch extends StatelessWidget {
                 ),
               ),
             ),
+=======
+                  ? const [Color(0xFF8B54FF), Color(0xFF5F2FE2)]
+                  : const [Color(0xFFC7BCD9), Color(0xFF9A8BB9)],
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x5533158E),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Color(0x55FFFFFF),
+                blurRadius: 5,
+                offset: Offset(0, -1),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Align(
+                alignment: value ? Alignment.centerLeft : Alignment.centerRight,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: value ? 9 : 0,
+                    right: value ? 0 : 8,
+                  ),
+                  child: Text(
+                    value ? 'ON' : 'OFF',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0,
+                      shadows: [
+                        Shadow(
+                          color: Color(0x66321698),
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              AnimatedAlign(
+                alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                child: Container(
+                  width: 26,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFF9F6FF),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x55321698),
+                        blurRadius: 5,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           ),
         ),
       ),
@@ -5913,6 +6546,7 @@ class SettingsVersionPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+<<<<<<< HEAD
       constraints: const BoxConstraints(minWidth: 80),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
@@ -5926,6 +6560,21 @@ class SettingsVersionPill extends StatelessWidget {
         style: TextStyle(
           color: Color(0xFF0284C7),
           fontSize: 14,
+=======
+      constraints: const BoxConstraints(minWidth: 92),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE6D8FF),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withAlpha(150)),
+      ),
+      child: const Text(
+        '1.0.0',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Color(0xFF241873),
+          fontSize: 17,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           fontWeight: FontWeight.w900,
         ),
       ),
@@ -5938,6 +6587,7 @@ class SettingsThanksCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, langCode, _) {
@@ -5990,6 +6640,54 @@ class SettingsThanksCard extends StatelessWidget {
           ),
         );
       },
+=======
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 328),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(220),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withAlpha(205), width: 1.2),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x365D39CA),
+              blurRadius: 18,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(
+              Icons.favorite_rounded,
+              size: 48,
+              color: Color(0xFFE84A70),
+              shadows: [
+                Shadow(
+                  color: Color(0x66A3214C),
+                  blurRadius: 6,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            SizedBox(width: 16),
+            Flexible(
+              child: Text(
+                'Thanks for being part of our journey!\nYour support means the world to us.',
+                style: TextStyle(
+                  color: Color(0xFF241873),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     );
   }
 }
@@ -6301,6 +6999,7 @@ class HomeFeatureGrid extends StatelessWidget {
       spacing: 12,
       runSpacing: 12,
       children: [
+<<<<<<< HEAD
         ValueListenableBuilder<bool>(
           valueListenable: GameStorage.dailyCompletedNotifier,
           builder: (context, isCompleted, _) {
@@ -6323,6 +7022,16 @@ class HomeFeatureGrid extends StatelessWidget {
               onPressed: onDailyPressed,
             );
           },
+=======
+        HomeFeatureCard(
+          icon: Icons.calendar_month_rounded,
+          iconColor: const Color(0xFF4D75FF),
+          label: tr('daily_challenge'),
+          subtitle: "Daily puzzle",
+          iconSize: 40,
+          labelFontSize: 13,
+          onPressed: onDailyPressed,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
         ),
         HomeFeatureCard(
           icon: Icons.bar_chart_rounded,
@@ -6375,9 +7084,12 @@ class HomeFeatureCard extends StatelessWidget {
     this.labelFontSize = 15,
     this.subtitleFontSize = 8.5,
     this.notificationCount = 0,
+<<<<<<< HEAD
     this.badgeText,
     this.badgeIcon,
     this.badgeGradient,
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   });
 
   final IconData icon;
@@ -6389,9 +7101,12 @@ class HomeFeatureCard extends StatelessWidget {
   final double labelFontSize;
   final double subtitleFontSize;
   final int notificationCount;
+<<<<<<< HEAD
   final String? badgeText;
   final IconData? badgeIcon;
   final Gradient? badgeGradient;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 
   @override
   Widget build(BuildContext context) {
@@ -6483,11 +7198,15 @@ class HomeFeatureCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: subtitleFontSize,
                         fontWeight: FontWeight.w700,
+<<<<<<< HEAD
                         color: notificationCount > 0
                             ? const Color(0xFFDC2626)
                             : (badgeText == 'NEW'
                                 ? const Color(0xFFE11D48)
                                 : const Color(0xFF64748B)),
+=======
+                        color: notificationCount > 0 ? const Color(0xFFDC2626) : const Color(0xFF64748B),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       ),
                     ),
                   ],
@@ -6534,6 +7253,7 @@ class HomeFeatureCard extends StatelessWidget {
                   ],
                 ),
               ),
+<<<<<<< HEAD
             )
           else if (badgeText != null && badgeText!.isNotEmpty)
             Positioned(
@@ -6579,6 +7299,8 @@ class HomeFeatureCard extends StatelessWidget {
                   ],
                 ),
               ),
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             ),
         ],
       ),
@@ -6802,6 +7524,7 @@ class _DailyRewardScreenState extends State<DailyRewardScreen> {
 class StoreMonthlyRewards extends StatelessWidget {
   const StoreMonthlyRewards({super.key});
 
+<<<<<<< HEAD
   static String _getLocalizedMonth(int month) {
     const monthKeys = [
       'january', 'february', 'march', 'april', 'may', 'june',
@@ -6817,6 +7540,24 @@ class StoreMonthlyRewards extends StatelessWidget {
     const weekdayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     return weekdayKeys.map((k) => tr(k).toUpperCase()).toList();
   }
+=======
+  static const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  static const weekDays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 
   @override
   Widget build(BuildContext context) {
@@ -6829,13 +7570,22 @@ class StoreMonthlyRewards extends StatelessWidget {
     return StoreGlassPanel(
       child: Column(
         children: [
+<<<<<<< HEAD
           StoreSectionBanner(
             title: tr('daily_login_rewards'),
+=======
+          const StoreSectionBanner(
+            title: 'DAILY LOGIN REWARDS',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             assetPath: 'assets/images/daily_calendar.webp',
           ),
           const SizedBox(height: 12),
           Text(
+<<<<<<< HEAD
             '${_getLocalizedMonth(today.month)} ${today.year}',
+=======
+            '${monthNames[today.month - 1]} ${today.year}',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             style: const TextStyle(
               color: Color(0xFF25346D),
               fontSize: 20,
@@ -6844,7 +7594,11 @@ class StoreMonthlyRewards extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Row(
+<<<<<<< HEAD
             children: _getLocalizedWeekdays()
+=======
+            children: weekDays
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                 .map(
                   (day) => Expanded(
                     child: Center(
@@ -7281,7 +8035,11 @@ class StoreTopBar extends StatelessWidget {
     return Row(
       children: [
         HomeCircleButton(
+<<<<<<< HEAD
           icon: Icons.arrow_back_rounded,
+=======
+          icon: Icons.arrow_back_ios_new_rounded,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         const Spacer(),
@@ -7975,6 +8733,7 @@ class AchievementItem {
   bool get isLocked => !isCompleted && !isInProgress;
   bool get hasUnclaimedGift => isCompleted && !isClaimed;
 
+<<<<<<< HEAD
   String get localizedTitle {
     final key = 'ach_${id}_title';
     final val = tr(key);
@@ -7987,6 +8746,8 @@ class AchievementItem {
     return (val.isNotEmpty && val != key) ? val : description;
   }
 
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   AchievementItem copyWith({
     String? giftAssetPath,
     int? current,
@@ -8038,7 +8799,11 @@ const completedAchievements = [
     assetPath: 'assets/images/achievement_sharpshooter.webp',
     giftAssetPath: 'assets/images/Speedy_Thinker_gift_icon.png',
     target: 1,
+<<<<<<< HEAD
     coinReward: 20,
+=======
+    coinReward: 500,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     color: Color(0xFF31C882),
   ),
   AchievementItem(
@@ -8049,6 +8814,7 @@ const completedAchievements = [
     assetPath: 'assets/images/Smart_Solver.png',
     giftAssetPath: 'assets/images/Streak_Champion_gift_icon.png',
     target: 1,
+<<<<<<< HEAD
     coinReward: 30,
     color: Color(0xFF2F9DF2),
   ),
@@ -8062,11 +8828,27 @@ const completedAchievements = [
     target: 10,
     coinReward: 35,
     color: Color(0xFF3B82F6),
+=======
+    coinReward: 750,
+    color: Color(0xFF2F9DF2),
+  ),
+  AchievementItem(
+    id: 'comeback',
+    title: 'Comeback',
+    description: 'Win with exactly\n1 heart left',
+    visual: AchievementVisual.shieldCrown,
+    assetPath: 'assets/images/Perfect_Master.png',
+    giftAssetPath: 'assets/images/gift_3.png',
+    target: 1,
+    coinReward: 1000,
+    color: Color(0xFF9F58D9),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   ),
 ];
 
 const inProgressAchievements = [
   AchievementItem(
+<<<<<<< HEAD
     id: 'rising_star',
     title: 'Rising Star',
     description: 'Complete 5 levels\nin World 1',
@@ -8089,6 +8871,8 @@ const inProgressAchievements = [
     color: Color(0xFF9F58D9),
   ),
   AchievementItem(
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     id: 'world_1_complete',
     title: 'World 1 Master',
     description: 'Complete all 40 levels\nof World 1',
@@ -8096,7 +8880,11 @@ const inProgressAchievements = [
     assetPath: 'assets/images/World_Explorer.png',
     giftAssetPath: 'assets/images/daily_gift.webp',
     target: 40,
+<<<<<<< HEAD
     coinReward: 150,
+=======
+    coinReward: 1500,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     color: Color(0xFF31C58A),
   ),
   AchievementItem(
@@ -8107,7 +8895,11 @@ const inProgressAchievements = [
     assetPath: 'assets/images/Speedy_Thinker_main_icon.png',
     giftAssetPath: 'assets/images/Speedy_Thinker_gift_icon.png',
     target: 50,
+<<<<<<< HEAD
     coinReward: 80,
+=======
+    coinReward: 1000,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     color: Color(0xFF9962EA),
   ),
   AchievementItem(
@@ -8118,13 +8910,18 @@ const inProgressAchievements = [
     assetPath: 'assets/images/Streak_Champion_main_icon.png',
     giftAssetPath: 'assets/images/Streak_Champion_gift_icon.png',
     target: 10,
+<<<<<<< HEAD
     coinReward: 60,
+=======
+    coinReward: 1000,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     color: Color(0xFFFF8A22),
   ),
 ];
 
 const lockedAchievements = [
   AchievementItem(
+<<<<<<< HEAD
     id: 'world_2_complete',
     title: 'World 2 Master',
     description: 'Complete all 40 levels\nof World 2',
@@ -8147,6 +8944,8 @@ const lockedAchievements = [
     color: Color(0xFF8B5CF6),
   ),
   AchievementItem(
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     id: 'world_5_complete',
     title: '5 Worlds Champion',
     description: 'Complete 5 worlds\n(200 levels total)',
@@ -8154,7 +8953,11 @@ const lockedAchievements = [
     assetPath: 'assets/images/Knowledge_King.png',
     giftAssetPath: 'assets/images/gift_4.png',
     target: 5,
+<<<<<<< HEAD
     coinReward: 180,
+=======
+    coinReward: 5000,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     color: Color(0xFFFF8A22),
   ),
   AchievementItem(
@@ -8165,6 +8968,7 @@ const lockedAchievements = [
     assetPath: 'assets/images/Streak_Master.png',
     giftAssetPath: 'assets/images/gift_5.png',
     target: 10,
+<<<<<<< HEAD
     coinReward: 200,
     gemReward: 50,
     color: Color(0xFF9460E2),
@@ -8236,6 +9040,13 @@ const lockedAchievements = [
     color: Color(0xFFFF7A00),
   ),
   AchievementItem(
+=======
+    coinReward: 10000,
+    gemReward: 500,
+    color: Color(0xFF9460E2),
+  ),
+  AchievementItem(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     id: 'perfect_score',
     title: 'Perfect Score',
     description: 'Complete 10 perfect\nchallenge rounds',
@@ -8243,7 +9054,11 @@ const lockedAchievements = [
     assetPath: 'assets/images/Puzzle_Pro.png',
     giftAssetPath: 'assets/images/gift_3.png',
     target: 10,
+<<<<<<< HEAD
     coinReward: 120,
+=======
+    coinReward: 2000,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     color: Color(0xFFFF8A22),
   ),
   AchievementItem(
@@ -8254,7 +9069,11 @@ const lockedAchievements = [
     assetPath: 'assets/images/Knowledge_King.png',
     giftAssetPath: 'assets/images/gift_4.png',
     target: 25,
+<<<<<<< HEAD
     coinReward: 140,
+=======
+    coinReward: 2500,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     color: Color(0xFF2F9DF2),
   ),
   AchievementItem(
@@ -8265,7 +9084,11 @@ const lockedAchievements = [
     assetPath: 'assets/images/World_Explorer.png',
     giftAssetPath: 'assets/images/gift_3.png',
     target: 7,
+<<<<<<< HEAD
     coinReward: 90,
+=======
+    coinReward: 2000,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     color: Color(0xFF31C882),
   ),
   AchievementItem(
@@ -8276,7 +9099,11 @@ const lockedAchievements = [
     assetPath: 'assets/images/Daily_Champion.png',
     giftAssetPath: 'assets/images/Speedy_Thinker_gift_icon.png',
     target: 3,
+<<<<<<< HEAD
     coinReward: 50,
+=======
+    coinReward: 1000,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   ),
   AchievementItem(
     id: 'dedicated_mind',
@@ -8286,7 +9113,11 @@ const lockedAchievements = [
     assetPath: 'assets/images/Perfect_Score.png',
     giftAssetPath: 'assets/images/gift_4.png',
     target: 7,
+<<<<<<< HEAD
     coinReward: 100,
+=======
+    coinReward: 2500,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   ),
   AchievementItem(
     id: 'streak_master',
@@ -8296,8 +9127,13 @@ const lockedAchievements = [
     assetPath: 'assets/images/Streak_Master.png',
     giftAssetPath: 'assets/images/gift_5.png',
     target: 30,
+<<<<<<< HEAD
     coinReward: 200,
     gemReward: 50,
+=======
+    coinReward: 5000,
+    gemReward: 250,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   ),
 ];
 
@@ -8386,7 +9222,11 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                               Align(
                                 alignment: Alignment.centerLeft,
                                 child: StatsCircleButton(
+<<<<<<< HEAD
                                   icon: Icons.arrow_back_rounded,
+=======
+                                  icon: Icons.arrow_back_ios_new_rounded,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                   onPressed: () => Navigator.of(context).maybePop(),
                                 ),
                               ),
@@ -8402,10 +9242,17 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                 ),
                               ),
                               const SizedBox(height: 8),
+<<<<<<< HEAD
                               Text(
                                 tr('unlock_achievements_desc'),
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
+=======
+                              const Text(
+                                'Unlock achievements and earn rewards!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                   color: Color(0xFF41557A),
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
@@ -8453,7 +9300,11 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
+<<<<<<< HEAD
                                               '$unclaimedCount ${unclaimedCount == 1 ? tr("gift_ready_to_open") : tr("gifts_ready_to_open")}',
+=======
+                                              '$unclaimedCount ${unclaimedCount == 1 ? "Gift" : "Gifts"} Ready to Open!',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                               style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 16,
@@ -8461,9 +9312,15 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                               ),
                                             ),
                                             const SizedBox(height: 2),
+<<<<<<< HEAD
                                             Text(
                                               tr('tap_to_claim_coins'),
                                               style: const TextStyle(
+=======
+                                            const Text(
+                                              'Tap on completed achievements below to claim your coins!',
+                                              style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                                 color: Colors.white,
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w700,
@@ -8480,7 +9337,11 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                               AchievementSectionHeader(
                                 icon: Icons.star_rounded,
                                 iconColor: const Color(0xFFFFB52E),
+<<<<<<< HEAD
                                 title: tr('completed'),
+=======
+                                title: 'Completed',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                 count: completedCount,
                               ),
                               const SizedBox(height: 12),
@@ -8492,9 +9353,16 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                               AchievementSectionHeader(
                                 icon: Icons.lock_open_rounded,
                                 iconColor: const Color(0xFF8892AE),
+<<<<<<< HEAD
                                 title: tr('in_progress'),
                                 count: inProgressCount,
                               ),
+=======
+                                title: 'In Progress',
+                                count: inProgressCount,
+                              ),
+                              const SizedBox(height: 12),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                               for (
                                 var index = 0;
                                 index < inProgressItems.length;
@@ -8508,7 +9376,11 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                               AchievementSectionHeader(
                                 icon: Icons.lock_rounded,
                                 iconColor: const Color(0xFF8892AE),
+<<<<<<< HEAD
                                 title: tr('locked'),
+=======
+                                title: 'Locked',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                 count: lockedCount,
                               ),
                               const SizedBox(height: 12),
@@ -8611,11 +9483,19 @@ class AchievementSummaryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+<<<<<<< HEAD
                 Text(
                   tr('total_achievements'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
+=======
+                const Text(
+                  'Total Achievements',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                     color: Color(0xFF10234D),
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -8865,7 +9745,11 @@ class CompletedAchievementCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
+<<<<<<< HEAD
                   item.localizedTitle,
+=======
+                  item.title,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -8877,7 +9761,11 @@ class CompletedAchievementCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
+<<<<<<< HEAD
                   item.localizedDescription,
+=======
+                  item.description,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -8905,18 +9793,32 @@ class CompletedAchievementCard extends StatelessWidget {
                         ),
                       ],
                     ),
+<<<<<<< HEAD
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
+=======
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           Icons.notifications_active_rounded,
                           color: Colors.white,
                           size: 13,
                         ),
+<<<<<<< HEAD
                         const SizedBox(width: 4),
                         Text(
                           tr('open_gift'),
                           style: const TextStyle(
+=======
+                        SizedBox(width: 4),
+                        Text(
+                          'OPEN GIFT',
+                          style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             color: Colors.white,
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
@@ -8933,18 +9835,32 @@ class CompletedAchievementCard extends StatelessWidget {
                       color: const Color(0xFFE8F5E9),
                       borderRadius: BorderRadius.circular(8),
                     ),
+<<<<<<< HEAD
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
+=======
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           Icons.check_circle_rounded,
                           color: Color(0xFF2E7D32),
                           size: 13,
                         ),
+<<<<<<< HEAD
                         const SizedBox(width: 4),
                         Text(
                           tr('claimed'),
                           style: const TextStyle(
+=======
+                        SizedBox(width: 4),
+                        Text(
+                          'Claimed',
+                          style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             color: Color(0xFF2E7D32),
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
@@ -9007,7 +9923,11 @@ class InProgressAchievementCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
+<<<<<<< HEAD
                       item.localizedTitle,
+=======
+                      item.title,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -9018,7 +9938,11 @@ class InProgressAchievementCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
+<<<<<<< HEAD
                       item.localizedDescription,
+=======
+                      item.description,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -9043,8 +9967,13 @@ class InProgressAchievementCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             item.gemReward > 0
+<<<<<<< HEAD
                                 ? '+${item.coinReward} ${tr("coins")} & ${item.gemReward} ${tr("gems")}'
                                 : '+${item.coinReward} ${tr("coins")}',
+=======
+                                ? '+${item.coinReward} Coins & ${item.gemReward} Gems'
+                                : '+${item.coinReward} Coins',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             style: const TextStyle(
                               color: Color(0xFFEA580C),
                               fontSize: 10,
@@ -9177,7 +10106,11 @@ class LockedAchievementCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
+<<<<<<< HEAD
                 item.localizedTitle,
+=======
+                item.title,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -9189,7 +10122,11 @@ class LockedAchievementCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
+<<<<<<< HEAD
                 item.localizedDescription,
+=======
+                item.description,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -9215,8 +10152,13 @@ class LockedAchievementCard extends StatelessWidget {
                     const SizedBox(width: 3),
                     Text(
                       item.gemReward > 0
+<<<<<<< HEAD
                           ? '${item.coinReward} + ${item.gemReward} ${tr("gems")}'
                           : '${item.coinReward} ${tr("coins")}',
+=======
+                          ? '${item.coinReward} + ${item.gemReward} Gems'
+                          : '${item.coinReward} Coins',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       style: const TextStyle(
                         color: Color(0xFF64748B),
                         fontSize: 9.5,
@@ -9341,6 +10283,7 @@ class _GiftOpenCelebrationDialogState extends State<GiftOpenCelebrationDialog>
                           ),
                         ],
                       ),
+<<<<<<< HEAD
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -9349,6 +10292,16 @@ class _GiftOpenCelebrationDialogState extends State<GiftOpenCelebrationDialog>
                           Text(
                             tr('gift_ready_to_claim'),
                             style: const TextStyle(
+=======
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.notifications_active_rounded, color: Colors.white, size: 16),
+                          SizedBox(width: 6),
+                          Text(
+                            'GIFT READY TO CLAIM!',
+                            style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                               color: Colors.white,
                               fontSize: 12,
                               fontWeight: FontWeight.w900,
@@ -9360,7 +10313,11 @@ class _GiftOpenCelebrationDialogState extends State<GiftOpenCelebrationDialog>
                     ),
                     const SizedBox(height: 14),
                     Text(
+<<<<<<< HEAD
                       item.localizedTitle,
+=======
+                      item.title,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Color(0xFF10234D),
@@ -9370,7 +10327,11 @@ class _GiftOpenCelebrationDialogState extends State<GiftOpenCelebrationDialog>
                     ),
                     const SizedBox(height: 6),
                     Text(
+<<<<<<< HEAD
                       item.localizedDescription.replaceAll('\n', ' '),
+=======
+                      item.description.replaceAll('\n', ' '),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Color(0xFF566681),
@@ -9395,9 +10356,15 @@ class _GiftOpenCelebrationDialogState extends State<GiftOpenCelebrationDialog>
                       ),
                       child: Column(
                         children: [
+<<<<<<< HEAD
                           Text(
                             tr('reward_unlocked'),
                             style: const TextStyle(
+=======
+                          const Text(
+                            'REWARD UNLOCKED',
+                            style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                               color: Color(0xFFB78103),
                               fontSize: 11,
                               fontWeight: FontWeight.w900,
@@ -9420,7 +10387,11 @@ class _GiftOpenCelebrationDialogState extends State<GiftOpenCelebrationDialog>
                               ),
                               const SizedBox(width: 8),
                               Text(
+<<<<<<< HEAD
                                 '+${item.coinReward} ${tr("coins")}',
+=======
+                                '+${item.coinReward} Coins',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                 style: const TextStyle(
                                   color: Color(0xFF996500),
                                   fontSize: 22,
@@ -9446,7 +10417,11 @@ class _GiftOpenCelebrationDialogState extends State<GiftOpenCelebrationDialog>
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
+<<<<<<< HEAD
                                   '+${item.gemReward} ${tr("gems")}',
+=======
+                                  '+${item.gemReward} Gems',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                   style: const TextStyle(
                                     color: Color(0xFF0077C2),
                                     fontSize: 18,
@@ -9483,6 +10458,7 @@ class _GiftOpenCelebrationDialogState extends State<GiftOpenCelebrationDialog>
                                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                 ),
                               )
+<<<<<<< HEAD
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -9491,6 +10467,16 @@ class _GiftOpenCelebrationDialogState extends State<GiftOpenCelebrationDialog>
                                   Text(
                                     tr('claim_gift'),
                                     style: const TextStyle(
+=======
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.redeem_rounded, size: 22),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'CLAIM GIFT',
+                                    style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                       fontSize: 16,
                                       fontWeight: FontWeight.w900,
                                       letterSpacing: 0.5,
@@ -9885,7 +10871,11 @@ class StatsScreen extends StatelessWidget {
                           Align(
                             alignment: Alignment.centerLeft,
                             child: StatsCircleButton(
+<<<<<<< HEAD
                               icon: Icons.arrow_back_rounded,
+=======
+                              icon: Icons.arrow_back_ios_new_rounded,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                               onPressed: () => Navigator.of(context).maybePop(),
                             ),
                           ),
@@ -9901,10 +10891,17 @@ class StatsScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
+<<<<<<< HEAD
                       Text(
                         tr('stats_track_progress'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
+=======
+                      const Text(
+                        'Track your progress and keep improving!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           color: Color(0xFF3B466A),
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -9958,6 +10955,7 @@ class StatsCircleButton extends StatelessWidget {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: withButtonFeedback(onPressed),
+<<<<<<< HEAD
         child: Builder(
           builder: (context) {
             final isRtl = Directionality.of(context) == TextDirection.rtl;
@@ -9970,6 +10968,12 @@ class StatsCircleButton extends StatelessWidget {
               child: Icon(displayIcon, color: const Color(0xFF11224D), size: 24),
             );
           },
+=======
+        child: SizedBox(
+          width: 38,
+          height: 38,
+          child: Icon(icon, color: const Color(0xFF11224D), size: 18),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
         ),
       ),
     );
@@ -10015,7 +11019,11 @@ class StatsTotalScoreCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final totalScore = GameStorage.totalCorrectAnswers * 10;
+<<<<<<< HEAD
     final streakLabel = '${GameStorage.currentStreak} ${GameStorage.currentStreak == 1 ? tr("day") : tr("days")}';
+=======
+    final streakLabel = '${GameStorage.currentStreak} Days';
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 
     return Center(
       child: ConstrainedBox(
@@ -10075,9 +11083,15 @@ class StatsTotalScoreCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
+<<<<<<< HEAD
                     Text(
                       tr('total_score'),
                       style: const TextStyle(
+=======
+                    const Text(
+                      'Total Score',
+                      style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         color: Color(0xFF3B466A),
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -10086,7 +11100,11 @@ class StatsTotalScoreCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '$totalScore',
+<<<<<<< HEAD
                       style: const TextStyle(
+=======
+                      style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         color: Color(0xFF18A96F),
                         fontSize: 34,
                         fontWeight: FontWeight.w900,
@@ -10111,10 +11129,17 @@ class StatsTotalScoreCard extends StatelessWidget {
                       size: 64,
                     ),
                     const SizedBox(height: 10),
+<<<<<<< HEAD
                     Text(
                       tr('current_streak'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
+=======
+                    const Text(
+                      'Current Streak',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         color: Color(0xFF3B466A),
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -10131,9 +11156,15 @@ class StatsTotalScoreCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 5),
+<<<<<<< HEAD
                     Text(
                       tr('keep_it_up'),
                       style: const TextStyle(
+=======
+                    const Text(
+                      'Keep it up!',
+                      style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         color: Color(0xFF3B466A),
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -10166,7 +11197,11 @@ class StatsMetricStrip extends StatelessWidget {
               child: StatsMetricItem(
                 icon: Icons.extension_rounded,
                 color: Color(0xFF4CD99D),
+<<<<<<< HEAD
                 label: tr('puzzles_solved'),
+=======
+                label: 'Puzzles Solved',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                 value: '${GameStorage.totalCorrectAnswers}',
               ),
             ),
@@ -10175,7 +11210,11 @@ class StatsMetricStrip extends StatelessWidget {
               child: StatsMetricItem(
                 icon: Icons.my_location_rounded,
                 color: Color(0xFF5B9DF5),
+<<<<<<< HEAD
                 label: tr('accuracy'),
+=======
+                label: 'Accuracy',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                 value: accuracy,
               ),
             ),
@@ -10188,7 +11227,11 @@ class StatsMetricStrip extends StatelessWidget {
               child: StatsMetricItem(
                 icon: Icons.bolt_rounded,
                 color: Color(0xFF9F68E8),
+<<<<<<< HEAD
                 label: tr('best_streak'),
+=======
+                label: 'Best Streak',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                 value: '${GameStorage.bestStreak}',
               ),
             ),
@@ -10197,7 +11240,11 @@ class StatsMetricStrip extends StatelessWidget {
               child: StatsMetricItem(
                 icon: Icons.star_rounded,
                 color: Color(0xFFFFAB2E),
+<<<<<<< HEAD
                 label: tr('total_stars'),
+=======
+                label: 'Total Stars',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                 value: '$totalStars',
               ),
             ),
@@ -10370,9 +11417,15 @@ class StatsCategoryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+<<<<<<< HEAD
           Text(
             tr('performance_by_category'),
             style: const TextStyle(
+=======
+          const Text(
+            'Performance by Category',
+            style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               color: Color(0xFF172D56),
               fontSize: 16,
               fontWeight: FontWeight.w900,
@@ -10382,28 +11435,44 @@ class StatsCategoryCard extends StatelessWidget {
           StatsCategoryRow(
             icon: Icons.public_rounded,
             color: Color(0xFF4CD99D),
+<<<<<<< HEAD
             label: tr('geography'),
+=======
+            label: 'Geography',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             percent: accuracy,
           ),
           const SizedBox(height: 14),
           StatsCategoryRow(
             icon: Icons.science_rounded,
             color: Color(0xFF5B9DF5),
+<<<<<<< HEAD
             label: tr('science'),
+=======
+            label: 'Science',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             percent: winRate,
           ),
           const SizedBox(height: 14),
           StatsCategoryRow(
             icon: Icons.menu_book_rounded,
             color: Color(0xFF9F68E8),
+<<<<<<< HEAD
             label: tr('history'),
+=======
+            label: 'History',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             percent: bestScoreProgress,
           ),
           const SizedBox(height: 14),
           StatsCategoryRow(
             icon: Icons.palette_rounded,
             color: Color(0xFFFFAB2E),
+<<<<<<< HEAD
             label: tr('art_and_culture'),
+=======
+            label: 'Art & Culture',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             percent: streakProgress,
           ),
         ],
@@ -10592,9 +11661,15 @@ class StatsHomeButton extends StatelessWidget {
           color: Color(0xFF3B466A),
           size: 28,
         ),
+<<<<<<< HEAD
         label: Text(
           tr('back_to_home'),
           style: const TextStyle(
+=======
+        label: const Text(
+          'Back to Home',
+          style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             fontSize: 18,
             fontWeight: FontWeight.w900,
             color: Color(0xFF3B466A),
@@ -10727,6 +11802,7 @@ class PuzzleLevel {
   final List<String> options;
   final String correctAnswer;
   final String explanation;
+<<<<<<< HEAD
 
   PuzzleLevel withShuffledOptions([int? seed]) {
     final seedVal = seed ?? (question.hashCode ^ correctAnswer.hashCode);
@@ -10738,6 +11814,8 @@ class PuzzleLevel {
       explanation: explanation,
     );
   }
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 }
 
 List<PuzzleLevel> buildMindTrapPuzzleBank() {
@@ -12251,6 +13329,7 @@ class _DailyPuzzleLandingScreenState extends State<DailyPuzzleLandingScreen> {
       return const PremiumLoading();
     }
 
+<<<<<<< HEAD
     return ValueListenableBuilder<String>(
       valueListenable: LanguageController.instance.activeLanguage,
       builder: (context, langCode, _) {
@@ -12298,6 +13377,47 @@ class _DailyPuzzleLandingScreenState extends State<DailyPuzzleLandingScreen> {
           ),
         );
       },
+=======
+    return Scaffold(
+      body: Stack(
+        children: [
+          const Positioned.fill(
+            child: Image(
+              image: AssetImage(
+                'assets/images/daily_puzzle_landing_background.webp',
+              ),
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 430),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DailyLandingTopBar(
+                        canPop: canPop,
+                        streak: streak,
+                        onBack: () => Navigator.of(context).maybePop(),
+                      ),
+                      const SizedBox(height: 20),
+                      DailyLandingHeroCard(onStart: openPuzzle),
+                      const SizedBox(height: 20),
+                      DailyLandingStreakCard(trackerDays: trackerDays),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     );
   }
 }
@@ -12319,14 +13439,24 @@ class DailyLandingTopBar extends StatelessWidget {
     return Row(
       children: [
         ProfessionalCircleButton(
+<<<<<<< HEAD
           size: 38,
+=======
+          size: 40,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           icon: Icons.arrow_back_rounded,
           onPressed: canPop ? withButtonFeedback(onBack) : null,
         ),
         const Spacer(),
+<<<<<<< HEAD
         Text(
           tr('daily_puzzle'),
           style: const TextStyle(
+=======
+        const Text(
+          'Daily Puzzle',
+          style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             color: Color(0xFF0F172A),
             fontSize: 18,
             fontWeight: FontWeight.w900,
@@ -12380,6 +13510,7 @@ class DailyLandingTopBar extends StatelessWidget {
 }
 
 class DailyLandingHeroCard extends StatelessWidget {
+<<<<<<< HEAD
   const DailyLandingHeroCard({
     super.key,
     required this.onStart,
@@ -12418,6 +13549,26 @@ class DailyLandingHeroCard extends StatelessWidget {
             offset: const Offset(0, 8),
           ),
           const BoxShadow(
+=======
+  const DailyLandingHeroCard({super.key, required this.onStart});
+
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(205),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFBAE6FD), width: 1.8),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x180284C7),
+            blurRadius: 24,
+            offset: Offset(0, 8),
+          ),
+          BoxShadow(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             color: Color(0x120F172A),
             blurRadius: 12,
             offset: Offset(0, 4),
@@ -12429,6 +13580,7 @@ class DailyLandingHeroCard extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Padding(
+<<<<<<< HEAD
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
             child: Column(
               children: [
@@ -12490,6 +13642,11 @@ class DailyLandingHeroCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+=======
+            padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+            child: Column(
+              children: [
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                 // 3D Medallion
                 Container(
                   width: 96,
@@ -12501,6 +13658,7 @@ class DailyLandingHeroCard extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.white,
+<<<<<<< HEAD
                         isCompletedToday
                             ? const Color(0xFFECFDF5)
                             : const Color(0xFFF1F5F9),
@@ -12512,6 +13670,12 @@ class DailyLandingHeroCard extends StatelessWidget {
                           : const Color(0xFFBAE6FD),
                       width: 1.6,
                     ),
+=======
+                        const Color(0xFFF1F5F9),
+                      ],
+                    ),
+                    border: Border.all(color: const Color(0xFFBAE6FD), width: 1.6),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                     boxShadow: const [
                       BoxShadow(
                         color: Color(0x186366F1),
@@ -12529,6 +13693,7 @@ class DailyLandingHeroCard extends StatelessWidget {
                     ),
                   ),
                 ),
+<<<<<<< HEAD
                 const SizedBox(height: 14),
                 Text(
                   isCompletedToday
@@ -12536,12 +13701,20 @@ class DailyLandingHeroCard extends StatelessWidget {
                       : tr('todays_mindtrap'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
+=======
+                const SizedBox(height: 18),
+                const Text(
+                  "Today's MindTrap",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                     color: Color(0xFF0F172A),
                     fontSize: 21,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.3,
                   ),
                 ),
+<<<<<<< HEAD
                 const SizedBox(height: 4),
                 Text(
                   isCompletedToday
@@ -12551,6 +13724,15 @@ class DailyLandingHeroCard extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0xFF475569),
                     fontSize: 13,
+=======
+                const SizedBox(height: 5),
+                const Text(
+                  'One puzzle a day keeps your mind sharp!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF475569),
+                    fontSize: 13.5,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -12559,6 +13741,7 @@ class DailyLandingHeroCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
+<<<<<<< HEAD
                     color: isCompletedToday
                         ? const Color(0xFFECFDF5)
                         : const Color(0xFFF0FDF4),
@@ -12591,6 +13774,21 @@ class DailyLandingHeroCard extends StatelessWidget {
                           color: isCompletedToday
                               ? const Color(0xFF047857)
                               : const Color(0xFF15803D),
+=======
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: const Color(0xFFBBF7D0), width: 1.2),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.stars_rounded, color: Color(0xFFEAB308), size: 16),
+                      SizedBox(width: 5),
+                      Text(
+                        '+20 Coins  •  +5 Diamonds Streak',
+                        style: TextStyle(
+                          color: Color(0xFF15803D),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
                         ),
@@ -12598,7 +13796,11 @@ class DailyLandingHeroCard extends StatelessWidget {
                     ],
                   ),
                 ),
+<<<<<<< HEAD
                 const SizedBox(height: 18),
+=======
+                const SizedBox(height: 20),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                 TactileBounce(
                   onTap: onStart,
                   child: Container(
@@ -12606,6 +13808,7 @@ class DailyLandingHeroCard extends StatelessWidget {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
+<<<<<<< HEAD
                       gradient: isCompletedToday
                           ? const LinearGradient(
                               begin: Alignment.topCenter,
@@ -12638,12 +13841,31 @@ class DailyLandingHeroCard extends StatelessWidget {
                           offset: const Offset(0, 6),
                         ),
                         const BoxShadow(
+=======
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF6366F1),
+                          Color(0xFF4F46E5),
+                        ],
+                      ),
+                      border: Border.all(color: const Color(0xFF818CF8), width: 1.2),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x454F46E5),
+                          blurRadius: 16,
+                          offset: Offset(0, 6),
+                        ),
+                        BoxShadow(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           color: Color(0x20000000),
                           blurRadius: 3,
                           offset: Offset(0, 2),
                         ),
                       ],
                     ),
+<<<<<<< HEAD
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -12666,6 +13888,39 @@ class DailyLandingHeroCard extends StatelessWidget {
                             letterSpacing: 0.2,
                           ),
                         ),
+=======
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Positioned(
+                          top: 1.5,
+                          left: 18,
+                          right: 18,
+                          child: Container(
+                            height: 1.2,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(90),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
+                            SizedBox(width: 6),
+                            Text(
+                              'Start Daily Puzzle',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       ],
                     ),
                   ),
@@ -12686,6 +13941,7 @@ class DailyLandingStreakCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     const monthKeys = [
       'january', 'february', 'march', 'april', 'may', 'june',
       'july', 'august', 'september', 'october', 'november', 'december'
@@ -12693,6 +13949,25 @@ class DailyLandingStreakCard extends StatelessWidget {
     const weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
     final now = DateTime.now();
     final monthName = tr(monthKeys[now.month - 1]);
+=======
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    const weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final now = DateTime.now();
+    final monthName = monthNames[now.month - 1];
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 
     return Container(
       decoration: BoxDecoration(
@@ -13033,6 +14308,7 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
       ),
     );
 
+<<<<<<< HEAD
     if (mounted && GameStorage.shouldPromptRating()) {
       await GameStorage.markRatingPrompted();
       if (mounted) {
@@ -13040,6 +14316,8 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
       }
     }
 
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     if (mounted) {
       setState(() {});
     }
@@ -13141,9 +14419,15 @@ class LevelRoundIconButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: withButtonFeedback(onPressed),
         child: SizedBox(
+<<<<<<< HEAD
           width: 38,
           height: 38,
           child: Icon(icon, color: const Color(0xFF071A49), size: 24),
+=======
+          width: 42,
+          height: 42,
+          child: Icon(icon, color: const Color(0xFF071A49), size: 26),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
         ),
       ),
     );
@@ -13669,6 +14953,7 @@ class _StageSelectScreenState extends State<StageSelectScreen> {
       ),
     );
 
+<<<<<<< HEAD
     if (mounted && GameStorage.shouldPromptRating()) {
       await GameStorage.markRatingPrompted();
       if (mounted) {
@@ -13676,6 +14961,8 @@ class _StageSelectScreenState extends State<StageSelectScreen> {
       }
     }
 
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     if (mounted) {
       setState(() {});
     }
@@ -13785,12 +15072,21 @@ class StageMapSection extends StatelessWidget {
                         customBorder: const CircleBorder(),
                         onTap: withButtonFeedback(onBackPressed),
                         child: const SizedBox(
+<<<<<<< HEAD
                           width: 38,
                           height: 38,
                           child: Icon(
                             Icons.arrow_back_rounded,
                             color: Color(0xFF244169),
                             size: 24,
+=======
+                          width: 42,
+                          height: 42,
+                          child: Icon(
+                            Icons.arrow_back_rounded,
+                            color: Color(0xFF244169),
+                            size: 26,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           ),
                         ),
                       ),
@@ -14252,6 +15548,7 @@ class _StageTileDust extends StatelessWidget {
 class DailyPuzzleScreen extends StatefulWidget {
   const DailyPuzzleScreen({super.key});
 
+<<<<<<< HEAD
   /// Deterministically returns a distinct, unique puzzle for any given calendar date.
   /// Guarantees that every day of the year gets a fresh, non-repeating puzzle in the active language.
   static PuzzleLevel getDailyPuzzleForDate(DateTime date, {String? languageCode}) {
@@ -14310,12 +15607,27 @@ class DailyPuzzleScreen extends StatefulWidget {
       base.correctAnswer,
       base.explanation,
       activeCode,
+=======
+  @override
+  State<DailyPuzzleScreen> createState() => _DailyPuzzleScreenState();
+}
+
+class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
+  PuzzleLevel get dailyPuzzle {
+    final localized = PuzzleLocalizer.getTranslation(
+      "What has keys but can't open locks?",
+      const ['Piano', 'Door', 'Car', 'Chest'],
+      'Piano',
+      'A piano has musical keys, not keys for opening locks.',
+      LanguageController.instance.currentCode,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     );
     return PuzzleLevel(
       question: localized.question,
       options: localized.options,
       correctAnswer: localized.correctAnswer,
       explanation: localized.explanation,
+<<<<<<< HEAD
     ).withShuffledOptions(hash);
   }
 
@@ -14326,6 +15638,11 @@ class DailyPuzzleScreen extends StatefulWidget {
 class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
   PuzzleLevel get dailyPuzzle => DailyPuzzleScreen.getDailyPuzzleForDate(DateTime.now());
 
+=======
+    );
+  }
+
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   int streak = 0;
   bool solvedToday = false;
   bool attemptedToday = false;
@@ -14671,7 +15988,10 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   bool isDismissingLevelCompletePage = false;
   bool isDismissingWrongAnswerPage = false;
   bool isDismissingResultOverlay = false;
+<<<<<<< HEAD
   bool isHandlingNextPuzzle = false;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   bool lastAnswerWasCorrect = false;
   bool? feedbackBackgroundWasCorrect;
   bool hasPrecachedCorrectBackground = false;
@@ -14869,6 +16189,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
 
   PuzzleLevel get currentLevel {
     final base = sessionLevels[currentLevelIndex];
+<<<<<<< HEAD
     final activeCode = LanguageController.instance.currentCode;
     final PuzzleLevel level;
     // If questions are already native (Urdu, English, or loaded from asset), use directly without translation
@@ -14890,6 +16211,21 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       );
     }
     return level.withShuffledOptions();
+=======
+    final localized = PuzzleLocalizer.getTranslation(
+      base.question,
+      base.options,
+      base.correctAnswer,
+      base.explanation,
+      LanguageController.instance.currentCode,
+    );
+    return PuzzleLevel(
+      question: localized.question,
+      options: localized.options,
+      correctAnswer: localized.correctAnswer,
+      explanation: localized.explanation,
+    );
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   }
   LevelTheme get currentTheme {
     final wIndex = widget.isStageMode
@@ -14902,6 +16238,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     return levelThemeForBackground(bgAsset, fallbackStageIndex: wIndex);
   }
 
+<<<<<<< HEAD
   int get actualLevelNumber {
     if (widget.isStageMode) {
       final stage = widget.stageIndex ?? 0;
@@ -14911,10 +16248,13 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     return currentLevelIndex + 1;
   }
 
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   @override
   void initState() {
     super.initState();
     updateBackgroundMusicSetting();
+<<<<<<< HEAD
     LanguageController.instance.activeLanguage.addListener(_onLanguageChanged);
     final activeCode = LanguageController.instance.currentCode;
     if (!LanguageQuestionService.instance.hasNativeBank(activeCode)) {
@@ -14922,10 +16262,13 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         if (mounted) setState(() => startNewGame());
       });
     }
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     startNewGame();
   }
 
   @override
+<<<<<<< HEAD
   void dispose() {
     LanguageController.instance.activeLanguage.removeListener(_onLanguageChanged);
     super.dispose();
@@ -14940,6 +16283,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   }
 
   @override
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   void didChangeDependencies() {
     super.didChangeDependencies();
 
@@ -14981,6 +16326,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
 
   void startNewGame() {
     eliminatedOptions.clear();
+<<<<<<< HEAD
     final activeCode = LanguageController.instance.currentCode;
     if (widget.isStageMode) {
       final globalLevel = (widget.stageIndex ?? 0) * WorldThemes.levelsPerWorld + (widget.levelIndex ?? 0);
@@ -15010,6 +16356,16 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         sessionLevels = sessionLevels.take(5).toList();
       }
     }
+=======
+    final randomSeed = widget.isStageMode
+        ? ((widget.stageIndex! + 1) * 1000 +
+              widget.levelIndex! +
+              (levelRetryCount * 997))
+        : DateTime.now().microsecondsSinceEpoch;
+    sessionLevels = List<PuzzleLevel>.from(questionBank)
+      ..shuffle(Random(randomSeed));
+    sessionLevels = sessionLevels.take(widget.isStageMode ? 3 : 5).toList();
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     currentLevelIndex = 0;
     score = GameStorage.runningScore;
     lives = 3;
@@ -15022,7 +16378,10 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     isDismissingLevelCompletePage = false;
     isDismissingWrongAnswerPage = false;
     isDismissingResultOverlay = false;
+<<<<<<< HEAD
     isHandlingNextPuzzle = false;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     lastAnswerWasCorrect = false;
     feedbackBackgroundWasCorrect = null;
     hasWon = false;
@@ -15108,11 +16467,15 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       setState(() {
         isShowingLevelCompletePage = true;
         isDismissingLevelCompletePage = false;
+<<<<<<< HEAD
         isHandlingNextPuzzle = false;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       });
     });
   }
 
+<<<<<<< HEAD
   Future<void> dismissLevelCompletePageThenAdvance() async {
     if (isHandlingNextPuzzle || isDismissingLevelCompletePage) {
       return;
@@ -15131,11 +16494,20 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     }
 
     if (!mounted) return;
+=======
+  void dismissLevelCompletePageThenAdvance() {
+    if (isDismissingLevelCompletePage) {
+      return;
+    }
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 
     if (widget.isStageMode && currentLevelIndex == sessionLevels.length - 1) {
       setState(() {
         isDismissingLevelCompletePage = false;
+<<<<<<< HEAD
         isHandlingNextPuzzle = false;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       });
       advanceAfterAnswer(lives);
       return;
@@ -15146,9 +16518,12 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     });
 
     Future.delayed(const Duration(milliseconds: 420), () {
+<<<<<<< HEAD
       if (mounted) {
         isHandlingNextPuzzle = false;
       }
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       advanceAfterAnswer(lives);
     });
   }
@@ -15245,7 +16620,10 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       isDismissingLevelCompletePage = false;
       isDismissingWrongAnswerPage = false;
       isDismissingResultOverlay = false;
+<<<<<<< HEAD
       isHandlingNextPuzzle = false;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       lastAnswerWasCorrect = false;
       feedbackBackgroundWasCorrect = null;
       selectedAnswer = shouldKeepCompleteOverlay ? selectedAnswer : null;
@@ -15463,7 +16841,10 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         ),
         const SizedBox(height: 20),
         ProgressHeader(
+<<<<<<< HEAD
           levelNumber: actualLevelNumber,
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           currentPuzzle: currentLevelIndex + 1,
           totalPuzzles: sessionLevels.length,
           theme: currentTheme,
@@ -15969,14 +17350,23 @@ class DailyPuzzleTopHud extends StatelessWidget {
             customBorder: const CircleBorder(),
             onTap: withButtonFeedback(canPop ? onBack : null),
             child: SizedBox(
+<<<<<<< HEAD
               width: 38,
               height: 38,
+=======
+              width: 42,
+              height: 42,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               child: Icon(
                 Icons.arrow_back_rounded,
                 color: canPop
                     ? const Color(0xFF244169)
                     : const Color(0x66244169),
+<<<<<<< HEAD
                 size: 24,
+=======
+                size: 26,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               ),
             ),
           ),
@@ -16100,27 +17490,45 @@ class DailyPuzzleHeader extends StatelessWidget {
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(width: 18),
+<<<<<<< HEAD
                 Expanded(
+=======
+                const Expanded(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
+<<<<<<< HEAD
                         tr('daily_puzzle'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
+=======
+                        "Today's Puzzle",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0,
                           color: Color(0xFF1F2E55),
                         ),
                       ),
+<<<<<<< HEAD
                       const SizedBox(height: 6),
                       Text(
                         isSolved
                             ? tr('daily_subtitle_completed')
                             : tr('daily_subtitle_waiting'),
                         style: const TextStyle(
+=======
+                      SizedBox(height: 6),
+                      Text(
+                        "Complete today's puzzle\nand keep your streak alive!",
+                        style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           height: 1.25,
@@ -16150,7 +17558,11 @@ class DailyPuzzleHeader extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
+<<<<<<< HEAD
                       isSolved ? tr('completed') : tr('in_progress'),
+=======
+                      isSolved ? 'Solved' : 'Unsolved',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -16208,9 +17620,15 @@ class DailyPuzzleScorePill extends StatelessWidget {
             fit: BoxFit.contain,
           ),
           const SizedBox(width: 4),
+<<<<<<< HEAD
           Text(
             '+20 ${tr('coins')}',
             style: const TextStyle(
+=======
+          const Text(
+            '+20 Coins',
+            style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               fontSize: 12,
               fontWeight: FontWeight.w900,
               color: Color(0xFFC2410C),
@@ -16272,8 +17690,13 @@ class DailyPuzzleCompleteCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isCorrect
+<<<<<<< HEAD
                             ? tr('daily_subtitle_completed')
                             : tr('completed_today'),
+=======
+                            ? 'Come back tomorrow to continue streak.'
+                            : "Today's puzzle completed.",
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
@@ -16302,9 +17725,15 @@ class DailyPuzzleCompleteCard extends StatelessWidget {
                           height: 20,
                         ),
                         const SizedBox(width: 6),
+<<<<<<< HEAD
                         Text(
                           '+20 ${tr('coins')}',
                           style: const TextStyle(
+=======
+                        const Text(
+                          '+20 Coins',
+                          style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             fontSize: 13,
                             fontWeight: FontWeight.w900,
                             color: Color(0xFF15803D),
@@ -16318,9 +17747,15 @@ class DailyPuzzleCompleteCard extends StatelessWidget {
                             height: 20,
                           ),
                           const SizedBox(width: 6),
+<<<<<<< HEAD
                           Text(
                             '+5 ${tr('gems')}',
                             style: const TextStyle(
+=======
+                          const Text(
+                            '+5 Diamonds',
+                            style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                               fontSize: 13,
                               fontWeight: FontWeight.w900,
                               color: Color(0xFF0369A1),
@@ -16340,9 +17775,15 @@ class DailyPuzzleCompleteCard extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: withButtonFeedback(onBackHome),
               icon: const Icon(Icons.home_rounded, size: 24),
+<<<<<<< HEAD
               label: Text(
                 tr('back_to_home'),
                 style: const TextStyle(
+=======
+              label: const Text(
+                'Back Home',
+                style: TextStyle(
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0,
@@ -16593,8 +18034,29 @@ class _PuzzleAnswerButtonState extends State<PuzzleAnswerButton> {
                       ),
                     ],
                   ),
+<<<<<<< HEAD
                   child: Row(
                     children: [
+=======
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (isCorrectFeedback || isWrongFeedback)
+                        Positioned(
+                          top: 0,
+                          left: 18,
+                          right: 18,
+                          child: Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(115),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ),
+                      Row(
+                        children: [
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           SizedBox(
                             width: 40,
                             height: 40,
@@ -16688,7 +18150,13 @@ class _PuzzleAnswerButtonState extends State<PuzzleAnswerButton> {
                           ),
                         ],
                       ),
+<<<<<<< HEAD
                     ),
+=======
+                    ],
+                  ),
+                ),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               ),
             ),
           ),
@@ -19623,14 +21091,20 @@ class ProgressHeader extends StatelessWidget {
     required this.totalPuzzles,
     this.timerSeconds,
     this.theme,
+<<<<<<< HEAD
     this.levelNumber,
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   });
 
   final int currentPuzzle;
   final int totalPuzzles;
   final int? timerSeconds;
   final LevelTheme? theme;
+<<<<<<< HEAD
   final int? levelNumber;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 
   @override
   Widget build(BuildContext context) {
@@ -19648,7 +21122,11 @@ class ProgressHeader extends StatelessWidget {
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
               child: Text(
+<<<<<<< HEAD
                 '${tr('level')} ${formatNumber(levelNumber ?? currentPuzzle)}',
+=======
+                '${tr('level')} ${formatNumber(currentPuzzle)}',
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                 key: ValueKey(currentPuzzle),
                 textAlign: TextAlign.left,
                 style: TextStyle(

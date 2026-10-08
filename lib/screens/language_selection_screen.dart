@@ -122,6 +122,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             if (widget.isFromSettings || Navigator.of(context).canPop())
+<<<<<<< HEAD
                               Material(
                                 color: Colors.white,
                                 shape: const CircleBorder(),
@@ -139,6 +140,31 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                                           : Icons.arrow_back_rounded,
                                       color: const Color(0xFF244169),
                                       size: 24,
+=======
+                              InkWell(
+                                onTap: () => Navigator.of(context).pop(),
+                                borderRadius: BorderRadius.circular(999),
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                   decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withAlpha(235),
+                                    border: Border.all(color: Colors.white, width: 1.5),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x180F172A),
+                                        blurRadius: 10,
+                                        offset: Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.arrow_back_ios_new_rounded,
+                                      color: Color(0xFF0F172A),
+                                      size: 18,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                     ),
                                   ),
                                 ),

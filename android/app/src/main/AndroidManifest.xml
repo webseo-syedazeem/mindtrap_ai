@@ -7,9 +7,13 @@
     <application
         android:label="mindtrap_ai"
         android:name="${applicationName}"
+<<<<<<< HEAD
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
         android:fullBackupContent="false">
+=======
+        android:icon="@mipmap/ic_launcher">
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -46,6 +50,7 @@
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
         <intent>
+<<<<<<< HEAD
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
         </intent>
@@ -54,6 +59,8 @@
             <data android:scheme="market"/>
         </intent>
         <intent>
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>

@@ -414,7 +414,11 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                       child: Row(
                         children: [
                           _buildCircleButton(
+<<<<<<< HEAD
                             icon: Icons.arrow_back_rounded,
+=======
+                            icon: Icons.arrow_back_ios_new_rounded,
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             onPressed: () => Navigator.of(context).maybePop(),
                           ),
                           const Spacer(),
@@ -846,10 +850,13 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
   }
 
   Widget _buildCircleButton({required IconData icon, required VoidCallback onPressed}) {
+<<<<<<< HEAD
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final displayIcon = (icon == Icons.arrow_back_rounded && isRtl)
         ? Icons.arrow_forward_rounded
         : icon;
+=======
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     return Material(
       color: Colors.white.withAlpha(25),
       shape: const CircleBorder(),
@@ -857,9 +864,15 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
         customBorder: const CircleBorder(),
         onTap: onPressed,
         child: SizedBox(
+<<<<<<< HEAD
           width: 38,
           height: 38,
           child: Icon(displayIcon, color: Colors.white, size: 24),
+=======
+          width: 44,
+          height: 44,
+          child: Icon(icon, color: Colors.white, size: 20),
+>>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
         ),
       ),
     );
