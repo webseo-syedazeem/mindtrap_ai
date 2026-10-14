@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -5,8 +8,14 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
-    namespace = "com.example.mindtrap_ai"
+    namespace = "com.mindtrap.ai"
     compileSdk = 36
     ndkVersion = "28.2.13676358"
 
@@ -23,20 +32,32 @@ android {
     val flutterVersionName = flutter.versionName
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.mindtrap_ai"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        applicationId = "com.mindtrap.ai"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutterVersionCode
         versionName = flutterVersionName
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            val storeFileName = keystoreProperties["storeFile"] as String?
+            storeFile = if (storeFileName != null) file(storeFileName) else null
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
+    }
+
     androidResources {
         noCompress += listOf("wav", "mp3", "ogg")
     }
 
+    packaging {
+        jniLibs {
+            keepDebugSymbols += listOf("**/*.so")
+        }
+    }
 
     lint {
         checkReleaseBuilds = false
@@ -45,9 +66,11 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

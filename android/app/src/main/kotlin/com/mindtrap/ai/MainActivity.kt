@@ -1,4 +1,4 @@
-package com.example.mindtrap_ai
+package com.mindtrap.ai
 
 import io.flutter.embedding.android.FlutterActivity
 

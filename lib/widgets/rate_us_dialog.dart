@@ -57,7 +57,7 @@ class _RateUsDialogCardState extends State<RateUsDialogCard> {
   final TextEditingController _feedbackController = TextEditingController();
   bool _isSubmitting = false;
 
-  static const String playStorePackage = 'com.example.mindtrap_ai';
+  static const String playStorePackage = 'com.mindtrap.ai';
   static const String playStoreMarketUri = 'market://details?id=$playStorePackage';
   static const String playStoreWebUrl =
       'https://play.google.com/store/apps/details?id=$playStorePackage';

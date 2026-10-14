@@ -55,3 +55,7 @@ MindTrap_AI.apk
 MindTrap_AI.aab
 build/
 *.apk
+*.aab
+key.properties
+*.jks
+*.keystore
