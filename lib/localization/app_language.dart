@@ -27,16 +27,34 @@ class AppStrings {
       flagEmoji: '🇬🇧',
     ),
     AppLanguage(
-      code: 'ur',
-      englishName: 'Urdu',
-      nativeName: 'اردو',
-      flagEmoji: '🇵🇰',
+      code: 'es',
+      englishName: 'Spanish',
+      nativeName: 'Español',
+      flagEmoji: '🇪🇸',
+    ),
+    AppLanguage(
+      code: 'fr',
+      englishName: 'French',
+      nativeName: 'Français',
+      flagEmoji: '🇫🇷',
+    ),
+    AppLanguage(
+      code: 'nl',
+      englishName: 'Dutch',
+      nativeName: 'Nederlands',
+      flagEmoji: '🇳🇱',
     ),
     AppLanguage(
       code: 'hi',
       englishName: 'Hindi',
       nativeName: 'हिन्दी',
       flagEmoji: '🇮🇳',
+    ),
+    AppLanguage(
+      code: 'ur',
+      englishName: 'Urdu',
+      nativeName: 'اردو',
+      flagEmoji: '🇵🇰',
     ),
     AppLanguage(
       code: 'bn',
@@ -141,18 +159,6 @@ class AppStrings {
       flagEmoji: '🇵🇰',
     ),
     AppLanguage(
-      code: 'es',
-      englishName: 'Spanish',
-      nativeName: 'Español',
-      flagEmoji: '🇪🇸',
-    ),
-    AppLanguage(
-      code: 'fr',
-      englishName: 'French',
-      nativeName: 'Français',
-      flagEmoji: '🇫🇷',
-    ),
-    AppLanguage(
       code: 'de',
       englishName: 'German',
       nativeName: 'Deutsch',
@@ -253,12 +259,6 @@ class AppStrings {
       englishName: 'Khmer',
       nativeName: 'ភាសាខ្មែរ',
       flagEmoji: '🇰🇭',
-    ),
-    AppLanguage(
-      code: 'nl',
-      englishName: 'Dutch',
-      nativeName: 'Nederlands',
-      flagEmoji: '🇳🇱',
     ),
     AppLanguage(
       code: 'pl',
