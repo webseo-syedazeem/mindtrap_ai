@@ -39,7 +39,6 @@ class WorldData {
   String get localizedTitle {
     final key = 'world_${id}_title';
     final val = tr(key);
-<<<<<<< HEAD
     final code = LanguageController.instance.currentCode;
     if (val != key && val.isNotEmpty) {
       if (code == 'en' || val != title) {
@@ -47,16 +46,11 @@ class WorldData {
       }
     }
     return _getWorldTitle(id, code) ?? title;
-=======
-    if (val != key) return val;
-    return _getWorldTitle(id, LanguageController.instance.currentCode) ?? title;
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   }
 
   String get localizedSubtitle {
     final key = 'world_${id}_subtitle';
     final val = tr(key);
-<<<<<<< HEAD
     final code = LanguageController.instance.currentCode;
     if (val != key && val.isNotEmpty) {
       if (code == 'en' || val != subtitle) {
@@ -64,16 +58,11 @@ class WorldData {
       }
     }
     return _getWorldSubtitle(id, code) ?? subtitle;
-=======
-    if (val != key) return val;
-    return _getWorldSubtitle(id, LanguageController.instance.currentCode) ?? subtitle;
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   }
 
   String get localizedLore {
     final key = 'world_${id}_lore';
     final val = tr(key);
-<<<<<<< HEAD
     final code = LanguageController.instance.currentCode;
     if (val != key && val.isNotEmpty) {
       if (code == 'en' || val != lore) {
@@ -81,10 +70,6 @@ class WorldData {
       }
     }
     return _getWorldLore(id, code) ?? lore;
-=======
-    if (val != key) return val;
-    return _getWorldLore(id, LanguageController.instance.currentCode) ?? lore;
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   }
 
   static String? _getWorldTitle(int id, String code) {
@@ -204,7 +189,6 @@ class WorldData {
         'Núcleo Infinito',
       ];
       if (id >= 0 && id < esTitles.length) return esTitles[id];
-<<<<<<< HEAD
     } else if (code == 'pa') {
       const paTitles = [
         'ਸੂਰਜ ਡੁੱਬਣ ਦਾ ਮੈਦਾਨ',
@@ -234,8 +218,6 @@ class WorldData {
         'ਬੇਅੰਤ ਬੁੱਧੀ ਕੇਂਦਰ',
       ];
       if (id >= 0 && id < paTitles.length) return paTitles[id];
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     }
     return null;
   }
@@ -270,7 +252,6 @@ class WorldData {
         'دانش کا مرکز',
       ];
       if (id >= 0 && id < urSubtitles.length) return urSubtitles[id];
-<<<<<<< HEAD
     } else if (code == 'hi' || code == 'bn') {
       const hiSubtitles = [
         'स्वर्णिम सूर्योदय',
@@ -387,8 +368,6 @@ class WorldData {
         'Núcleo Cognitivo',
       ];
       if (id >= 0 && id < esSubtitles.length) return esSubtitles[id];
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     }
     return null;
   }
@@ -423,7 +402,6 @@ class WorldData {
         'مائنڈ ٹریپ کا سب سے بلند اور اعلیٰ ترین مقام، جہاں سوچ کی کوئی حد نہیں۔',
       ];
       if (id >= 0 && id < urLores.length) return urLores[id];
-<<<<<<< HEAD
     } else if (code == 'hi' || code == 'bn') {
       const hiLores = [
         'जंगली फूलों की पहाड़ियों में धूप का आनंद लें जहां मौलिक तर्क शुरू होता है।',
@@ -511,8 +489,6 @@ class WorldData {
         'أعلى قمة في مايند تراب ذكاء اصطناعي، حيث لا حدود لقدرات العقل والتفكير.',
       ];
       if (id >= 0 && id < arLores.length) return arLores[id];
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     }
     return null;
   }

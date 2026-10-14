@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 import '../screens/map_your_mind_screen.dart';
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -13,10 +10,7 @@ import '../screens/auth_screen.dart';
 import '../screens/store_screen.dart';
 import '../screens/worlds_screen.dart';
 import '../services/auth_service.dart';
-<<<<<<< HEAD
 import 'rate_us_dialog.dart';
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 
 class AppLanguageDrawer extends StatefulWidget {
   final Future<void> Function(String code)? onLanguageChanged;
@@ -254,11 +248,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                             border: Border.all(color: Colors.white, width: 1.5),
                           ),
                           child: Text(
-<<<<<<< HEAD
                             loggedIn ? tr('pro') : tr('guest'),
-=======
-                            loggedIn ? 'PRO' : 'GUEST',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 8,
@@ -296,11 +286,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                         Text(
                           loggedIn
                               ? AuthService.instance.userEmail.value
-<<<<<<< HEAD
                               : tr('tap_to_sync'),
-=======
-                              : 'Tap to sync cloud progress',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -323,11 +309,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                         if (context.mounted) {
                           showGameNotification(
                             context: context,
-<<<<<<< HEAD
                             message: tr('signed_out_success'),
-=======
-                            message: 'Signed out successfully',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             icon: Icons.logout_rounded,
                             accentColor: const Color(0xFFEF4444),
                             iconColor: const Color(0xFFF87171),
@@ -443,11 +425,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
         children: [
           Expanded(
             child: _buildTabButton(
-<<<<<<< HEAD
               title: tr('game_menu'),
-=======
-              title: 'GAME MENU',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               icon: Icons.explore_rounded,
               isSelected: _selectedTab == 0,
               onTap: () => setState(() => _selectedTab = 0),
@@ -456,11 +434,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
           const SizedBox(width: 6),
           Expanded(
             child: _buildTabButton(
-<<<<<<< HEAD
               title: '${tr('languages')} ($langCount)',
-=======
-              title: 'LANGUAGES ($langCount)',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               icon: Icons.language_rounded,
               isSelected: _selectedTab == 1,
               onTap: () => setState(() => _selectedTab = 1),
@@ -559,21 +533,12 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-<<<<<<< HEAD
                     Row(
                       children: [
                         const Icon(Icons.military_tech_rounded, color: Color(0xFFF59E0B), size: 18),
                         const SizedBox(width: 6),
                         Text(
                           tr('levels_odyssey'),
-=======
-                    const Row(
-                      children: [
-                        Icon(Icons.military_tech_rounded, color: Color(0xFFF59E0B), size: 18),
-                        SizedBox(width: 6),
-                        Text(
-                          '1,000 LEVELS ODYSSEY',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           style: TextStyle(
                             color: Color(0xFF0F172A),
                             fontSize: 12,
@@ -612,13 +577,8 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
           // 1. Worlds Odyssey (1,000 Levels)
           _buildNavTile(
             title: tr('worlds'),
-<<<<<<< HEAD
             subtitle: tr('worlds_map_sub'),
             badgeText: tr('worlds_badge'),
-=======
-            subtitle: '25 Worlds • 1,000 Levels Map',
-            badgeText: '25 WORLDS',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             icon: Icons.public_rounded,
             iconColors: const [Color(0xFF38BDF8), Color(0xFF0284C7)],
             onTap: () {
@@ -629,7 +589,6 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                 Navigator.push(
                   context,
                   smoothPageRoute(
-<<<<<<< HEAD
                     WorldsScreen(
                       getStarsMap: () => GameStorage.stageLevelStars,
                       onLevelSelected: (worldIndex, levelIndex) async {
@@ -644,9 +603,6 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                         );
                       },
                     ),
-=======
-                    WorldsScreen(getStarsMap: () => GameStorage.stageLevelStars),
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                   ),
                 );
               }
@@ -658,13 +614,8 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
           // 2. Diamond & Coin Store
           _buildNavTile(
             title: tr('store'),
-<<<<<<< HEAD
             subtitle: tr('store_sub'),
             badgeText: tr('hot_deals'),
-=======
-            subtitle: 'Gems, Coins & Hint Boosters',
-            badgeText: 'HOT DEALS',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             badgeColor: const Color(0xFFD97706),
             icon: Icons.diamond_rounded,
             iconColors: const [Color(0xFFA855F7), Color(0xFF7C3AED)],
@@ -678,15 +629,9 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
 
           // 3. Daily Mystery Reward
           _buildNavTile(
-<<<<<<< HEAD
             title: tr('daily_rewards'),
             subtitle: tr('daily_rewards_sub'),
             badgeText: tr('free'),
-=======
-            title: 'Daily Rewards',
-            subtitle: 'Claim free coins & gems every 24h',
-            badgeText: 'FREE',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             badgeColor: const Color(0xFF059669),
             icon: Icons.card_giftcard_rounded,
             iconColors: const [Color(0xFFF59E0B), Color(0xFFEA580C)],
@@ -698,7 +643,6 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
 
           const SizedBox(height: 8),
 
-<<<<<<< HEAD
           // 3.5. Edit Mind Profile
           _buildNavTile(
             title: tr('edit_mind_profile'),
@@ -737,12 +681,6 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
           _buildNavTile(
             title: '${tr('language_label')}: ${currentLanguage.nativeName}',
             subtitle: '${currentLanguage.flagEmoji} ${currentLanguage.nativeName} (${tr('tap_to_change')})',
-=======
-          // 4. Active Language Selector Shortcut
-          _buildNavTile(
-            title: 'Language: ${currentLanguage.englishName}',
-            subtitle: '${currentLanguage.flagEmoji} ${currentLanguage.nativeName} (Tap to change)',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             badgeText: '56 >',
             badgeColor: const Color(0xFF0284C7),
             icon: Icons.translate_rounded,
@@ -757,13 +695,8 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
           // 5. Game Settings
           _buildNavTile(
             title: tr('settings'),
-<<<<<<< HEAD
             subtitle: tr('settings_sub'),
             badgeText: tr('config_badge'),
-=======
-            subtitle: 'Audio, vibration & game data',
-            badgeText: 'CONFIG',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             icon: Icons.settings_rounded,
             iconColors: const [Color(0xFF64748B), Color(0xFF475569)],
             onTap: () {
@@ -772,7 +705,6 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             },
           ),
 
-<<<<<<< HEAD
           const SizedBox(height: 8),
 
           // 6. Rate Us
@@ -789,8 +721,6 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             },
           ),
 
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           const SizedBox(height: 14),
 
           // Quick Audio Controls Strip
@@ -816,13 +746,8 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-<<<<<<< HEAD
                 Text(
                   tr('quick_audio_haptics'),
-=======
-                const Text(
-                  'QUICK AUDIO & HAPTICS',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                   style: TextStyle(
                     color: Color(0xFF64748B),
                     fontSize: 10,
@@ -835,11 +760,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                   children: [
                     Expanded(
                       child: _buildAudioQuickToggle(
-<<<<<<< HEAD
                         label: tr('sound'),
-=======
-                        label: 'Sound',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         icon: _soundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
                         isEnabled: _soundEnabled,
                         onTap: () => _toggleAudio(GameStorage.soundKey, _soundEnabled),
@@ -848,11 +769,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _buildAudioQuickToggle(
-<<<<<<< HEAD
                         label: tr('music'),
-=======
-                        label: 'Music',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         icon: _musicEnabled ? Icons.music_note_rounded : Icons.music_off_rounded,
                         isEnabled: _musicEnabled,
                         onTap: () => _toggleAudio(GameStorage.musicKey, _musicEnabled),
@@ -861,11 +778,7 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _buildAudioQuickToggle(
-<<<<<<< HEAD
                         label: tr('vibration'),
-=======
-                        label: 'Vibrate',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         icon: _vibrationEnabled ? Icons.vibration_rounded : Icons.smartphone_rounded,
                         isEnabled: _vibrationEnabled,
                         onTap: () => _toggleAudio(GameStorage.vibrationKey, _vibrationEnabled),
@@ -1234,15 +1147,9 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
                 ),
               ),
               const SizedBox(width: 8),
-<<<<<<< HEAD
               Text(
                 tr('app_title'),
                 style: const TextStyle(
-=======
-              const Text(
-                'MindTrap AI',
-                style: TextStyle(
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                   color: Color(0xFF0F172A),
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
@@ -1252,13 +1159,8 @@ class _AppLanguageDrawerState extends State<AppLanguageDrawer> {
             ],
           ),
           Text(
-<<<<<<< HEAD
             '${tr('version')} 1.2.0 • 1,000 ${tr('levels')}',
             style: const TextStyle(
-=======
-            'v1.2.0 • 1,000 Levels',
-            style: TextStyle(
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               color: Color(0xFF64748B),
               fontSize: 10,
               fontWeight: FontWeight.w600,

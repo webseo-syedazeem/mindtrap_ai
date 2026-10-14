@@ -819,13 +819,8 @@ class _AuthScreenState extends State<AuthScreen>
         children: [
           // Back Button
           _buildCircleButton(
-<<<<<<< HEAD
             icon: Icons.arrow_back_rounded,
             tooltip: tr('back'),
-=======
-            icon: Icons.arrow_back_ios_new_rounded,
-            tooltip: 'Back',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             onPressed: () => Navigator.of(context).maybePop(),
           ),
 
@@ -945,7 +940,6 @@ class _AuthScreenState extends State<AuthScreen>
     required VoidCallback onPressed,
     String? tooltip,
   }) {
-<<<<<<< HEAD
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final displayIcon = (icon == Icons.arrow_back_rounded && isRtl)
         ? Icons.arrow_forward_rounded
@@ -956,19 +950,11 @@ class _AuthScreenState extends State<AuthScreen>
       shape: const CircleBorder(),
       elevation: 2,
       shadowColor: const Color(0x332178BA),
-=======
-    return Material(
-      color: Colors.white.withAlpha(235),
-      shape: const CircleBorder(),
-      elevation: 3,
-      shadowColor: const Color(0x1A0F172A),
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onPressed,
         child: Tooltip(
           message: tooltip ?? '',
-<<<<<<< HEAD
           child: SizedBox(
             width: 38,
             height: 38,
@@ -977,19 +963,6 @@ class _AuthScreenState extends State<AuthScreen>
               color: const Color(0xFF244169),
               size: 24,
             ),
-=======
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white,
-                width: 1.5,
-              ),
-            ),
-            child: Icon(icon, color: const Color(0xFF0F172A), size: 18),
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           ),
         ),
       ),
@@ -1085,15 +1058,9 @@ class _AuthScreenState extends State<AuthScreen>
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-<<<<<<< HEAD
             _buildFeaturePill(Icons.psychology_alt_rounded, tr('cognitive_puzzles')),
             _buildFeaturePill(Icons.cloud_done_rounded, tr('cloud_sync')),
             _buildFeaturePill(Icons.emoji_events_rounded, tr('global_ranks')),
-=======
-            _buildFeaturePill(Icons.psychology_alt_rounded, 'Cognitive Puzzles'),
-            _buildFeaturePill(Icons.cloud_done_rounded, 'Cloud Sync'),
-            _buildFeaturePill(Icons.emoji_events_rounded, 'Global Ranks'),
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
           ],
         ),
       ],
@@ -1666,44 +1633,26 @@ class _AuthScreenState extends State<AuthScreen>
                   child: GestureDetector(
                     onTap: _showTermsSheet,
                     child: RichText(
-<<<<<<< HEAD
                       text: TextSpan(
                         text: tr('agree_terms_prefix'),
                         style: const TextStyle(
-=======
-                      text: const TextSpan(
-                        text: 'I agree to the ',
-                        style: TextStyle(
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           color: Color(0xFF475569),
                           fontSize: 12,
                           height: 1.35,
                         ),
                         children: [
                           TextSpan(
-<<<<<<< HEAD
                             text: tr('terms_of_service'),
                             style: const TextStyle(
-=======
-                            text: 'Terms of Service',
-                            style: TextStyle(
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                               color: Color(0xFF0284C7),
                               fontWeight: FontWeight.w700,
                               decoration: TextDecoration.underline,
                             ),
                           ),
-<<<<<<< HEAD
                           TextSpan(text: tr('and_separator')),
                           TextSpan(
                             text: tr('privacy_policy'),
                             style: const TextStyle(
-=======
-                          TextSpan(text: ' & '),
-                          TextSpan(
-                            text: 'Privacy Policy',
-                            style: TextStyle(
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                               color: Color(0xFF0284C7),
                               fontWeight: FontWeight.w700,
                               decoration: TextDecoration.underline,
@@ -1742,7 +1691,6 @@ class _AuthScreenState extends State<AuthScreen>
     switch (_passwordScore) {
       case 1:
         activeColor = const Color(0xFFEF4444);
-<<<<<<< HEAD
         strengthLabel = tr('weak');
         break;
       case 2:
@@ -1756,21 +1704,6 @@ class _AuthScreenState extends State<AuthScreen>
       case 4:
         activeColor = const Color(0xFF10B981);
         strengthLabel = tr('strong');
-=======
-        strengthLabel = 'Weak';
-        break;
-      case 2:
-        activeColor = const Color(0xFFF59E0B);
-        strengthLabel = 'Fair';
-        break;
-      case 3:
-        activeColor = const Color(0xFF0284C7);
-        strengthLabel = 'Good';
-        break;
-      case 4:
-        activeColor = const Color(0xFF10B981);
-        strengthLabel = 'Strong';
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
         break;
       default:
         activeColor = const Color(0xFFE2E8F0);
@@ -1906,17 +1839,10 @@ class _AuthScreenState extends State<AuthScreen>
           child: Container(
             alignment: Alignment.center,
             child: isLoading
-<<<<<<< HEAD
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(
-=======
-                ? const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
@@ -1924,17 +1850,10 @@ class _AuthScreenState extends State<AuthScreen>
                           strokeWidth: 2.2,
                         ),
                       ),
-<<<<<<< HEAD
                       const SizedBox(width: 10),
                       Text(
                         tr('authenticating'),
                         style: const TextStyle(
-=======
-                      SizedBox(width: 10),
-                      Text(
-                        'Authenticating...',
-                        style: TextStyle(
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -2226,32 +2145,18 @@ class _AuthScreenState extends State<AuthScreen>
           ),
         ],
       ),
-<<<<<<< HEAD
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(
-=======
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
             Icons.shield_outlined,
             color: Color(0xFF0284C7),
             size: 14,
           ),
-<<<<<<< HEAD
           const SizedBox(width: 7),
           Text(
             tr('ssl_security_badge'),
             style: const TextStyle(
-=======
-          SizedBox(width: 7),
-          Text(
-            '256-Bit SSL Encrypted • Supabase Cloud Security',
-            style: TextStyle(
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
               color: Color(0xFF0284C7),
               fontSize: 11,
               fontWeight: FontWeight.w700,

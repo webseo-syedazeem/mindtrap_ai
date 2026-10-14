@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 import 'auth_translations.dart';
 import 'extended_app_strings.dart';
 import 'screen_translations.dart';
 
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 class AppLanguage {
   final String code;
   final String englishName;
@@ -588,11 +585,7 @@ class AppStrings {
       'diamond_bonus': '+5 ہیرے',
       'stage_coin_bonus': '+150 اسٹیج بونس سکے!',
       'hint_eliminated': '2 غلط آپشنز ختم کر دیے گئے!',
-<<<<<<< HEAD
       'worlds': 'دنیا',
-=======
-      'worlds': 'دنیا (WORLDS)',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       'select_world': 'دنیا منتخب کریں',
       'world': 'دنیا',
       'locked': 'مقفل',
@@ -7063,7 +7056,6 @@ class AppStrings {
   static String currentCode = 'en';
 
   static String get(String key) {
-<<<<<<< HEAD
     final authMap = AuthTranslations.data[currentCode];
     if (authMap != null && authMap.containsKey(key)) {
       final val = authMap[key]!;
@@ -7102,10 +7094,6 @@ class AppStrings {
       return enExt[key]!;
     }
     return _translations['en']![key] ?? key;
-=======
-    final langMap = _translations[currentCode] ?? _translations['en']!;
-    return langMap[key] ?? _translations['en']![key] ?? key;
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
   }
 }
 

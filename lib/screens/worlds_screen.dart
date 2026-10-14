@@ -109,11 +109,7 @@ class _WorldsScreenState extends State<WorldsScreen> {
                       child: Row(
                         children: [
                           _buildCircleButton(
-<<<<<<< HEAD
                             icon: Icons.arrow_back_rounded,
-=======
-                            icon: Icons.arrow_back_ios_new_rounded,
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             onPressed: () => Navigator.of(context).maybePop(),
                           ),
                           const SizedBox(width: 14),
@@ -159,10 +155,7 @@ class _WorldsScreenState extends State<WorldsScreen> {
                                   ),
                                 ),
                               );
-<<<<<<< HEAD
                               if (mounted) setState(() {});
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             },
                           ),
                           const SizedBox(width: 8),
@@ -250,15 +243,9 @@ class _WorldsScreenState extends State<WorldsScreen> {
                                 : () {
                                     showProfessionalLockDialog(
                                       context,
-<<<<<<< HEAD
                                       title: tr('world_locked'),
                                       subtitle: world.localizedTitle,
                                       message: tr('world_unlock_req').replaceAll('{n}', '${world.worldNumber - 1}'),
-=======
-                                      title: 'World Locked',
-                                      subtitle: world.localizedTitle,
-                                      message: 'Complete all 40 levels of World ${world.worldNumber - 1} to unlock this world!',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                       currentProgress: prevCompleted,
                                       targetProgress: WorldThemes.levelsPerWorld,
                                     );
@@ -278,13 +265,10 @@ class _WorldsScreenState extends State<WorldsScreen> {
   }
 
   Widget _buildCircleButton({required IconData icon, required VoidCallback onPressed}) {
-<<<<<<< HEAD
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final displayIcon = (icon == Icons.arrow_back_rounded && isRtl)
         ? Icons.arrow_forward_rounded
         : icon;
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     return Material(
       color: Colors.white.withAlpha(25),
       shape: const CircleBorder(),
@@ -292,15 +276,9 @@ class _WorldsScreenState extends State<WorldsScreen> {
         customBorder: const CircleBorder(),
         onTap: onPressed,
         child: SizedBox(
-<<<<<<< HEAD
           width: 38,
           height: 38,
           child: Icon(displayIcon, color: Colors.white, size: 24),
-=======
-          width: 44,
-          height: 44,
-          child: Icon(icon, color: Colors.white, size: 20),
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
         ),
       ),
     );
@@ -494,11 +472,7 @@ class _WorldCard extends StatelessWidget {
                               const Icon(Icons.lock_rounded, color: Color(0xFFFFB703), size: 14),
                               const SizedBox(width: 4),
                               Text(
-<<<<<<< HEAD
                                 '${tr("world")} ${world.worldNumber - 1} ($prevWorldCompleted/40)',
-=======
-                                'World ${world.worldNumber - 1} ($prevWorldCompleted/40)',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                 style: const TextStyle(
                                   color: Color(0xFFFFB703),
                                   fontWeight: FontWeight.w900,
@@ -620,11 +594,7 @@ class _WorldCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-<<<<<<< HEAD
                               '${formatNumber(completedLevels)} / ${formatNumber(world.levelsCount)} ${tr('levels_cleared')}',
-=======
-                              '$completedLevels / ${world.levelsCount} Levels Cleared',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
@@ -665,11 +635,7 @@ class _WorldCard extends StatelessWidget {
                         border: Border.all(color: Colors.white.withAlpha(20)),
                       ),
                       child: Text(
-<<<<<<< HEAD
                         tr('world_unlock_req').replaceAll('{n}', '${world.worldNumber - 1}'),
-=======
-                        'Complete all 40 levels of World ${world.worldNumber - 1} to unlock',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         style: const TextStyle(
                           color: Color(0xFFFDE68A),
                           fontSize: 11,

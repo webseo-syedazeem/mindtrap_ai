@@ -5,10 +5,7 @@ import '../models/world_model.dart';
 import '../screens/language_selection_screen.dart';
 import '../widgets/level_background_builder.dart';
 import '../widgets/professional_lock_dialog.dart';
-<<<<<<< HEAD
 import '../main.dart' show PuzzleScreen, smoothPageRoute;
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
 import 'worlds_screen.dart';
 
 class WorldLevelsScreen extends StatefulWidget {
@@ -110,11 +107,7 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
                       child: Row(
                         children: [
                           _buildCircleButton(
-<<<<<<< HEAD
                             icon: Icons.arrow_back_rounded,
-=======
-                            icon: Icons.arrow_back_ios_new_rounded,
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             onPressed: () => Navigator.of(context).maybePop(),
                           ),
                           _buildCircleButton(
@@ -128,10 +121,7 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
                                   ),
                                 ),
                               );
-<<<<<<< HEAD
                               if (mounted) setState(() {});
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                             },
                           ),
                           const SizedBox(width: 14),
@@ -262,26 +252,12 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
 
                     const SizedBox(height: 6),
 
-<<<<<<< HEAD
                     // Levels List (single full-width column)
                     Expanded(
                       child: ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
                         physics: const BouncingScrollPhysics(),
                         separatorBuilder: (context, index) => const SizedBox(height: 14),
-=======
-                    // Levels Grid (Up to 1000 Total Levels)
-                    Expanded(
-                      child: GridView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-                        physics: const BouncingScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 14,
-                          mainAxisSpacing: 14,
-                          childAspectRatio: 0.94,
-                        ),
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         itemCount: world.levelsCount,
                         itemBuilder: (context, levelIndex) {
                           final unlocked = _isLevelUnlocked(levelIndex);
@@ -299,7 +275,6 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
                               if (unlocked) {
                                 if (widget.onLevelSelected != null) {
                                   await widget.onLevelSelected!(world.id, levelIndex);
-<<<<<<< HEAD
                                 } else {
                                   await Navigator.push(
                                     context,
@@ -312,24 +287,14 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
                                   );
                                 }
                                 _refreshStars();
-=======
-                                  _refreshStars();
-                                }
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                               } else {
                                 final isWorldLocked = world.id > 0 && !isWorldUnlocked(world.id, 0, _starsMap);
                                 if (isWorldLocked) {
                                   showProfessionalLockDialog(
                                     context,
-<<<<<<< HEAD
                                     title: tr('world_locked'),
                                     subtitle: world.localizedTitle,
                                     message: tr('world_unlock_req').replaceAll('{n}', '${world.worldNumber - 1}'),
-=======
-                                    title: 'World Locked',
-                                    subtitle: world.localizedTitle,
-                                    message: 'Complete all 40 levels of World ${world.worldNumber - 1} to unlock this world!',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                     currentProgress: getWorldCompletedLevels(world.id - 1, _starsMap),
                                     targetProgress: WorldThemes.levelsPerWorld,
                                   );
@@ -339,11 +304,7 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
                                       .replaceAll('{next}', '${levelIndex + 1}');
                                   showProfessionalLockDialog(
                                     context,
-<<<<<<< HEAD
                                     title: tr('level_locked'),
-=======
-                                    title: 'Level Locked',
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                                     subtitle: '${tr('level')} ${levelIndex + 1}',
                                     message: msg,
                                     currentProgress: levelIndex,
@@ -367,13 +328,10 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
   }
 
   Widget _buildCircleButton({required IconData icon, required VoidCallback onPressed}) {
-<<<<<<< HEAD
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final displayIcon = (icon == Icons.arrow_back_rounded && isRtl)
         ? Icons.arrow_forward_rounded
         : icon;
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     return Material(
       color: Colors.white.withAlpha(25),
       shape: const CircleBorder(),
@@ -381,15 +339,9 @@ class _WorldLevelsScreenState extends State<WorldLevelsScreen> {
         customBorder: const CircleBorder(),
         onTap: onPressed,
         child: SizedBox(
-<<<<<<< HEAD
           width: 38,
           height: 38,
           child: Icon(displayIcon, color: Colors.white, size: 24),
-=======
-          width: 44,
-          height: 44,
-          child: Icon(icon, color: Colors.white, size: 20),
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
         ),
       ),
     );
@@ -418,10 +370,7 @@ class _LevelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-<<<<<<< HEAD
       height: 112,
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
@@ -458,7 +407,6 @@ class _LevelCard extends StatelessWidget {
                 child: Container(color: Colors.black.withAlpha(160)),
               ),
 
-<<<<<<< HEAD
             // 2b. Left-to-right readability gradient
             Positioned.fill(
               child: DecoratedBox(
@@ -531,114 +479,21 @@ class _LevelCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-=======
-            // 3. Card Content
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Top row: Level badge & status
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: isUnlocked ? world.primaryColor.withAlpha(90) : Colors.white10,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isUnlocked ? world.glowColor : Colors.white24,
-                          ),
-                        ),
-                        child: Text(
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                           '${tr('level').toUpperCase()} ${formatNumber(levelNumber)}',
                           style: TextStyle(
                             color: isUnlocked ? Colors.white : Colors.white60,
                             fontWeight: FontWeight.w900,
-<<<<<<< HEAD
                             fontSize: 16,
                             letterSpacing: 0.8,
                             shadows: const [Shadow(color: Colors.black, blurRadius: 6)],
                           ),
                         ),
                         const SizedBox(height: 2),
-=======
-                            fontSize: 11,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                      ),
-                      if (isUnlocked && stars > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withAlpha(80),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFF34D399), width: 1.0),
-                          ),
-                          child: Text(
-                            tr('cleared').toUpperCase(),
-                            style: const TextStyle(
-                              color: Color(0xFF6EE7B7),
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      if (!isUnlocked)
-                        const Icon(Icons.lock_rounded, color: Color(0xFFFFB703), size: 18),
-                    ],
-                  ),
-
-                  // Center icon / atmosphere name
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: isUnlocked
-                                ? LinearGradient(
-                                    colors: [world.primaryColor, world.secondaryColor],
-                                  )
-                                : null,
-                            color: isUnlocked ? null : Colors.white10,
-                            boxShadow: isUnlocked
-                                ? [
-                                    BoxShadow(
-                                      color: world.glowColor.withAlpha(100),
-                                      blurRadius: 14,
-                                    ),
-                                  ]
-                                : [],
-                          ),
-                          child: Center(
-                            child: isUnlocked
-                                ? Text(
-                                    formatNumber(levelNumber),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  )
-                                : const Icon(Icons.lock_rounded, color: Colors.white38, size: 22),
-                          ),
-                        ),
-                        const SizedBox(height: 5),
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                         Text(
                           styleName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-<<<<<<< HEAD
                             color: isUnlocked ? Colors.white.withAlpha(220) : Colors.white38,
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
@@ -665,19 +520,10 @@ class _LevelCard extends StatelessWidget {
                             );
                           }),
                         ),
-=======
-                            color: isUnlocked ? Colors.white : Colors.white38,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            shadows: const [Shadow(color: Colors.black, blurRadius: 6)],
-                          ),
-                        ),
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                       ],
                     ),
                   ),
 
-<<<<<<< HEAD
                   // Status on the right
                   if (!isUnlocked)
                     const Icon(Icons.lock_rounded, color: Color(0xFFFFB703), size: 24)
@@ -719,29 +565,6 @@ class _LevelCard extends StatelessWidget {
                       ),
                       child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
                     ),
-=======
-                  // Bottom row: 3D Stars (0 to 3)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(3, (starIdx) {
-                      final hasStar = isUnlocked && starIdx < stars;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2.5),
-                        child: hasStar
-                            ? Image.asset(
-                                'assets/images/Golden_Star_Icon.png',
-                                width: 20,
-                                height: 20,
-                              )
-                            : Icon(
-                                Icons.star_border_rounded,
-                                color: Colors.white.withAlpha(60),
-                                size: 20,
-                              ),
-                      );
-                    }),
-                  ),
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
                 ],
               ),
             ),

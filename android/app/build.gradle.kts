@@ -19,12 +19,9 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
-<<<<<<< HEAD
     val flutterVersionCode = flutter.versionCode
     val flutterVersionName = flutter.versionName
 
-=======
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.mindtrap_ai"
@@ -32,13 +29,8 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = 36
-<<<<<<< HEAD
         versionCode = flutterVersionCode
         versionName = flutterVersionName
-=======
-        versionCode = 1
-        versionName = "1.0.0"
->>>>>>> 6d559dfe6413366ed60a0eedce09101114d17a9f
     }
 
     androidResources {
