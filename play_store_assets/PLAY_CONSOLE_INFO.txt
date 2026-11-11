@@ -1,0 +1,72 @@
+# Word Puzzle – Language Quest
+## Google Play Console Upload & Metadata Information
+
+---
+
+### 1. App Basics (Store Listing)
+* **App Name (Title - Max 30 chars):** 
+  ```text
+  Word Puzzle – Language Quest
+  ```
+* **Short Description (Max 80 chars):**
+  ```text
+  Tricky brain riddles & multilingual word puzzles across 56 languages!
+  ```
+* **Category:** Games > Puzzle / Word / Trivia
+* **Tags / Keywords:** Brain Games, Tricky Puzzles, Riddles, IQ Test, Multi-Language, Word Games
+
+---
+
+### 2. Full Description (Max 4000 chars)
+```text
+Welcome to Word Puzzle – Language Quest!
+
+Challenge your mind with the ultimate cognitive riddle and word puzzle experience, playable in 56 native languages! Train your brain, solve tricky logic puzzles, and expand your vocabulary across worlds of imagination.
+
+✨ KEY FEATURES:
+• 🌍 56 Native Languages Supported: Play seamlessly in English, Spanish, French, Dutch, Hindi, Urdu, Arabic, Bengali, and many more!
+• 🧩 Tricky Riddles & Brain Teasers: Hundreds of hand-crafted stages designed to test your lateral thinking and cognitive flexibility.
+• 🗺️ Exciting World Progression: Explore unique thematic worlds like Sunset Meadow, Sunlit Forest, Tropical Lagoon, and Sakura Sanctuary.
+• 🎁 Daily Login Rewards: Earn gems and coins every day to unlock powerful hints and boosters.
+• ☁️ Cloud Sync & Guest Play: Save your progress securely or sign in with Google/Apple for cross-device synchronization.
+
+Download Word Puzzle – Language Quest today and start your global brain training journey!
+```
+
+---
+
+### 3. Technical & Package Details
+* **Package Name (Application ID):**
+  ```text
+  com.mindtrap.ai
+  ```
+* **Version Name:** `1.0.1`
+* **Version Code:** `2`
+* **Target Android Version:** Android 16 / 17 (API 36 / 37)
+* **Minimum Android Version:** Android 5.0 (API 21+)
+
+---
+
+### 4. Release Signing & Keystore Details (Play App Signing)
+* **Keystore File:** `upload-keystore.jks`
+* **Key Alias:** `upload`
+* **Key Password:** `mindtrap_upload_key2026`
+* **Store Password:** `mindtrap_upload_key2026`
+* **SHA-256 Fingerprint:**
+  ```text
+  80:46:04:EE:41:81:06:7B:54:6C:58:BC:1A:C2:EA:48:92:8E:F0:D5:E4:D3:B7:40:1B:24:EF:67:48:7B:8A:DA
+  ```
+* **SHA-1 Fingerprint:**
+  ```text
+  5F:78:CF:B2:58:2F:64:89:36:07:D4:ED:AC:AF:5B:7E:13:9D:8A:5E
+  ```
+
+---
+
+### 5. Files Included in This Folder:
+1. `app-release.aab` -> **(Main File)** Google Play Console par upload karne ke liye.
+2. `app-release.apk` -> Testing ke liye direct installable APK file.
+3. `icon_512x512.png` -> High-Res App Icon (512x512 px).
+4. `feature_graphic_1024x500.png` -> Feature Banner Graphic (1024x500 px).
+5. `screenshots/` -> Tamam 8 high-res phone screenshots (1080x1920 px).
+6. `upload-keystore.jks` -> Future app updates ke liye secure signing key backup.
